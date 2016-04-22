@@ -19,7 +19,7 @@ import (
 	"github.com/jadeblaquiere/btcd/database"
 	_ "github.com/jadeblaquiere/btcd/database/ffldb"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 	flags "github.com/btcsuite/go-flags"
 	"github.com/btcsuite/go-socks/socks"
 )

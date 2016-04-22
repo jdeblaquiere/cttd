@@ -11,7 +11,7 @@ import (
 	"github.com/jadeblaquiere/btcd/database"
 	"github.com/jadeblaquiere/btcd/txscript"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // CheckpointConfirmations is the number of blocks before the end of the current

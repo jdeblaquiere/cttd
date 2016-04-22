@@ -10,7 +10,7 @@ import (
 	"github.com/jadeblaquiere/btcd/blockchain"
 	"github.com/jadeblaquiere/btcd/chaincfg"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // TestHaveBlock tests the HaveBlock API to ensure proper functionality.

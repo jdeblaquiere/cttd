@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // TxDesc is a descriptor about a transaction in a transaction source along with

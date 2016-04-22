@@ -23,7 +23,7 @@ import (
 	"github.com/jadeblaquiere/btcd/database"
 	"github.com/jadeblaquiere/btcd/txscript"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 	"github.com/btcsuite/fastsha256"
 	"github.com/btcsuite/golangcrypto/ripemd160"
 	"github.com/btcsuite/websocket"

@@ -11,7 +11,7 @@ import (
 	"github.com/jadeblaquiere/btcd/blockchain"
 	"github.com/jadeblaquiere/btcd/database"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 const (

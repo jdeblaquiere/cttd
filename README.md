@@ -113,7 +113,7 @@ To subscribe to a given list, send email to list+subscribe@opensource.conformal.
 
 ## Issue Tracker
 
-The [integrated github issue tracker](https://github.com/btcsuite/btcd/issues)
+The [integrated github issue tracker](https://github.com/jadeblaquiere/btcd/issues)
 is used for this project.
 
 ## Documentation

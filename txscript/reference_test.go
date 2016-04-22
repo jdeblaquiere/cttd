@@ -17,7 +17,7 @@ import (
 
 	. "github.com/jadeblaquiere/btcd/txscript"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // testName returns a descriptive test name for the given reference test data.

@@ -14,7 +14,7 @@ import (
 	"github.com/jadeblaquiere/btcd/chaincfg"
 	"github.com/jadeblaquiere/btcd/database"
 	_ "github.com/jadeblaquiere/btcd/database/ffldb"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // This example demonstrates how to create a new chain instance and use

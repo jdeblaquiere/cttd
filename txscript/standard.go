@@ -6,7 +6,7 @@ package txscript
 
 import (
 	"github.com/jadeblaquiere/btcd/chaincfg"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 const (

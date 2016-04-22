@@ -9,7 +9,7 @@ package database
 
 import (
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // Cursor represents a cursor over key/value pairs and nested buckets of a

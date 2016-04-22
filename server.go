@@ -29,8 +29,8 @@ import (
 	"github.com/jadeblaquiere/btcd/peer"
 	"github.com/jadeblaquiere/btcd/txscript"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
-	"github.com/btcsuite/btcutil/bloom"
+	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/btcutil/bloom"
 )
 
 const (

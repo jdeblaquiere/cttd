@@ -12,7 +12,7 @@ import (
 
 	"github.com/jadeblaquiere/btcd/chaincfg"
 	"github.com/jadeblaquiere/btcd/txscript"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // decodeHex decodes the passed hex string and returns the resulting bytes.  It

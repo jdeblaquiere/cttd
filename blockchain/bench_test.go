@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/jadeblaquiere/btcd/blockchain"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // BenchmarkIsCoinBase performs a simple benchmark against the IsCoinBase

@@ -13,7 +13,7 @@ import (
 	"github.com/jadeblaquiere/btcd/blockchain"
 	"github.com/jadeblaquiere/btcd/chaincfg"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // TestCheckConnectBlock tests the CheckConnectBlock function to ensure it

@@ -14,7 +14,7 @@ import (
 	"github.com/jadeblaquiere/btcd/database"
 	_ "github.com/jadeblaquiere/btcd/database/ffldb"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // This example demonstrates creating a new database.

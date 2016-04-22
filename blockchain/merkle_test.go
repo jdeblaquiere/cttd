@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/jadeblaquiere/btcd/blockchain"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // TestMerkle tests the BuildMerkleTreeStore API.

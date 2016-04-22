@@ -221,5 +221,5 @@ information.
 	  Bitcoin scripts
     * [database](https://github.com/jadeblaquiere/btcd/tree/master/database) -
 	  Provides a database interface for the Bitcoin block chain
-    * [btcutil](https://github.com/btcsuite/btcutil) - Provides Bitcoin-specific
+    * [btcutil](https://github.com/jadeblaquiere/btcutil) - Provides Bitcoin-specific
 	  convenience functions and types

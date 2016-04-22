@@ -8,7 +8,7 @@ import (
 	"math"
 
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // nextPowerOfTwo returns the next highest power of two from a given number if

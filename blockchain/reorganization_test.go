@@ -15,7 +15,7 @@ import (
 
 	"github.com/jadeblaquiere/btcd/blockchain"
 	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/btcsuite/btcutil"
+	"github.com/jadeblaquiere/btcutil"
 )
 
 // TestReorganization loads a set of test blocks which force a chain
