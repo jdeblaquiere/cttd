@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/database"
-	"github.com/btcsuite/btcd/wire"
+	"github.com/jadeblaquiere/btcd/chaincfg"
+	"github.com/jadeblaquiere/btcd/database"
+	"github.com/jadeblaquiere/btcd/wire"
 	"github.com/btcsuite/btcutil"
 )
 

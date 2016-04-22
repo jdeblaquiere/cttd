@@ -39,7 +39,7 @@ which are both under active development.
 
 #### Windows - MSI Available
 
-https://github.com/btcsuite/btcd/releases
+https://github.com/jadeblaquiere/btcd/releases
 
 #### Linux/BSD/MacOSX/POSIX - Build from Source
 
@@ -60,7 +60,7 @@ recommended that `GOPATH` is set to a directory in your home directory such as
 - Run the following command to obtain btcd, all dependencies, and install it:
 
 ```bash
-$ go get -u github.com/btcsuite/btcd/...
+$ go get -u github.com/jadeblaquiere/btcd/...
 ```
 
 - btcd (and utilities) will now be installed in either ```$GOROOT/bin``` or
@@ -79,7 +79,7 @@ Install a newer MSI
 - Run the following command to update btcd, all dependencies, and install it:
 
 ```bash
-$ go get -u -v github.com/btcsuite/btcd/...
+$ go get -u -v github.com/jadeblaquiere/btcd/...
 ```
 
 ## Getting Started
@@ -118,7 +118,7 @@ is used for this project.
 
 ## Documentation
 
-The documentation is a work-in-progress.  It is located in the [docs](https://github.com/btcsuite/btcd/tree/master/docs) folder.
+The documentation is a work-in-progress.  It is located in the [docs](https://github.com/jadeblaquiere/btcd/tree/master/docs) folder.
 
 ## GPG Verification Key
 

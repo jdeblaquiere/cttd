@@ -7,9 +7,9 @@ package blockchain_test
 import (
 	"testing"
 
-	"github.com/btcsuite/btcd/blockchain"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/wire"
+	"github.com/jadeblaquiere/btcd/blockchain"
+	"github.com/jadeblaquiere/btcd/chaincfg"
+	"github.com/jadeblaquiere/btcd/wire"
 	"github.com/btcsuite/btcutil"
 )
 

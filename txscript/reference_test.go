@@ -15,8 +15,8 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcd/wire"
+	. "github.com/jadeblaquiere/btcd/txscript"
+	"github.com/jadeblaquiere/btcd/wire"
 	"github.com/btcsuite/btcutil"
 )
 

@@ -10,8 +10,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/txscript"
+	"github.com/jadeblaquiere/btcd/chaincfg"
+	"github.com/jadeblaquiere/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 )
 

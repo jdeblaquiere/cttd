@@ -286,7 +286,7 @@ Changes in 0.10.0 (Sun Mar 01 2015)
   - RPC changes:
     - Require TLS version 1.2 as the minimum version for all TLS connections
     - Provide support for disabling TLS when only listening on localhost
-      (https://github.com/btcsuite/btcd/pull/192)
+      (https://github.com/jadeblaquiere/btcd/pull/192)
     - Modify help output for all commands to provide much more consistent
       and detailed information
     - Correct case in getrawtransaction which would refuse to serve certain

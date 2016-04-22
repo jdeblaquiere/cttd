@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/btcsuite/btcd/addrmgr"
-	"github.com/btcsuite/btcd/blockchain"
-	"github.com/btcsuite/btcd/blockchain/indexers"
-	"github.com/btcsuite/btcd/database"
-	"github.com/btcsuite/btcd/peer"
-	"github.com/btcsuite/btcd/txscript"
+	"github.com/jadeblaquiere/btcd/addrmgr"
+	"github.com/jadeblaquiere/btcd/blockchain"
+	"github.com/jadeblaquiere/btcd/blockchain/indexers"
+	"github.com/jadeblaquiere/btcd/database"
+	"github.com/jadeblaquiere/btcd/peer"
+	"github.com/jadeblaquiere/btcd/txscript"
 	"github.com/btcsuite/btclog"
 	"github.com/btcsuite/seelog"
 )
