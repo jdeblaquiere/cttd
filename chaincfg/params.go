@@ -34,6 +34,10 @@ var (
 	// simNetPowLimit is the highest proof of work value a Bitcoin block
 	// can have for the simulation test network.  It is the value 2^255 - 1.
 	simNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 255), bigOne)
+
+	// simNetPowLimit is the highest proof of work value a Bitcoin block
+	// can have for the simulation test network.  It is the value 2^255 - 1.
+	ctredNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 255), bigOne)
 )
 
 // Checkpoint identifies a known good point in the block chain.  Using
@@ -324,6 +328,53 @@ var SimNetParams = Params{
 	HDCoinType: 115, // ASCII for s
 }
 
+// RedNetParams defines the network parameters for the ciphrtxt token (CT) ciphertxt-red
+// network. The Red network is a test network.   
+var CTRedNetParams = Params{
+	Name:        "ctrednet",
+	Net:         wire.CTRedNet,
+	DefaultPort: "17761",
+	DNSSeeds:    []string{}, // NOTE: There must NOT be any seeds.
+
+	// Chain parameters
+	GenesisBlock:           &ctredNetGenesisBlock,
+	GenesisHash:            &ctredNetGenesisHash,
+	PowLimit:               ctredNetPowLimit,
+	PowLimitBits:           0x207fffff,
+	SubsidyHalvingInterval: 210000,
+	ResetMinDifficulty:     true,
+	GenerateSupported:      true,
+
+	// Checkpoints ordered from oldest to newest.
+	Checkpoints: nil,
+
+	// Enforce current block version once majority of the network has
+	// upgraded.
+	// 51% (51 / 100)
+	// Reject previous block versions once a majority of the network has
+	// upgraded.
+	// 75% (75 / 100)
+	BlockEnforceNumRequired: 51,
+	BlockRejectNumRequired:  75,
+	BlockUpgradeNumToCheck:  100,
+
+	// Mempool parameters
+	RelayNonStdTxs: true,
+
+	// Address encoding magics
+	PubKeyHashAddrID: 0x3f, // starts with S
+	ScriptHashAddrID: 0x7b, // starts with s
+	PrivateKeyID:     0x64, // starts with 4 (uncompressed) or F (compressed)
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x04, 0x20, 0xb9, 0x00}, // starts with sprv
+	HDPublicKeyID:  [4]byte{0x04, 0x20, 0xbd, 0x3a}, // starts with spub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 99, // ASCII for c
+}
+
 var (
 	// ErrDuplicateNet describes an error where the parameters for a Bitcoin
 	// network could not be set due to the network already being a standard
@@ -436,4 +487,5 @@ func init() {
 	mustRegister(&TestNet3Params)
 	mustRegister(&RegressionNetParams)
 	mustRegister(&SimNetParams)
+	mustRegister(&CTRedNetParams)
 }
