@@ -337,8 +337,8 @@ var CTRedNetParams = Params{
 	DNSSeeds:    []string{}, // NOTE: There must NOT be any seeds.
 
 	// Chain parameters
-	GenesisBlock:           &ctredGenesisBlock,
-	GenesisHash:            &ctredGenesisHash,
+	GenesisBlock:           &genesisBlock,
+	GenesisHash:            &genesisHash,
 	PowLimit:               ctredNetPowLimit,
 	PowLimitBits:           0x207fffff,
 	SubsidyHalvingInterval: 210000,
