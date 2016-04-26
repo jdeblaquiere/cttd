@@ -340,7 +340,7 @@ var CTRedNetParams = Params{
 	GenesisBlock:           &ctredGenesisBlock,
 	GenesisHash:            &ctredGenesisHash,
 	PowLimit:               ctredNetPowLimit,
-	PowLimitBits:           0x1f7fffff,
+	PowLimitBits:           0x1e07ffff,
 	SubsidyHalvingInterval: 210000,
 	ResetMinDifficulty:     true,
 	GenerateSupported:      true,
