@@ -35,9 +35,9 @@ var (
 	// can have for the simulation test network.  It is the value 2^255 - 1.
 	simNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 255), bigOne)
 
-	// simNetPowLimit is the highest proof of work value a Bitcoin block
-	// can have for the simulation test network.  It is the value 2^255 - 1.
-	ctredNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 255), bigOne)
+	// ctredNetPowLimit is the highest proof of work value a ciphrtxt block
+	// can have for the ciphrtxt red test network.  It is the value 2^240 - 1.
+	ctredNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 240), bigOne)
 )
 
 // Checkpoint identifies a known good point in the block chain.  Using

@@ -86,7 +86,7 @@ var genesisBlock = wire.MsgBlock{
 	Transactions: []*wire.MsgTx{&genesisCoinbaseTx},
 }
 
-// genesisCoinbaseTx is the coinbase transaction for the ciphrtxt red network.
+// ctredGenesisCoinbaseTx is the coinbase transaction for the ciphrtxt red network.
 var ctredGenesisCoinbaseTx = wire.MsgTx{
 	Version: 1,
 	TxIn: []*wire.TxIn{
