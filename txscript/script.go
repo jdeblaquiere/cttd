@@ -469,5 +469,16 @@ func IsUnspendable(pkScript []byte) bool {
 		return true
 	}
 
-	return len(pops) > 0 && pops[0].opcode.value == OP_RETURN
+	return len(pops) > 0 && ((pops[0].opcode.value == OP_RETURN) || (pops[0].opcode.value == OP_REGISTERACCESSKEY) || (pops[0].opcode.value == OP_POSTDIRECTORY))
+}
+
+// IsRecord returns whether the passed public key script is a record transaction,
+// which returns outputs to coinbase and must be preserved
+func IsRecord(pkScript []byte) bool {
+	pops, err := parseScript(pkScript)
+	if err != nil {
+		return true
+	}
+
+	return len(pops) > 0 && ((pops[0].opcode.value == OP_REGISTERACCESSKEY) || (pops[0].opcode.value == OP_POSTDIRECTORY))
 }

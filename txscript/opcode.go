@@ -217,8 +217,10 @@ const (
 	OP_NOP3                = 0xb2 // 178
 	OP_NOP4                = 0xb3 // 179
 	OP_NOP5                = 0xb4 // 180
+	OP_REGISTERACCESSKEY   = 0xb4 // 180 - AKA OP_NOP5
 	OP_NOP6                = 0xb5 // 181
 	OP_NOP7                = 0xb6 // 182
+	OP_POSTDIRECTORY       = 0xb6 // 182 - AKA OP_NOP7
 	OP_NOP8                = 0xb7 // 183
 	OP_NOP9                = 0xb8 // 184
 	OP_NOP10               = 0xb9 // 185
@@ -415,6 +417,8 @@ var opcodeArray = [256]opcode{
 	OP_ENDIF:               {OP_ENDIF, "OP_ENDIF", 1, opcodeEndif},
 	OP_VERIFY:              {OP_VERIFY, "OP_VERIFY", 1, opcodeVerify},
 	OP_RETURN:              {OP_RETURN, "OP_RETURN", 1, opcodeReturn},
+	OP_REGISTERACCESSKEY:   {OP_REGISTERACCESSKEY, "OP_REGISTERACCESSKEY", 1, opcodeRegisterAK},
+	OP_POSTDIRECTORY:       {OP_POSTDIRECTORY, "OP_POSTDIRECTORY", 1, opcodePostDirent},
 	OP_CHECKLOCKTIMEVERIFY: {OP_CHECKLOCKTIMEVERIFY, "OP_CHECKLOCKTIMEVERIFY", 1, opcodeCheckLockTimeVerify},
 
 	// Stack opcodes.
@@ -500,9 +504,9 @@ var opcodeArray = [256]opcode{
 	OP_NOP1:  {OP_NOP1, "OP_NOP1", 1, opcodeNop},
 	OP_NOP3:  {OP_NOP3, "OP_NOP3", 1, opcodeNop},
 	OP_NOP4:  {OP_NOP4, "OP_NOP4", 1, opcodeNop},
-	OP_NOP5:  {OP_NOP5, "OP_NOP5", 1, opcodeNop},
+	//OP_NOP5:  {OP_NOP5, "OP_NOP5", 1, opcodeNop},
 	OP_NOP6:  {OP_NOP6, "OP_NOP6", 1, opcodeNop},
-	OP_NOP7:  {OP_NOP7, "OP_NOP7", 1, opcodeNop},
+	//OP_NOP7:  {OP_NOP7, "OP_NOP7", 1, opcodeNop},
 	OP_NOP8:  {OP_NOP8, "OP_NOP8", 1, opcodeNop},
 	OP_NOP9:  {OP_NOP9, "OP_NOP9", 1, opcodeNop},
 	OP_NOP10: {OP_NOP10, "OP_NOP10", 1, opcodeNop},
@@ -1005,6 +1009,18 @@ func opcodeVerify(op *parsedOpcode, vm *Engine) error {
 // opcodeReturn returns an appropriate error since it is always an error to
 // return early from a script.
 func opcodeReturn(op *parsedOpcode, vm *Engine) error {
+	return ErrStackEarlyReturn
+}
+
+// opcodeRegisterAK returns an appropriate error since it is always an error to
+// return early from a script. Behavior is identical to OP_RETURN
+func opcodeRegisterAK(op *parsedOpcode, vm *Engine) error {
+	return ErrStackEarlyReturn
+}
+
+// opcodePostDirent returns an appropriate error since it is always an error to
+// return early from a script. Behavior is identical to OP_RETURN
+func opcodePostDirent(op *parsedOpcode, vm *Engine) error {
 	return ErrStackEarlyReturn
 }
 

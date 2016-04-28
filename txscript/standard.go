@@ -14,6 +14,14 @@ const (
 	// data to be considered a nulldata transaction
 	MaxDataCarrierSize = 80
 
+	// MaxAccessKeySize is the maximum number of bytes allowed in pushed
+	// in a OP_REGISTERACCCESSKEY txn to be considered a nulldata transaction
+	MaxAccessKeySize = 256
+
+	// MaxDirectoryEntrySize is the maximum number of bytes allowed in pushed
+	// in a OP_POSTDIRECTORY txn to be considered a nulldata transaction
+	MaxDirectoryEntrySize = 4096
+
 	// StandardVerifyFlags are the script flags which are used when
 	// executing transaction scripts to enforce additional checks which
 	// are required for the script to be considered standard.  These checks
@@ -130,7 +138,11 @@ func isNullData(pops []parsedOpcode) bool {
 	// A nulldata transaction is either a single OP_RETURN or an
 	// OP_RETURN SMALLDATA (where SMALLDATA is a data push up to
 	// MaxDataCarrierSize bytes).
+    
+    // OP_REGISTERACCESSKEY and OP_POSTDIRECTORY also push limited data
+    // to stack - at higher cost with limits
 	l := len(pops)
+    
 	if l == 1 && pops[0].opcode.value == OP_RETURN {
 		return true
 	}
@@ -139,6 +151,16 @@ func isNullData(pops []parsedOpcode) bool {
 		pops[0].opcode.value == OP_RETURN &&
 		pops[1].opcode.value <= OP_PUSHDATA4 &&
 		len(pops[1].data) <= MaxDataCarrierSize
+
+	return l == 2 &&
+		pops[0].opcode.value == OP_REGISTERACCESSKEY &&
+		pops[1].opcode.value <= OP_PUSHDATA4 &&
+		len(pops[1].data) <= MaxAccessKeySize
+
+	return l == 2 &&
+		pops[0].opcode.value == OP_POSTDIRECTORY &&
+		pops[1].opcode.value <= OP_PUSHDATA4 &&
+		len(pops[1].data) <= MaxDirectoryEntrySize
 }
 
 // scriptType returns the type of the script being inspected from the known

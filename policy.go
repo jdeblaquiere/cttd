@@ -258,6 +258,11 @@ func checkPkScriptStandard(pkScript []byte, scriptClass txscript.ScriptClass) er
 // particular, if the cost to the network to spend coins is more than 1/3 of the
 // minimum transaction relay fee, it is considered dust.
 func isDust(txOut *wire.TxOut, minRelayTxFee btcutil.Amount) bool {
+	// Record transactions are not considered dust.
+	if txscript.IsRecord(txOut.PkScript) {
+		return false
+	}
+
 	// Unspendable outputs are considered dust.
 	if txscript.IsUnspendable(txOut.PkScript) {
 		return true
