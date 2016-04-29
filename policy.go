@@ -263,7 +263,7 @@ func isDust(txOut *wire.TxOut, minRelayTxFee btcutil.Amount) bool {
 		return false
 	}
 
-	// Unspendable outputs are considered dust.
+	// Unspendable (non-Record) outputs are considered dust.
 	if txscript.IsUnspendable(txOut.PkScript) {
 		return true
 	}

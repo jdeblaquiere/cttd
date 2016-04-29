@@ -140,7 +140,8 @@ func isNullData(pops []parsedOpcode) bool {
 	// MaxDataCarrierSize bytes).
     
     // OP_REGISTERACCESSKEY and OP_POSTDIRECTORY also push limited data
-    // to stack - at higher cost with limits
+    // to stack - at higher cost with higher limits - (TODO) policy should enforce
+    // higher transaction costs for these Record transactions
 	l := len(pops)
     
 	if l == 1 && pops[0].opcode.value == OP_RETURN {
