@@ -367,8 +367,8 @@ var CTRedNetParams = Params{
 	PrivateKeyID:     0xbb, // starts with 7 (uncompressed)
 
 	// BIP32 hierarchical deterministic extended key magics
-	HDPrivateKeyID: [4]byte{0x04, 0x20, 0xb9, 0x00}, // starts with sprv
-	HDPublicKeyID:  [4]byte{0x04, 0x20, 0xbd, 0x3a}, // starts with spub
+	HDPrivateKeyID: [4]byte{0x02, 0xe8, 0xda, 0x54}, // starts with cprv
+	HDPublicKeyID:  [4]byte{0x02, 0xe8, 0xde, 0x8e}, // starts with cpub
 
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
