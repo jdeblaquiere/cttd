@@ -362,9 +362,9 @@ var CTRedNetParams = Params{
 	RelayNonStdTxs: true,
 
 	// Address encoding magics
-	PubKeyHashAddrID: 0x3f, // starts with S
-	ScriptHashAddrID: 0x7b, // starts with s
-	PrivateKeyID:     0x64, // starts with 4 (uncompressed) or F (compressed)
+	PubKeyHashAddrID: 0x1c, // starts with C
+	ScriptHashAddrID: 0x57, // starts with c
+	PrivateKeyID:     0xbb, // starts with 7 (uncompressed)
 
 	// BIP32 hierarchical deterministic extended key magics
 	HDPrivateKeyID: [4]byte{0x04, 0x20, 0xb9, 0x00}, // starts with sprv
