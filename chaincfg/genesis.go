@@ -140,8 +140,8 @@ var ctredGenesisHash = wire.ShaHash([wire.HashSize]byte{ // Make go vet happy.
     /* 0000006cdaceaa814e1a55fcb49ca018b611ae07fa10258b4f227d855af7037c */
 })
 
-// genesisMerkleRoot is the hash of the first transaction in the genesis block
-// for the main network.
+// ctredGenesisMerkleRoot is the hash of the first transaction in the genesis block
+// for the ciphrtxt red test network.
 var ctredGenesisMerkleRoot = wire.ShaHash([wire.HashSize]byte{ // Make go vet happy.
     0x47, 0x05, 0x37, 0x60, 0x87, 0xb1, 0x55, 0x7c, 
     0x59, 0x87, 0xeb, 0x7a, 0xf3, 0xa7, 0x5b, 0xe1, 
