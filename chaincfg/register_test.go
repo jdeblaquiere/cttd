@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/jadeblaquiere/btcd/chaincfg"
+	. "github.com/jadeblaquiere/ctcd/chaincfg"
 )
 
 // Define some of the required parameters for a user-registered

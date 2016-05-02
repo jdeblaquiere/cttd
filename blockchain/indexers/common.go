@@ -10,9 +10,9 @@ package indexers
 import (
 	"encoding/binary"
 
-	"github.com/jadeblaquiere/btcd/blockchain"
-	"github.com/jadeblaquiere/btcd/database"
-	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/ctcutil"
 )
 
 var (

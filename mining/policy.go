@@ -4,7 +4,7 @@
 
 package mining
 
-import "github.com/jadeblaquiere/btcutil"
+import "github.com/jadeblaquiere/ctcutil"
 
 // Policy houses the policy (configuration parameters) which is used to control
 // the generation of block templates.  See the documentation for

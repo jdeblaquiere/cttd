@@ -12,10 +12,10 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/jadeblaquiere/btcd/chaincfg"
-	"github.com/jadeblaquiere/btcd/database"
-	"github.com/jadeblaquiere/btcd/database/ffldb"
-	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/ctcd/database/ffldb"
+	"github.com/jadeblaquiere/ctcutil"
 )
 
 // dbType is the database type name for this driver.

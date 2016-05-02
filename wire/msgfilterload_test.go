@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 // TestFilterCLearLatest tests the MsgFilterLoad API against the latest protocol

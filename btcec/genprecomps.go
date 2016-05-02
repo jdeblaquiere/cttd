@@ -17,7 +17,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/jadeblaquiere/btcd/btcec"
+	"github.com/jadeblaquiere/ctcd/btcec"
 )
 
 func main() {

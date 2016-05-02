@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"hash/crc32"
 
-	"github.com/jadeblaquiere/btcd/database"
+	"github.com/jadeblaquiere/ctcd/database"
 )
 
 // The serialized write cursor location format is:

@@ -7,8 +7,8 @@ package mining
 import (
 	"time"
 
-	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/ctcutil"
 )
 
 // TxDesc is a descriptor about a transaction in a transaction source along with

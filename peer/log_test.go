@@ -9,7 +9,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/jadeblaquiere/btcd/peer"
+	"github.com/jadeblaquiere/ctcd/peer"
 )
 
 func TestSetLogWriter(t *testing.T) {

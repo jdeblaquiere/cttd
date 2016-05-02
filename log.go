@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jadeblaquiere/btcd/addrmgr"
-	"github.com/jadeblaquiere/btcd/blockchain"
-	"github.com/jadeblaquiere/btcd/blockchain/indexers"
-	"github.com/jadeblaquiere/btcd/database"
-	"github.com/jadeblaquiere/btcd/peer"
-	"github.com/jadeblaquiere/btcd/txscript"
+	"github.com/jadeblaquiere/ctcd/addrmgr"
+	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
+	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/ctcd/peer"
+	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/btcsuite/btclog"
 	"github.com/btcsuite/seelog"
 )
@@ -52,7 +52,7 @@ var subsystemLoggers = map[string]btclog.Logger{
 	"AMGR": amgrLog,
 	"BCDB": bcdbLog,
 	"BMGR": bmgrLog,
-	"BTCD": btcdLog,
+	"CTCD": btcdLog,
 	"CHAN": chanLog,
 	"DISC": discLog,
 	"INDX": indxLog,
@@ -103,7 +103,7 @@ func useLogger(subsystemID string, logger btclog.Logger) {
 	case "BMGR":
 		bmgrLog = logger
 
-	case "BTCD":
+	case "CTCD":
 		btcdLog = logger
 
 	case "CHAN":

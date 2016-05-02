@@ -7,7 +7,7 @@ package wire_test
 import (
 	"io"
 
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 // fakeMessage implements the wire.Message interface and is used to force

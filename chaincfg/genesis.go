@@ -7,7 +7,7 @@ package chaincfg
 import (
 	"time"
 
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 // genesisCoinbaseTx is the coinbase transaction for the genesis blocks for

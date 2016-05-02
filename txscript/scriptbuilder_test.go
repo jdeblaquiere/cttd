@@ -8,7 +8,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/jadeblaquiere/btcd/txscript"
+	"github.com/jadeblaquiere/ctcd/txscript"
 )
 
 // TestScriptBuilderAddOp tests that pushing opcodes to a script via the

@@ -7,8 +7,8 @@ package txscript_test
 import (
 	"testing"
 
-	"github.com/jadeblaquiere/btcd/txscript"
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/txscript"
+	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 // TestBadPC sets the pc to a deliberately bad result then confirms that Step()

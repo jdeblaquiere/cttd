@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/jadeblaquiere/btcd/blockchain"
-	"github.com/jadeblaquiere/btcd/database"
-	"github.com/jadeblaquiere/btcd/limits"
+	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/ctcd/limits"
 	"github.com/btcsuite/btclog"
 )
 

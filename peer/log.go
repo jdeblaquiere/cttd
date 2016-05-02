@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jadeblaquiere/btcd/txscript"
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/txscript"
+	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/btcsuite/btclog"
 )
 

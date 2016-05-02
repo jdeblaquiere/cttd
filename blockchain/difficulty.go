@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 const (

@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jadeblaquiere/btcd/txscript"
+	"github.com/jadeblaquiere/ctcd/txscript"
 )
 
 // TestPushedData ensured the PushedData function extracts the expected data out

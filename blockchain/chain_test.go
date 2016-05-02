@@ -7,10 +7,10 @@ package blockchain_test
 import (
 	"testing"
 
-	"github.com/jadeblaquiere/btcd/blockchain"
-	"github.com/jadeblaquiere/btcd/chaincfg"
-	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/ctcutil"
 )
 
 // TestHaveBlock tests the HaveBlock API to ensure proper functionality.

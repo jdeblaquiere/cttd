@@ -13,8 +13,8 @@ import (
 	"runtime"
 	"runtime/pprof"
 
-	"github.com/jadeblaquiere/btcd/blockchain/indexers"
-	"github.com/jadeblaquiere/btcd/limits"
+	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
+	"github.com/jadeblaquiere/ctcd/limits"
 )
 
 var (

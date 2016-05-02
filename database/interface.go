@@ -8,8 +8,8 @@
 package database
 
 import (
-	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/ctcutil"
 )
 
 // Cursor represents a cursor over key/value pairs and nested buckets of a

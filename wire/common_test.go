@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/davecgh/go-spew/spew"
 )
 

@@ -8,7 +8,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 // These variables are the chain proof-of-work limit parameters for each default

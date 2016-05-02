@@ -20,17 +20,17 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/jadeblaquiere/btcd/addrmgr"
-	"github.com/jadeblaquiere/btcd/blockchain"
-	"github.com/jadeblaquiere/btcd/blockchain/indexers"
-	"github.com/jadeblaquiere/btcd/chaincfg"
-	"github.com/jadeblaquiere/btcd/database"
-	"github.com/jadeblaquiere/btcd/mining"
-	"github.com/jadeblaquiere/btcd/peer"
-	"github.com/jadeblaquiere/btcd/txscript"
-	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/jadeblaquiere/btcutil"
-	"github.com/jadeblaquiere/btcutil/bloom"
+	"github.com/jadeblaquiere/ctcd/addrmgr"
+	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
+	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/ctcd/mining"
+	"github.com/jadeblaquiere/ctcd/peer"
+	"github.com/jadeblaquiere/ctcd/txscript"
+	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/ctcutil/bloom"
 )
 
 const (

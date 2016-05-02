@@ -10,11 +10,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jadeblaquiere/btcd/blockchain"
-	"github.com/jadeblaquiere/btcd/chaincfg"
-	"github.com/jadeblaquiere/btcd/database"
-	_ "github.com/jadeblaquiere/btcd/database/ffldb"
-	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/database"
+	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
+	"github.com/jadeblaquiere/ctcutil"
 )
 
 // This example demonstrates how to create a new chain instance and use

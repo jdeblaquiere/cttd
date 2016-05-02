@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jadeblaquiere/btcd/addrmgr"
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/addrmgr"
+	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 // naTest is used to describe a test to be performed against the NetAddressKey

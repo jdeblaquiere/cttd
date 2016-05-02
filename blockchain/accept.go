@@ -4,7 +4,7 @@
 
 package blockchain
 
-import "github.com/jadeblaquiere/btcutil"
+import "github.com/jadeblaquiere/ctcutil"
 
 // maybeAcceptBlock potentially accepts a block into the memory block chain.
 // It performs several validation checks which depend on its position within

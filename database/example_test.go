@@ -10,11 +10,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jadeblaquiere/btcd/chaincfg"
-	"github.com/jadeblaquiere/btcd/database"
-	_ "github.com/jadeblaquiere/btcd/database/ffldb"
-	"github.com/jadeblaquiere/btcd/wire"
-	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/database"
+	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
+	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/ctcutil"
 )
 
 // This example demonstrates creating a new database.
@@ -22,8 +22,8 @@ func ExampleCreate() {
 	// This example assumes the ffldb driver is imported.
 	//
 	// import (
-	// 	"github.com/jadeblaquiere/btcd/database"
-	// 	_ "github.com/jadeblaquiere/btcd/database/ffldb"
+	// 	"github.com/jadeblaquiere/ctcd/database"
+	// 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
 	// )
 
 	// Create a database and schedule it to be closed and removed on exit.
@@ -48,8 +48,8 @@ func Example_basicUsage() {
 	// This example assumes the ffldb driver is imported.
 	//
 	// import (
-	// 	"github.com/jadeblaquiere/btcd/database"
-	// 	_ "github.com/jadeblaquiere/btcd/database/ffldb"
+	// 	"github.com/jadeblaquiere/ctcd/database"
+	// 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
 	// )
 
 	// Create a database and schedule it to be closed and removed on exit.
@@ -114,8 +114,8 @@ func Example_blockStorageAndRetrieval() {
 	// This example assumes the ffldb driver is imported.
 	//
 	// import (
-	// 	"github.com/jadeblaquiere/btcd/database"
-	// 	_ "github.com/jadeblaquiere/btcd/database/ffldb"
+	// 	"github.com/jadeblaquiere/ctcd/database"
+	// 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
 	// )
 
 	// Create a database and schedule it to be closed and removed on exit.

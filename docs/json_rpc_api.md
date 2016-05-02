@@ -594,10 +594,10 @@ The following is an overview of the RPC methods which are implemented by btcd, b
 |---|---|
 |Method|debuglevel|
 |Parameters|1. _levelspec_ (string)|
-|Description|Dynamically changes the debug logging level.<br />The levelspec can either a debug level or of the form `<subsystem>=<level>,<subsystem2>=<level2>,...`<br />The valid debug levels are `trace`, `debug`, `info`, `warn`, `error`, and `critical`.<br />The valid subsystems are `AMGR`, `ADXR`, `BCDB`, `BMGR`, `BTCD`, `CHAN`, `DISC`, `PEER`, `RPCS`, `SCRP`, `SRVR`, and `TXMP`.<br />Additionally, the special keyword `show` can be used to get a list of the available subsystems.|
+|Description|Dynamically changes the debug logging level.<br />The levelspec can either a debug level or of the form `<subsystem>=<level>,<subsystem2>=<level2>,...`<br />The valid debug levels are `trace`, `debug`, `info`, `warn`, `error`, and `critical`.<br />The valid subsystems are `AMGR`, `ADXR`, `BCDB`, `BMGR`, `CTCD`, `CHAN`, `DISC`, `PEER`, `RPCS`, `SCRP`, `SRVR`, and `TXMP`.<br />Additionally, the special keyword `show` can be used to get a list of the available subsystems.|
 |Returns|string|
 |Example Return|`Done.`|
-|Example `show` Return|`Supported subsystems [AMGR ADXR BCDB BMGR BTCD CHAN DISC PEER RPCS SCRP SRVR TXMP]`|
+|Example `show` Return|`Supported subsystems [AMGR ADXR BCDB BMGR CTCD CHAN DISC PEER RPCS SCRP SRVR TXMP]`|
 [Return to Overview](#ExtMethodOverview)<br />
 
 ***
@@ -991,7 +991,7 @@ package main
 
 import (
 	"github.com/btcsuite/btcrpcclient"
-	"github.com/jadeblaquiere/btcutil"
+	"github.com/jadeblaquiere/ctcutil"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -1051,8 +1051,8 @@ package main
 
 import (
 	"github.com/btcsuite/btcrpcclient"
-	"github.com/jadeblaquiere/btcutil"
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/ctcd/wire"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -1141,8 +1141,8 @@ package main
 
 import (
 	"github.com/btcsuite/btcrpcclient"
-	"github.com/jadeblaquiere/btcutil"
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/ctcd/wire"
 	"io/ioutil"
 	"log"
 	"path/filepath"

@@ -7,8 +7,8 @@ package txscript
 import (
 	"sync"
 
-	"github.com/jadeblaquiere/btcd/btcec"
-	"github.com/jadeblaquiere/btcd/wire"
+	"github.com/jadeblaquiere/ctcd/btcec"
+	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 // sigCacheEntry represents an entry in the SigCache. Entries within the
