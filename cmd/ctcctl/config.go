@@ -24,10 +24,10 @@ const (
 )
 
 var (
-	btcdHomeDir           = btcutil.AppDataDir("btcd", false)
-	btcctlHomeDir         = btcutil.AppDataDir("btcctl", false)
-	btcwalletHomeDir      = btcutil.AppDataDir("btcwallet", false)
-	defaultConfigFile     = filepath.Join(btcctlHomeDir, "btcctl.conf")
+	btcdHomeDir           = btcutil.AppDataDir("ctcd", false)
+	btcctlHomeDir         = btcutil.AppDataDir("ctcctl", false)
+	btcwalletHomeDir      = btcutil.AppDataDir("ctcwallet", false)
+	defaultConfigFile     = filepath.Join(btcctlHomeDir, "ctcctl.conf")
 	defaultRPCServer      = "localhost"
 	defaultRPCCertFile    = filepath.Join(btcdHomeDir, "rpc.cert")
 	defaultWalletCertFile = filepath.Join(btcwalletHomeDir, "rpc.cert")
