@@ -7,6 +7,7 @@ package wire
 import (
 	"crypto/rand"
 	"encoding/binary"
+    //"encoding/hex"
 	"fmt"
 	"io"
 	"math"
@@ -570,5 +571,7 @@ func ShaMulSha256SH(b []byte) ShaHash {
 	first := fastsha256.Sum256(b)
     _, pub := btcec.PrivKeyFromBytes(btcec.S256(),first[:])
     second := pub.SerializeUncompressed()
-	return ShaHash(fastsha256.Sum256(second[:]))
+    third := fastsha256.Sum256(second[:])
+    //fmt.Printf("f,s,t = %s, %s, %s\n", hex.EncodeToString(first[:]), hex.EncodeToString(second), hex.EncodeToString(third[:]))
+	return ShaHash(third)
 }
