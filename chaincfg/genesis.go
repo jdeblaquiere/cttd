@@ -132,12 +132,19 @@ var ctredGenesisCoinbaseTx = wire.MsgTx{
 // genesisHash is the hash of the first block in the block chain for the main
 // network (genesis block).
 var ctredGenesisHash = wire.ShaHash([wire.HashSize]byte{ // Make go vet happy.
-	0x7c, 0x03, 0xf7, 0x5a, 0x85, 0x7d, 0x22, 0x4f, 
+	/* 0x7c, 0x03, 0xf7, 0x5a, 0x85, 0x7d, 0x22, 0x4f, 
     0x8b, 0x25, 0x10, 0xfa, 0x07, 0xae, 0x11, 0xb6, 
     0x18, 0xa0, 0x9c, 0xb4, 0xfc, 0x55, 0x1a, 0x4e, 
-    0x81, 0xaa, 0xce, 0xda, 0x6c, 0x00, 0x00, 0x00,
+    0x81, 0xaa, 0xce, 0xda, 0x6c, 0x00, 0x00, 0x00, */
     
-    /* 0000006cdaceaa814e1a55fcb49ca018b611ae07fa10258b4f227d855af7037c */
+    /* 0000006cdaceaa814e1a55fcb49ca018b611ae07fa10258b4f227d855af7037c for doublesha */
+    
+    0xa9, 0xde, 0x65, 0xe7, 0x47, 0xd6, 0x43, 0x15, 
+    0x22, 0xcf, 0x32, 0x71, 0x63, 0x31, 0xc3, 0x34, 
+    0x2f, 0x00, 0x9a, 0x22, 0x1e, 0x06, 0x64, 0xe0, 
+    0xb8, 0x4c, 0x55, 0xae, 0x9f, 0x07, 0x00, 0x00,
+    
+    /* 0000079fae554cb8e064061e229a002f34c331637132cf221543d647e765dea9 for shamulsha */
 })
 
 // ctredGenesisMerkleRoot is the hash of the first transaction in the genesis block
@@ -160,7 +167,8 @@ var ctredGenesisBlock = wire.MsgBlock{
 		MerkleRoot: ctredGenesisMerkleRoot,        // 3348fb2c1f734c347dbedf2eb8f7d4f0e15ba7f37aeb87597c55b18760370547
 		Timestamp:  time.Unix(0x571ec680, 0), // 2016-04-26 01:38:08 +0000 UTC
 		Bits:       0x1e07ffff,               // 503840767 [00000000ffff0000000000000000000000000000000000000000000000000000]
-		Nonce:      0x001c2639,               // 1844793
+		/* Nonce:      0x001c2639,               // 1844793 using doublesha*/ 
+		Nonce:      0x00033194,               // 209300
 	},
 	Transactions: []*wire.MsgTx{&ctredGenesisCoinbaseTx},
 }

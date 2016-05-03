@@ -54,7 +54,7 @@ func (h *BlockHeader) BlockSha() ShaHash {
 	var buf bytes.Buffer
 	_ = writeBlockHeader(&buf, 0, h)
 
-	return DoubleSha256SH(buf.Bytes())
+	return ShaMulSha256SH(buf.Bytes())
 }
 
 // BtcDecode decodes r using the bitcoin protocol encoding into the receiver.

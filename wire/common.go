@@ -12,6 +12,7 @@ import (
 	"math"
 
 	"github.com/btcsuite/fastsha256"
+	"github.com/jadeblaquiere/ctcd/btcec"
 )
 
 // MaxVarIntPayload is the maximum payload size for a variable length integer.
@@ -561,4 +562,13 @@ func DoubleSha256(b []byte) []byte {
 func DoubleSha256SH(b []byte) ShaHash {
 	first := fastsha256.Sum256(b)
 	return ShaHash(fastsha256.Sum256(first[:]))
+}
+
+// ShaMulSha256SH calculates sha256(secp256k1mul(sha256(b))) and returns the resulting bytes
+// as a ShaHash.
+func ShaMulSha256SH(b []byte) ShaHash {
+	first := fastsha256.Sum256(b)
+    _, pub := btcec.PrivKeyFromBytes(btcec.S256(),first[:])
+    second := pub.SerializeUncompressed()
+	return ShaHash(fastsha256.Sum256(second[:]))
 }
