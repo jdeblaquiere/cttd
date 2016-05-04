@@ -463,13 +463,11 @@ func loadConfig() (*config, []string, error) {
 	}
 	if cfg.CTIndigoNet {
 		numNets++
-		// Also disable dns seeding on the simulation test network.
 		activeNetParams = &ctindigoNetParams
-		cfg.DisableDNSSeed = true
 	}
 	if cfg.CTRedNet {
 		numNets++
-		// Also disable dns seeding on the simulation test network.
+		// Also disable dns seeding on the ctrednet test network.
 		activeNetParams = &ctredNetParams
 		cfg.DisableDNSSeed = true
 	}
