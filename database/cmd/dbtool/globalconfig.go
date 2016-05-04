@@ -36,6 +36,8 @@ type config struct {
 	TestNet3       bool   `long:"testnet" description:"Use the test network"`
 	RegressionTest bool   `long:"regtest" description:"Use the regression test network"`
 	SimNet         bool   `long:"simnet" description:"Use the simulation test network"`
+	CTIndigoNet    bool   `long:"ctindigonet" description:"Use the ciphrtxt indigo network"`
+	CTRedNet       bool   `long:"ctrednet" description:"Use the ciphrtxt red test network"`
 }
 
 // fileExists reports whether the named file or directory exists.
@@ -96,6 +98,14 @@ func setupGlobalConfig() error {
 	if cfg.SimNet {
 		numNets++
 		activeNetParams = &chaincfg.SimNetParams
+	}
+	if cfg.CTIndigoNet {
+		numNets++
+		activeNetParams = &chaincfg.CTIndigoNetParams
+	}
+	if cfg.CTRedNet {
+		numNets++
+		activeNetParams = &chaincfg.CTRedNetParams
 	}
 	if numNets > 1 {
 		return errors.New("The testnet, regtest, and simnet params " +

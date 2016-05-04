@@ -38,6 +38,10 @@ var (
 	// ctredNetPowLimit is the highest proof of work value a ciphrtxt block
 	// can have for the ciphrtxt red test network.  It is the value 2^248 - 1.
 	ctredNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 248), bigOne)
+
+	// ctindigoNetPowLimit is the highest proof of work value a ciphrtxt block
+	// can have for the ciphrtxt red test network.  It is the value 2^248 - 1.
+	ctindigoNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 240), bigOne)
 )
 
 // Checkpoint identifies a known good point in the block chain.  Using
@@ -328,6 +332,55 @@ var SimNetParams = Params{
 	HDCoinType: 115, // ASCII for s
 }
 
+// CTIndigoNetParams defines the network parameters for the ciphrtxt token (CT) ciphertxt-indigo
+// network. The Indigo network is the main ciphrtxt network.   
+var CTIndigoNetParams = Params{
+	Name:        "ctindigonet",
+	Net:         wire.CTIndigoNet,
+	DefaultPort: "17764",
+	DNSSeeds: []string{
+		"indigo.ciphrtxt.com",
+	},
+
+	// Chain parameters
+	GenesisBlock:           &ctindigoGenesisBlock,
+	GenesisHash:            &ctindigoGenesisHash,
+	PowLimit:               ctindigoNetPowLimit,
+	PowLimitBits:           0x1e00ffff,
+	SubsidyHalvingInterval: 210000,
+	ResetMinDifficulty:     true,
+	GenerateSupported:      true,
+
+	// Checkpoints ordered from oldest to newest.
+	Checkpoints: nil,
+
+	// Enforce current block version once majority of the network has
+	// upgraded.
+	// 51% (51 / 100)
+	// Reject previous block versions once a majority of the network has
+	// upgraded.
+	// 75% (75 / 100)
+	BlockEnforceNumRequired: 51,
+	BlockRejectNumRequired:  75,
+	BlockUpgradeNumToCheck:  100,
+
+	// Mempool parameters
+	RelayNonStdTxs: true,
+
+	// Address encoding magics
+	PubKeyHashAddrID: 0x1c, // starts with C
+	ScriptHashAddrID: 0x57, // starts with c
+	PrivateKeyID:     0xbb, // starts with 7 (uncompressed) or U (compressed)
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID: [4]byte{0x02, 0xe8, 0xda, 0x54}, // starts with cprv
+	HDPublicKeyID:  [4]byte{0x02, 0xe8, 0xde, 0x8e}, // starts with cpub
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType: 99, // ASCII for c
+}
+
 // RedNetParams defines the network parameters for the ciphrtxt token (CT) ciphertxt-red
 // network. The Red network is a test network.   
 var CTRedNetParams = Params{
@@ -362,13 +415,13 @@ var CTRedNetParams = Params{
 	RelayNonStdTxs: true,
 
 	// Address encoding magics
-	PubKeyHashAddrID: 0x1c, // starts with C
-	ScriptHashAddrID: 0x57, // starts with c
-	PrivateKeyID:     0xbb, // starts with 7 (uncompressed)
+	PubKeyHashAddrID: 0x50, // starts with Z
+	ScriptHashAddrID: 0x8e, // starts with z
+	PrivateKeyID:     0xa3, // starts with 6 (uncompressed) or R (compressed)
 
 	// BIP32 hierarchical deterministic extended key magics
-	HDPrivateKeyID: [4]byte{0x02, 0xe8, 0xda, 0x54}, // starts with cprv
-	HDPublicKeyID:  [4]byte{0x02, 0xe8, 0xde, 0x8e}, // starts with cpub
+	HDPrivateKeyID: [4]byte{0x04, 0xb2, 0x43, 0x0b}, // starts with zprv
+	HDPublicKeyID:  [4]byte{0x04, 0xb2, 0x47, 0x45}, // starts with zpub
 
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
@@ -487,5 +540,6 @@ func init() {
 	mustRegister(&TestNet3Params)
 	mustRegister(&RegressionNetParams)
 	mustRegister(&SimNetParams)
+	mustRegister(&CTIndigoNetParams)
 	mustRegister(&CTRedNetParams)
 }

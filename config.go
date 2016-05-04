@@ -114,6 +114,7 @@ type config struct {
 	TestNet3           bool          `long:"testnet" description:"Use the test network"`
 	RegressionTest     bool          `long:"regtest" description:"Use the regression test network"`
 	SimNet             bool          `long:"simnet" description:"Use the simulation test network"`
+	CTIndigoNet        bool          `long:"ctindigonet" description:"Use the ciphrtxt-indigo main network"`
 	CTRedNet           bool          `long:"ctrednet" description:"Use the ciphrtxt-red test network"`
 	DisableCheckpoints bool          `long:"nocheckpoints" description:"Disable built-in checkpoints.  Don't do this unless you know what you're doing."`
 	DbType             string        `long:"dbtype" description:"Database backend to use for the Block Chain"`
@@ -458,6 +459,12 @@ func loadConfig() (*config, []string, error) {
 		numNets++
 		// Also disable dns seeding on the simulation test network.
 		activeNetParams = &simNetParams
+		cfg.DisableDNSSeed = true
+	}
+	if cfg.CTIndigoNet {
+		numNets++
+		// Also disable dns seeding on the simulation test network.
+		activeNetParams = &ctindigoNetParams
 		cfg.DisableDNSSeed = true
 	}
 	if cfg.CTRedNet {

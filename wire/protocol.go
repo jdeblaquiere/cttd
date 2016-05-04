@@ -124,6 +124,9 @@ const (
 	// SimNet represents the simulation test network.
 	SimNet BitcoinNet = 0x12141c16
 
+	// CTIndigoNet represents the ciphrtxt-indigo test network.
+	CTIndigoNet BitcoinNet = 0xbedeadfe
+
 	// CTRedNet represents the ciphrtxt-red test network.
 	CTRedNet BitcoinNet = 0xdeadbeef
 )

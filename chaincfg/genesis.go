@@ -86,8 +86,8 @@ var genesisBlock = wire.MsgBlock{
 	Transactions: []*wire.MsgTx{&genesisCoinbaseTx},
 }
 
-// ctredGenesisCoinbaseTx is the coinbase transaction for the ciphrtxt red network.
-var ctredGenesisCoinbaseTx = wire.MsgTx{
+// ctindigoGenesisCoinbaseTx is the coinbase transaction for the ciphrtxt indigo network.
+var ctindigoGenesisCoinbaseTx = wire.MsgTx{
 	Version: 1,
 	TxIn: []*wire.TxIn{
 		{
@@ -131,6 +131,61 @@ var ctredGenesisCoinbaseTx = wire.MsgTx{
 
 // genesisHash is the hash of the first block in the block chain for the main
 // network (genesis block).
+var ctindigoGenesisHash = wire.ShaHash([wire.HashSize]byte{ // Make go vet happy.
+	/* 0x7c, 0x03, 0xf7, 0x5a, 0x85, 0x7d, 0x22, 0x4f, 
+    0x8b, 0x25, 0x10, 0xfa, 0x07, 0xae, 0x11, 0xb6, 
+    0x18, 0xa0, 0x9c, 0xb4, 0xfc, 0x55, 0x1a, 0x4e, 
+    0x81, 0xaa, 0xce, 0xda, 0x6c, 0x00, 0x00, 0x00, */
+    
+    /* 0000006cdaceaa814e1a55fcb49ca018b611ae07fa10258b4f227d855af7037c for doublesha */
+    
+    0x5d, 0xaa, 0x11, 0x36, 0xfb, 0x34, 0x5a, 0xef, 
+    0x58, 0x91, 0xae, 0x23, 0x5c, 0x47, 0x29, 0x26, 
+    0xa0, 0x36, 0x1e, 0x01, 0x07, 0xc8, 0x17, 0x9a, 
+    0x4f, 0x69, 0x53, 0xa7, 0xff, 0x00, 0x00, 0x00,
+    
+    /* 000000ffa753694f9a17c807011e36a02629475c23ae9158ef5a34fb3611aa5d for shamulsha */
+})
+
+// ctindigoGenesisMerkleRoot is the hash of the first transaction in the genesis block
+// for the ciphrtxt red test network.
+var ctindigoGenesisMerkleRoot = wire.ShaHash([wire.HashSize]byte{ // Make go vet happy.
+    /* 0x47, 0x05, 0x37, 0x60, 0x87, 0xb1, 0x55, 0x7c, 
+    0x59, 0x87, 0xeb, 0x7a, 0xf3, 0xa7, 0x5b, 0xe1, 
+    0xf0, 0xd4, 0xf7, 0xb8, 0x2e, 0xdf, 0xbe, 0x7d, 
+    0x34, 0x4c, 0x73, 0x1f, 0x2c, 0xfb, 0x48, 0x33, */
+    
+    /* 3348fb2c1f734c347dbedf2eb8f7d4f0e15ba7f37aeb87597c55b18760370547 for 0x1e07ffff */
+    
+    0x93, 0xbe, 0xbd, 0x22, 0x01, 0xd2, 0x90, 0x94, 
+    0xaf, 0xb8, 0x33, 0xac, 0x5b, 0x22, 0x3e, 0x4d, 
+    0xaa, 0xf8, 0x37, 0x23, 0xe1, 0xac, 0xdb, 0xf4, 
+    0x90, 0xa2, 0x3e, 0x54, 0x03, 0x98, 0xd6, 0x27,
+    
+    /* 27d69803543ea290f4dbace12337f8aa4d3e225bac33b8af9490d20122bdbe93 for 0x1e0fffff */
+})
+
+// genesisBlock defines the genesis block of the block chain which serves as the
+// public transaction ledger for the main network.
+var ctindigoGenesisBlock = wire.MsgBlock{
+	Header: wire.BlockHeader{
+		Version:    1,
+		PrevBlock:  wire.ShaHash{},           // 0000000000000000000000000000000000000000000000000000000000000000
+		MerkleRoot: ctindigoGenesisMerkleRoot,        // 27d69803543ea290f4dbace12337f8aa4d3e225bac33b8af9490d20122bdbe93
+		Timestamp:  time.Unix(0x572a2ee8, 0), // 2016-05-04 17:18:32 +0000 UTC
+		// Bits:       0x1e07ffff,               // 503840767 [000007ffff000000000000000000000000000000000000000000000000000000] for doublesha 
+		Bits:       0x1e0fffff,               // 504365055 [00000fffff000000000000000000000000000000000000000000000000000000] for shamulsha
+		// Nonce:      0x001c2639,               // 1844793 using doublesha
+		Nonce:      0x00094532,              // 607538
+	},
+	Transactions: []*wire.MsgTx{&ctredGenesisCoinbaseTx},
+}
+
+// ctredGenesisCoinbaseTx is the coinbase transaction for the ciphrtxt red network.
+var ctredGenesisCoinbaseTx = ctindigoGenesisCoinbaseTx
+
+// genesisHash is the hash of the first block in the block chain for the main
+// network (genesis block).
 var ctredGenesisHash = wire.ShaHash([wire.HashSize]byte{ // Make go vet happy.
 	/* 0x7c, 0x03, 0xf7, 0x5a, 0x85, 0x7d, 0x22, 0x4f, 
     0x8b, 0x25, 0x10, 0xfa, 0x07, 0xae, 0x11, 0xb6, 
@@ -162,7 +217,7 @@ var ctredGenesisMerkleRoot = wire.ShaHash([wire.HashSize]byte{ // Make go vet ha
     0x79, 0x8f, 0xfa, 0x1c, 0x13, 0x55, 0x4b, 0x61, 
     0x0e, 0x29, 0xb7, 0x7c, 0x63, 0x81, 0x49, 0x16,
     
-    /* 164981637cb7290e614b55131cfa8f7997ae70b2f455b13a0aa8b0cdb2b4098a */
+    /* 164981637cb7290e614b55131cfa8f7997ae70b2f455b13a0aa8b0cdb2b4098a for 0x1f07ffff */
 })
 
 // genesisBlock defines the genesis block of the block chain which serves as the
