@@ -321,7 +321,8 @@ func (b *blockManager) startSync(peers *list.List) {
 		// downloads when in regression test mode.
 		if b.nextCheckpoint != nil &&
 			best.Height < b.nextCheckpoint.Height &&
-			!cfg.RegressionTest && !cfg.DisableCheckpoints {
+			!cfg.DisableCheckpoints {
+			// !cfg.RegressionTest && !cfg.DisableCheckpoints {
 
 			bestPeer.PushGetHeadersMsg(locator, b.nextCheckpoint.Hash)
 			b.headersFirstMode = true
@@ -343,7 +344,8 @@ func (b *blockManager) isSyncCandidate(sp *serverPeer) bool {
 	// Typically a peer is not a candidate for sync if it's not a full node,
 	// however regression test is special in that the regression tool is
 	// not a full node and still needs to be considered a sync candidate.
-	if cfg.RegressionTest {
+	// if cfg.RegressionTest {
+	if false {
 		// The peer is not a candidate if it's not coming from localhost
 		// or the hostname can't be determined for some reason.
 		host, _, err := net.SplitHostPort(sp.Addr())
@@ -524,7 +526,8 @@ func (b *blockManager) handleBlockMsg(bmsg *blockMsg) {
 		// the peer or ignore the block when we're in regression test
 		// mode in this case so the chain code is actually fed the
 		// duplicate blocks.
-		if !cfg.RegressionTest {
+		// if !cfg.RegressionTest {
+		if true {
 			bmgrLog.Warnf("Got unrequested block %v from %s -- "+
 				"disconnecting", blockSha, bmsg.peer.Addr())
 			bmsg.peer.Disconnect()
@@ -1432,7 +1435,8 @@ func newBlockManager(s *server, indexManager blockchain.IndexManager) (*blockMan
 // in regression test mode and it already exists.
 func removeRegressionDB(dbPath string) error {
 	// Don't do anything if not in regression test mode.
-	if !cfg.RegressionTest {
+	// if !cfg.RegressionTest {
+	if true {
 		return nil
 	}
 

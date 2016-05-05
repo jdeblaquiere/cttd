@@ -111,10 +111,6 @@ type config struct {
 	OnionProxyPass     string        `long:"onionpass" default-mask:"-" description:"Password for onion proxy server"`
 	NoOnion            bool          `long:"noonion" description:"Disable connecting to tor hidden services"`
 	TorIsolation       bool          `long:"torisolation" description:"Enable Tor stream isolation by randomizing user credentials for each connection."`
-	TestNet3           bool          `long:"testnet" description:"Use the test network"`
-	RegressionTest     bool          `long:"regtest" description:"Use the regression test network"`
-	SimNet             bool          `long:"simnet" description:"Use the simulation test network"`
-	CTIndigoNet        bool          `long:"ctindigonet" description:"Use the ciphrtxt-indigo main network"`
 	CTRedNet           bool          `long:"ctrednet" description:"Use the ciphrtxt-red test network"`
 	DisableCheckpoints bool          `long:"nocheckpoints" description:"Disable built-in checkpoints.  Don't do this unless you know what you're doing."`
 	DbType             string        `long:"dbtype" description:"Database backend to use for the Block Chain"`
@@ -394,7 +390,8 @@ func loadConfig() (*config, []string, error) {
 	// Load additional config from file.
 	var configFileError error
 	parser := newConfigParser(&cfg, &serviceOpts, flags.Default)
-	if !(preCfg.RegressionTest || preCfg.SimNet) || preCfg.ConfigFile !=
+	//if !(preCfg.RegressionTest || preCfg.SimNet) || preCfg.ConfigFile !=
+	if !(false) || preCfg.ConfigFile !=
 		defaultConfigFile {
 
 		err := flags.NewIniParser(parser).ParseFile(preCfg.ConfigFile)
@@ -410,7 +407,8 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Don't add peers from the config file when in regression test mode.
-	if preCfg.RegressionTest && len(cfg.AddPeers) > 0 {
+	//if preCfg.RegressionTest && len(cfg.AddPeers) > 0 {
+	if false && len(cfg.AddPeers) > 0 {
 		cfg.AddPeers = nil
 	}
 
@@ -447,24 +445,6 @@ func loadConfig() (*config, []string, error) {
 	numNets := 0
 	// Count number of network flags passed; assign active network params
 	// while we're at it
-	if cfg.TestNet3 {
-		numNets++
-		activeNetParams = &testNet3Params
-	}
-	if cfg.RegressionTest {
-		numNets++
-		activeNetParams = &regressionNetParams
-	}
-	if cfg.SimNet {
-		numNets++
-		// Also disable dns seeding on the simulation test network.
-		activeNetParams = &simNetParams
-		cfg.DisableDNSSeed = true
-	}
-	if cfg.CTIndigoNet {
-		numNets++
-		activeNetParams = &ctindigoNetParams
-	}
 	if cfg.CTRedNet {
 		numNets++
 		// Also disable dns seeding on the ctrednet test network.

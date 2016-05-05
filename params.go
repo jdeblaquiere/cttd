@@ -11,7 +11,7 @@ import (
 
 // activeNetParams is a pointer to the parameters specific to the
 // currently active bitcoin network.
-var activeNetParams = &mainNetParams
+var activeNetParams = &ctindigoNetParams
 
 // params is used to group parameters for various networks such as the main
 // network and test networks.
@@ -59,7 +59,7 @@ var simNetParams = params{
 // (wire.CTIndigoNet).
 var ctindigoNetParams = params{
 	Params:  &chaincfg.CTIndigoNetParams,
-	rpcPort: "17765",
+	rpcPort: "7765",
 }
 
 // ctredNetParams contains parameters specific to the CT Red test network

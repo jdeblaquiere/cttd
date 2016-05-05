@@ -1745,7 +1745,8 @@ func handleGetBlockTemplateRequest(s *rpcServer, request *btcjson.TemplateReques
 	// way to relay a found block or receive transactions to work on.
 	// However, allow this state when running in the regression test or
 	// simulation test mode.
-	if !(cfg.RegressionTest || cfg.SimNet) && s.server.ConnectedCount() == 0 {
+	//if !(cfg.RegressionTest || cfg.SimNet) && s.server.ConnectedCount() == 0 {
+	if !(false) && s.server.ConnectedCount() == 0 {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCClientNotConnected,
 			Message: "Bitcoin is not connected",
@@ -2009,7 +2010,8 @@ func handleGetInfo(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (in
 		Connections:     s.server.ConnectedCount(),
 		Proxy:           cfg.Proxy,
 		Difficulty:      getDifficultyRatio(best.Bits),
-		TestNet:         cfg.TestNet3,
+		//TestNet:         cfg.TestNet3,
+		TestNet:         false,
 		RelayFee:        cfg.minRelayTxFee.ToBTC(),
 	}
 
@@ -2063,7 +2065,8 @@ func handleGetMiningInfo(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 		HashesPerSec:     int64(s.server.cpuMiner.HashesPerSecond()),
 		NetworkHashPS:    networkHashesPerSec,
 		PooledTx:         uint64(s.server.txMemPool.Count()),
-		TestNet:          cfg.TestNet3,
+		// TestNet:          cfg.TestNet3,
+		TestNet:          false,
 	}
 	return &result, nil
 }
@@ -2838,7 +2841,8 @@ func handleGetWork(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (in
 	// way to relay a found block or receive transactions to work on.
 	// However, allow this state when running in the regression test or
 	// simulation test mode.
-	if !(cfg.RegressionTest || cfg.SimNet) && s.server.ConnectedCount() == 0 {
+	// if !(cfg.RegressionTest || cfg.SimNet) && s.server.ConnectedCount() == 0 {
+	if !(false) && s.server.ConnectedCount() == 0 {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCClientNotConnected,
 			Message: "Bitcoin is not connected",

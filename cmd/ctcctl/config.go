@@ -101,9 +101,6 @@ type config struct {
 	Proxy         string `long:"proxy" description:"Connect via SOCKS5 proxy (eg. 127.0.0.1:9050)"`
 	ProxyUser     string `long:"proxyuser" description:"Username for proxy server"`
 	ProxyPass     string `long:"proxypass" default-mask:"-" description:"Password for proxy server"`
-	TestNet3      bool   `long:"testnet" description:"Connect to testnet"`
-	SimNet        bool   `long:"simnet" description:"Connect to the simulation test network"`
-	CTIndigoNet   bool   `long:"ctindigonet" description:"Connect to the ciphrtxt indigo network"`
 	CTRedNet      bool   `long:"ctrednet" description:"Connect to the ciphrtxt red test network"`
 	TLSSkipVerify bool   `long:"skipverify" description:"Do not verify tls certificates (not recommended!)"`
 	Wallet        bool   `long:"wallet" description:"Connect to wallet"`
@@ -111,29 +108,11 @@ type config struct {
 
 // normalizeAddress returns addr with the passed default port appended if
 // there is not already a port specified.
-func normalizeAddress(addr string, useTestNet3, useSimNet, useCTIndigoNet, useCTRedNet, useWallet bool) string {
+func normalizeAddress(addr string, useCTRedNet, useWallet bool) string {
 	_, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		var defaultPort string
 		switch {
-		case useTestNet3:
-			if useWallet {
-				defaultPort = "18332"
-			} else {
-				defaultPort = "18334"
-			}
-		case useSimNet:
-			if useWallet {
-				defaultPort = "18554"
-			} else {
-				defaultPort = "18556"
-			}
-		case useCTIndigoNet:
-			if useWallet {
-				defaultPort = "17766"
-			} else {
-				defaultPort = "17765"
-			}
 		case useCTRedNet:
 			if useWallet {
 				defaultPort = "17763"
@@ -142,9 +121,9 @@ func normalizeAddress(addr string, useTestNet3, useSimNet, useCTIndigoNet, useCT
 			}
 		default:
 			if useWallet {
-				defaultPort = "8332"
+				defaultPort = "7766"
 			} else {
-				defaultPort = "8334"
+				defaultPort = "7765"
 			}
 		}
 
@@ -252,10 +231,7 @@ func loadConfig() (*config, []string, error) {
 
 	// Multiple networks can't be selected simultaneously.
 	numNets := 0
-	if cfg.TestNet3 {
-		numNets++
-	}
-	if cfg.SimNet {
+	if cfg.CTRedNet {
 		numNets++
 	}
 	if numNets > 1 {
@@ -275,10 +251,9 @@ func loadConfig() (*config, []string, error) {
 	// Handle environment variable expansion in the RPC certificate path.
 	cfg.RPCCert = cleanAndExpandPath(cfg.RPCCert)
 
-	// Add default port to RPC server based on --testnet and --wallet flags
+	// Add default port to RPC server based on --ctrednet and --wallet flags
 	// if needed.
-	cfg.RPCServer = normalizeAddress(cfg.RPCServer, cfg.TestNet3,
-		cfg.SimNet, cfg.CTIndigoNet, cfg.CTRedNet, cfg.Wallet)
+	cfg.RPCServer = normalizeAddress(cfg.RPCServer, cfg.CTRedNet, cfg.Wallet)
 
 	return &cfg, remainingArgs, nil
 }

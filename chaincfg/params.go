@@ -337,10 +337,8 @@ var SimNetParams = Params{
 var CTIndigoNetParams = Params{
 	Name:        "ctindigonet",
 	Net:         wire.CTIndigoNet,
-	DefaultPort: "17764",
-	DNSSeeds: []string{
-		"indigo.ciphrtxt.com",
-	},
+	DefaultPort: "7764",
+	DNSSeeds: []string{},
 
 	// Chain parameters
 	GenesisBlock:           &ctindigoGenesisBlock,

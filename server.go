@@ -361,7 +361,8 @@ func (sp *serverPeer) OnVersion(p *peer.Peer, msg *wire.MsgVersion) {
 	// on the simulation test network since it is only intended to connect
 	// to specified peers and actively avoids advertising and connecting to
 	// discovered peers.
-	if !cfg.SimNet {
+	// if !cfg.SimNet {
+	if true {
 		addrManager := sp.server.addrManager
 		// Outbound connections.
 		if !p.Inbound() {
@@ -841,7 +842,8 @@ func (sp *serverPeer) OnGetAddr(p *peer.Peer, msg *wire.MsgGetAddr) {
 	// network.  This helps prevent the network from becoming another
 	// public test network since it will not be able to learn about other
 	// peers that have not specifically been provided.
-	if cfg.SimNet {
+	// if cfg.SimNet {
+	if false {
 		return
 	}
 
@@ -865,7 +867,8 @@ func (sp *serverPeer) OnAddr(p *peer.Peer, msg *wire.MsgAddr) {
 	// helps prevent the network from becoming another public test network
 	// since it will not be able to learn about other peers that have not
 	// specifically been provided.
-	if cfg.SimNet {
+	// if cfg.SimNet {
+	if false {
 		return
 	}
 
@@ -1807,7 +1810,8 @@ out:
 		// simulation test network.  The simulation network is only
 		// intended to connect to specified peers and actively avoid
 		// advertising and connecting to discovered peers.
-		if cfg.SimNet {
+		// if cfg.SimNet {
+		if false {
 			continue
 		}
 
