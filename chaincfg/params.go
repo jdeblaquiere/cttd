@@ -40,8 +40,8 @@ var (
 	ctredNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 248), bigOne)
 
 	// ctindigoNetPowLimit is the highest proof of work value a ciphrtxt block
-	// can have for the ciphrtxt red test network.  It is the value 2^248 - 1.
-	ctindigoNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 240), bigOne)
+	// can have for the ciphrtxt indigo network.  It is the value 2^248 - 1.
+	ctindigoNetPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 248), bigOne)
 )
 
 // Checkpoint identifies a known good point in the block chain.  Using
@@ -346,7 +346,7 @@ var CTIndigoNetParams = Params{
 	GenesisBlock:           &ctindigoGenesisBlock,
 	GenesisHash:            &ctindigoGenesisHash,
 	PowLimit:               ctindigoNetPowLimit,
-	PowLimitBits:           0x1e00ffff,
+	PowLimitBits:           0x1f07ffff,
 	SubsidyHalvingInterval: 210000,
 	ResetMinDifficulty:     true,
 	GenerateSupported:      true,
