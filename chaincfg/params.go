@@ -337,7 +337,7 @@ var SimNetParams = Params{
 var CTIndigoNetParams = Params{
 	Name:        "ctindigonet",
 	Net:         wire.CTIndigoNet,
-	DefaultPort: "7764",
+	DefaultPort: "8080",
 	DNSSeeds: []string{},
 
 	// Chain parameters
