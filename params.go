@@ -59,7 +59,7 @@ var simNetParams = params{
 // (wire.CTIndigoNet).
 var ctindigoNetParams = params{
 	Params:  &chaincfg.CTIndigoNetParams,
-	rpcPort: "8080",
+	rpcPort: "8081",
 }
 
 // ctredNetParams contains parameters specific to the CT Red test network
