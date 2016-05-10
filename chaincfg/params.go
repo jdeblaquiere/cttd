@@ -338,9 +338,7 @@ var CTIndigoNetParams = Params{
 	Name:        "ctindigonet",
 	Net:         wire.CTIndigoNet,
 	DefaultPort: "7764",
-	DNSSeeds: []string{
-		"coopr8.com",
-	},
+	DNSSeeds: []string{},
 
 	// Chain parameters
 	GenesisBlock:           &ctindigoGenesisBlock,
