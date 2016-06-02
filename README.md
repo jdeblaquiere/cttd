@@ -1,6 +1,7 @@
 # ctcd
 
 ctcd is the ciphrtxt token coin node implementation. It is derived from btcd (see btcd information below). In addition to having unique network identifiers ctcd changes the POW algorithm and extends the bitcoin protocol by creating two additional script opcodes to support the ciphrtxt network. The extension script opcodes are:
+
 1. OP_REGISTERACCESSKEY (OP_NOP5) - used to register a 101-byte access key which includes the information below. In order for the NAK to be considered valid by the msgstore service it must return a fee to the miner (coinbase transaction)
  * (04 bytes) unsigned integer unix time for expiration of key
  * (33 bytes) compressed ECC public key (EC point)
