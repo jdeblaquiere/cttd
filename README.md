@@ -1,3 +1,13 @@
+# ctcd
+
+ctcd is the ciphrtxt token coin node implementation. It is derived from btcd (see btcd information below). In addition to having unique network identifiers ctcd changes the POW algorithm and extends the bitcoin protocol by creating two additional script opcodes to support the ciphrtxt network. The extension script opcodes are:
+1. OP_REGISTERACCESSKEY (OP_NOP5) - used to register a 101-byte access key which includes the information below. In order for the NAK to be considered valid by the msgstore service it must return a fee to the miner (coinbase transaction)
+ * (04 bytes) unsigned integer unix time for expiration of key
+ * (33 bytes) compressed ECC public key (EC point)
+ * (64 bytes) ecdsa signature (r,s) for the time and key
+
+2. OP_POSTDIRECTORY (OP_NOP7) - used to post a directory object (documentation pending)
+
 btcd
 ====
 
@@ -57,10 +67,10 @@ NOTE: The `GOROOT` and `GOPATH` above must not be the same path.  It is
 recommended that `GOPATH` is set to a directory in your home directory such as
 `~/goprojects` to avoid write permission issues.
 
-- Run the following command to obtain btcd, all dependencies, and install it:
+- Run the following command to obtain ctcd, all dependencies, and install it:
 
 ```bash
-$ go get -u github.com/jadeblaquiere/btcd/...
+$ go get -u github.com/jadeblaquiere/ctcd/...
 ```
 
 - btcd (and utilities) will now be installed in either ```$GOROOT/bin``` or
@@ -76,26 +86,26 @@ Install a newer MSI
 
 #### Linux/BSD/MacOSX/POSIX - Build from Source
 
-- Run the following command to update btcd, all dependencies, and install it:
+- Run the following command to update ctcd, all dependencies, and install it:
 
 ```bash
-$ go get -u -v github.com/jadeblaquiere/btcd/...
+$ go get -u -v github.com/jadeblaquiere/ctcd/...
 ```
 
 ## Getting Started
 
-btcd has several configuration options avilable to tweak how it runs, but all
+ctcd has several configuration options avilable to tweak how it runs, but all
 of the basic operations described in the intro section work with zero
 configuration.
 
 #### Windows (Installed from MSI)
 
-Launch btcd from your Start menu.
+Launch ctcd from your Start menu.
 
 #### Linux/BSD/POSIX/Source
 
 ```bash
-$ ./btcd
+$ ./ctcd
 ````
 
 ## IRC
