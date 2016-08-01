@@ -9,16 +9,10 @@ import (
 	"path/filepath"
 	"runtime"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/limits"
-=======
-	"github.com/btcsuite/btcd/blockchain"
-	"github.com/btcsuite/btcd/blockchain/indexers"
-	"github.com/btcsuite/btcd/database"
-	"github.com/btcsuite/btcd/limits"
->>>>>>> btcsuite/master
 	"github.com/btcsuite/btclog"
 )
 

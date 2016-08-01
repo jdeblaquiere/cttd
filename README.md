@@ -69,12 +69,6 @@ recommended that `GOPATH` is set to a directory in your home directory such as
 `~/goprojects` to avoid write permission issues.  It is also recommended to add
 `$GOPATH/bin` to your `PATH` at this point.
 
-<<<<<<< HEAD
-- Run the following command to obtain ctcd, all dependencies, and install it:
-
-```bash
-$ go get -u github.com/jadeblaquiere/ctcd/...
-=======
 **NOTE:** If you are using Go 1.5, you must manually enable the vendor
 experiment by setting the `GO15VENDOREXPERIMENT` environment variable to `1`.
 This step is not required for Go 1.6.
@@ -87,7 +81,6 @@ $ git clone https://github.com/btcsuite/btcd $GOPATH/src/github.com/btcsuite/btc
 $ cd $GOPATH/src/github.com/btcsuite/btcd
 $ glide install
 $ go install . ./cmd/...
->>>>>>> btcsuite/master
 ```
 
 - btcd (and utilities) will now be installed in ```$GOPATH/bin```.  If you did
@@ -102,19 +95,12 @@ Install a newer MSI
 
 #### Linux/BSD/MacOSX/POSIX - Build from Source
 
-<<<<<<< HEAD
-- Run the following command to update ctcd, all dependencies, and install it:
-
-```bash
-$ go get -u -v github.com/jadeblaquiere/ctcd/...
-=======
 - Run the following commands to update btcd, all dependencies, and install it:
 
 ```bash
 $ cd $GOPATH/src/github.com/btcsuite/btcd
 $ git pull && glide install
 $ go install . ./cmd/...
->>>>>>> btcsuite/master
 ```
 
 ## Getting Started
