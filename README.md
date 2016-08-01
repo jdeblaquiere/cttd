@@ -77,8 +77,8 @@ This step is not required for Go 1.6.
 
 ```bash
 $ go get -u github.com/Masterminds/glide
-$ git clone https://github.com/btcsuite/btcd $GOPATH/src/github.com/btcsuite/btcd
-$ cd $GOPATH/src/github.com/btcsuite/btcd
+$ git clone https://github.com/jadeblaquiere/ctcd $GOPATH/src/github.com/jadeblaquiere/ctcd
+$ cd $GOPATH/src/github.com/jadeblaquiere/ctcd
 $ glide install
 $ go install . ./cmd/...
 ```
@@ -98,7 +98,7 @@ Install a newer MSI
 - Run the following commands to update btcd, all dependencies, and install it:
 
 ```bash
-$ cd $GOPATH/src/github.com/btcsuite/btcd
+$ cd $GOPATH/src/github.com/jadeblaquiere/ctcd
 $ git pull && glide install
 $ go install . ./cmd/...
 ```
