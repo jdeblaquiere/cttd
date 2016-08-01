@@ -66,18 +66,33 @@ $ go env GOROOT GOPATH
 
 NOTE: The `GOROOT` and `GOPATH` above must not be the same path.  It is
 recommended that `GOPATH` is set to a directory in your home directory such as
-`~/goprojects` to avoid write permission issues.
+`~/goprojects` to avoid write permission issues.  It is also recommended to add
+`$GOPATH/bin` to your `PATH` at this point.
 
+<<<<<<< HEAD
 - Run the following command to obtain ctcd, all dependencies, and install it:
 
 ```bash
 $ go get -u github.com/jadeblaquiere/ctcd/...
+=======
+**NOTE:** If you are using Go 1.5, you must manually enable the vendor
+experiment by setting the `GO15VENDOREXPERIMENT` environment variable to `1`.
+This step is not required for Go 1.6.
+
+- Run the following commands to obtain btcd, all dependencies, and install it:
+
+```bash
+$ go get -u github.com/Masterminds/glide
+$ git clone https://github.com/btcsuite/btcd $GOPATH/src/github.com/btcsuite/btcd
+$ cd $GOPATH/src/github.com/btcsuite/btcd
+$ glide install
+$ go install . ./cmd/...
+>>>>>>> btcsuite/master
 ```
 
-- btcd (and utilities) will now be installed in either ```$GOROOT/bin``` or
-  ```$GOPATH/bin``` depending on your configuration.  If you did not already
-  add the bin directory to your system path during Go installation, we
-  recommend you do so now.
+- btcd (and utilities) will now be installed in ```$GOPATH/bin```.  If you did
+  not already add the bin directory to your system path during Go installation,
+  we recommend you do so now.
 
 ## Updating
 
@@ -87,10 +102,19 @@ Install a newer MSI
 
 #### Linux/BSD/MacOSX/POSIX - Build from Source
 
+<<<<<<< HEAD
 - Run the following command to update ctcd, all dependencies, and install it:
 
 ```bash
 $ go get -u -v github.com/jadeblaquiere/ctcd/...
+=======
+- Run the following commands to update btcd, all dependencies, and install it:
+
+```bash
+$ cd $GOPATH/src/github.com/btcsuite/btcd
+$ git pull && glide install
+$ go install . ./cmd/...
+>>>>>>> btcsuite/master
 ```
 
 ## Getting Started

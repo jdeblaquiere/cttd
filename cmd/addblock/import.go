@@ -11,10 +11,18 @@ import (
 	"sync"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
+=======
+	"github.com/btcsuite/btcd/blockchain"
+	"github.com/btcsuite/btcd/blockchain/indexers"
+	"github.com/btcsuite/btcd/database"
+	"github.com/btcsuite/btcd/wire"
+	"github.com/btcsuite/btcutil"
+>>>>>>> btcsuite/master
 )
 
 var zeroHash = wire.ShaHash{}
@@ -31,7 +39,6 @@ type importResults struct {
 type blockImporter struct {
 	db                database.DB
 	chain             *blockchain.BlockChain
-	medianTime        blockchain.MedianTimeSource
 	r                 io.ReadSeeker
 	processQueue      chan []byte
 	doneChan          chan bool
@@ -128,8 +135,7 @@ func (bi *blockImporter) processBlock(serializedBlock []byte) (bool, error) {
 
 	// Ensure the blocks follows all of the chain rules and match up to the
 	// known checkpoints.
-	isOrphan, err := bi.chain.ProcessBlock(block, bi.medianTime,
-		blockchain.BFFastAdd)
+	isOrphan, err := bi.chain.ProcessBlock(block, blockchain.BFFastAdd)
 	if err != nil {
 		return false, err
 	}
@@ -295,9 +301,41 @@ func (bi *blockImporter) Import() chan *importResults {
 // newBlockImporter returns a new importer for the provided file reader seeker
 // and database.
 func newBlockImporter(db database.DB, r io.ReadSeeker) (*blockImporter, error) {
+	// Create the transaction and address indexes if needed.
+	//
+	// CAUTION: the txindex needs to be first in the indexes array because
+	// the addrindex uses data from the txindex during catchup.  If the
+	// addrindex is run first, it may not have the transactions from the
+	// current block indexed.
+	var indexes []indexers.Indexer
+	if cfg.TxIndex || cfg.AddrIndex {
+		// Enable transaction index if address index is enabled since it
+		// requires it.
+		if !cfg.TxIndex {
+			log.Infof("Transaction index enabled because it is " +
+				"required by the address index")
+			cfg.TxIndex = true
+		} else {
+			log.Info("Transaction index is enabled")
+		}
+		indexes = append(indexes, indexers.NewTxIndex(db))
+	}
+	if cfg.AddrIndex {
+		log.Info("Address index is enabled")
+		indexes = append(indexes, indexers.NewAddrIndex(db, activeNetParams))
+	}
+
+	// Create an index manager if any of the optional indexes are enabled.
+	var indexManager blockchain.IndexManager
+	if len(indexes) > 0 {
+		indexManager = indexers.NewManager(db, indexes)
+	}
+
 	chain, err := blockchain.New(&blockchain.Config{
-		DB:          db,
-		ChainParams: activeNetParams,
+		DB:           db,
+		ChainParams:  activeNetParams,
+		TimeSource:   blockchain.NewMedianTime(),
+		IndexManager: indexManager,
 	})
 	if err != nil {
 		return nil, err
@@ -311,7 +349,6 @@ func newBlockImporter(db database.DB, r io.ReadSeeker) (*blockImporter, error) {
 		errChan:      make(chan error),
 		quit:         make(chan struct{}),
 		chain:        chain,
-		medianTime:   blockchain.NewMedianTime(),
 		lastLogTime:  time.Now(),
 	}, nil
 }
