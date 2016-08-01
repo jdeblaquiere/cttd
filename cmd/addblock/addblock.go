@@ -10,6 +10,7 @@ import (
 	"runtime"
 
 	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/limits"
 	"github.com/btcsuite/btclog"
@@ -73,6 +74,7 @@ func realMain() error {
 	log = btclog.NewSubsystemLogger(backendLogger, "")
 	database.UseLogger(btclog.NewSubsystemLogger(backendLogger, "BCDB: "))
 	blockchain.UseLogger(btclog.NewSubsystemLogger(backendLogger, "CHAN: "))
+	indexers.UseLogger(btclog.NewSubsystemLogger(backendLogger, "INDX: "))
 
 	// Load the block database.
 	db, err := loadBlockDB()
