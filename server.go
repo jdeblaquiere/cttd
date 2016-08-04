@@ -673,7 +673,7 @@ func (sp *serverPeer) OnGetBlocks(p *peer.Peer, msg *wire.MsgGetBlocks) {
 	}
 
 	// Send the inventory message if there is anything to send.
-	if len(invMsg.InvList) > 0 {
+	//if len(invMsg.InvList) > 0 {
 		invListLen := len(invMsg.InvList)
 		if autoContinue && invListLen == wire.MaxBlocksPerMsg {
 			// Intentionally use a copy of the final hash so there
@@ -684,7 +684,7 @@ func (sp *serverPeer) OnGetBlocks(p *peer.Peer, msg *wire.MsgGetBlocks) {
 			sp.continueHash = &continueHash
 		}
 		p.QueueMessage(invMsg, nil)
-	}
+	//}
 }
 
 // OnGetHeaders is invoked when a peer receives a getheaders bitcoin
@@ -1835,17 +1835,17 @@ out:
 				break
 			}
 
-			// Check that we don't have a pending connection to this addr.
-			addrStr := addrmgr.NetAddressKey(addr.NetAddress())
-			if _, ok := state.pendingPeers[addrStr]; ok {
-				continue
-			}
-
 			tries++
 			// After 100 bad tries exit the loop and we'll try again
 			// later.
 			if tries > 100 {
 				break
+			}
+
+			// Check that we don't have a pending connection to this addr.
+			addrStr := addrmgr.NetAddressKey(addr.NetAddress())
+			if _, ok := state.pendingPeers[addrStr]; ok {
+				continue
 			}
 
 			// XXX if we have limited that address skip
