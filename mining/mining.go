@@ -7,8 +7,13 @@ package mining
 import (
 	"time"
 
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcutil"
+=======
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil"
+>>>>>>> btcsuite/master
 )
 
 // TxDesc is a descriptor about a transaction in a transaction source along with

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"sync"
 
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
@@ -16,6 +17,15 @@ import (
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
+=======
+	"github.com/btcsuite/btcd/blockchain"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/database"
+	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
+	"github.com/btcsuite/btcutil"
+>>>>>>> btcsuite/master
 )
 
 const (

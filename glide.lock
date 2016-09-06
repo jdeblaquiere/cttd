@@ -5,7 +5,11 @@ imports:
   version: f96df2375f37300305f329b8e5258764b4f19a7f
 - name: github.com/btcsuite/btcrpcclient
   version: f584dbd2e595fcce72fe88440886d4935371ae6b
+<<<<<<< HEAD
 - name: github.com/jadeblaquiere/ctcutil
+=======
+- name: github.com/btcsuite/btcutil
+>>>>>>> btcsuite/master
   version: 22c91fa80a5e90e3feda26cf6d43adc249306188
   subpackages:
   - .

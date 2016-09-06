@@ -20,6 +20,7 @@ import (
 	"sync/atomic"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/addrmgr"
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
@@ -33,6 +34,21 @@ import (
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
 	"github.com/jadeblaquiere/ctcutil/bloom"
+=======
+	"github.com/btcsuite/btcd/addrmgr"
+	"github.com/btcsuite/btcd/blockchain"
+	"github.com/btcsuite/btcd/blockchain/indexers"
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/database"
+	"github.com/btcsuite/btcd/mempool"
+	"github.com/btcsuite/btcd/mining"
+	"github.com/btcsuite/btcd/peer"
+	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
+	"github.com/btcsuite/btcutil"
+	"github.com/btcsuite/btcutil/bloom"
+>>>>>>> btcsuite/master
 )
 
 const (
@@ -1830,17 +1846,17 @@ out:
 				break
 			}
 
-			// Check that we don't have a pending connection to this addr.
-			addrStr := addrmgr.NetAddressKey(addr.NetAddress())
-			if _, ok := state.pendingPeers[addrStr]; ok {
-				continue
-			}
-
 			tries++
 			// After 100 bad tries exit the loop and we'll try again
 			// later.
 			if tries > 100 {
 				break
+			}
+
+			// Check that we don't have a pending connection to this addr.
+			addrStr := addrmgr.NetAddressKey(addr.NetAddress())
+			if _, ok := state.pendingPeers[addrStr]; ok {
+				continue
 			}
 
 			// XXX if we have limited that address skip

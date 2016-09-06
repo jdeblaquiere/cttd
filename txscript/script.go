@@ -10,8 +10,13 @@ import (
 	"fmt"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/wire"
+=======
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/wire"
+>>>>>>> btcsuite/master
 )
 
 // Bip16Activation is the timestamp where BIP0016 is valid to use in the

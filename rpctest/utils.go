@@ -10,8 +10,13 @@ import (
 	"strconv"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcrpcclient"
+=======
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcrpcclient"
+>>>>>>> btcsuite/master
 )
 
 // JoinType is an enum representing a particular type of "node join". A node
@@ -122,7 +127,11 @@ func ConnectNode(from *Harness, to *Harness) error {
 	}
 	numPeers := len(peerInfo)
 
+<<<<<<< HEAD
 	if err := from.Node.AddNode(targetAddr, ctcrpcclient.ANAdd); err != nil {
+=======
+	if err := from.Node.AddNode(targetAddr, btcrpcclient.ANAdd); err != nil {
+>>>>>>> btcsuite/master
 		return err
 	}
 

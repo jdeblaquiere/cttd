@@ -5,7 +5,11 @@ rpctest
 (https://travis-ci.org/btcsuite/btcd) [![ISC License]
 (http://img.shields.io/badge/license-ISC-blue.svg)](http://copyfree.org)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)]
+<<<<<<< HEAD
 (http://godoc.org/github.com/jadeblaquiere/ctcd/rpctest)
+=======
+(http://godoc.org/github.com/btcsuite/btcd/rpctest)
+>>>>>>> btcsuite/master
 
 Package rpctest provides a btcd-specific RPC testing harness crafting and
 executing integration tests by driving a `btcd` instance via the `RPC`
@@ -22,7 +26,11 @@ systems/integration tests.
 ## Installation and Updating
 
 ```bash
+<<<<<<< HEAD
 $ go get -u github.com/jadeblaquiere/ctcd/rpctest
+=======
+$ go get -u github.com/btcsuite/btcd/rpctest
+>>>>>>> btcsuite/master
 ```
 
 ## License

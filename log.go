@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/addrmgr"
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
@@ -15,6 +16,15 @@ import (
 	"github.com/jadeblaquiere/ctcd/mempool"
 	"github.com/jadeblaquiere/ctcd/peer"
 	"github.com/jadeblaquiere/ctcd/txscript"
+=======
+	"github.com/btcsuite/btcd/addrmgr"
+	"github.com/btcsuite/btcd/blockchain"
+	"github.com/btcsuite/btcd/blockchain/indexers"
+	"github.com/btcsuite/btcd/database"
+	"github.com/btcsuite/btcd/mempool"
+	"github.com/btcsuite/btcd/peer"
+	"github.com/btcsuite/btcd/txscript"
+>>>>>>> btcsuite/master
 	"github.com/btcsuite/btclog"
 	"github.com/btcsuite/seelog"
 )

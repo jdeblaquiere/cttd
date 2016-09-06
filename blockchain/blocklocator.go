@@ -5,9 +5,15 @@
 package blockchain
 
 import (
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/wire"
+=======
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/database"
+	"github.com/btcsuite/btcd/wire"
+>>>>>>> btcsuite/master
 )
 
 // BlockLocator is used to help locate a specific block.  The algorithm for

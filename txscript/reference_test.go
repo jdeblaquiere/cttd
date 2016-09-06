@@ -15,10 +15,17 @@ import (
 	"strings"
 	"testing"
 
+<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	. "github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
+=======
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	. "github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
+	"github.com/btcsuite/btcutil"
+>>>>>>> btcsuite/master
 )
 
 // testName returns a descriptive test name for the given reference test data.

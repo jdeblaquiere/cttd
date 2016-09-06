@@ -5,7 +5,11 @@ chainhash
 (https://travis-ci.org/btcsuite/btcd) [![ISC License]
 (http://img.shields.io/badge/license-ISC-blue.svg)](http://copyfree.org)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)]
+<<<<<<< HEAD
 (http://godoc.org/github.com/jadeblaquiere/ctcd/chaincfg/chainhash)
+=======
+(http://godoc.org/github.com/btcsuite/btcd/chaincfg/chainhash)
+>>>>>>> btcsuite/master
 
 chainhash provides a generic hash type and associated functions that allows the
 specific hash algorithm to be abstracted.
@@ -13,7 +17,11 @@ specific hash algorithm to be abstracted.
 ## Installation and Updating
 
 ```bash
+<<<<<<< HEAD
 $ go get -u github.com/jadeblaquiere/ctcd/chaincfg/chainhash
+=======
+$ go get -u github.com/btcsuite/btcd/chaincfg/chainhash
+>>>>>>> btcsuite/master
 ```
 
 ## GPG Verification Key
