@@ -15,6 +15,7 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/database"
 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
 	"github.com/jadeblaquiere/ctcd/wire"
@@ -106,10 +107,14 @@ func chainSetup(dbName string) (*blockchain.BlockChain, func(), error) {
 		}
 	}
 
+	// Copy the chain params to ensure any modifications the tests do to
+	// the chain parameters do not affect the global instance.
+	mainNetParams := chaincfg.MainNetParams
+
 	// Create the main chain instance.
 	chain, err := blockchain.New(&blockchain.Config{
 		DB:          db,
-		ChainParams: &chaincfg.MainNetParams,
+		ChainParams: &mainNetParams,
 		TimeSource:  blockchain.NewMedianTime(),
 	})
 	if err != nil {
@@ -146,7 +151,7 @@ func loadUtxoView(filename string) (*blockchain.UtxoViewpoint, error) {
 	view := blockchain.NewUtxoViewpoint()
 	for {
 		// Hash of the utxo entry.
-		var hash wire.ShaHash
+		var hash chainhash.Hash
 		_, err := io.ReadAtLeast(r, hash[:], len(hash[:]))
 		if err != nil {
 			// Expected EOF at the right offset.

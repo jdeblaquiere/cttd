@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2015 The btcsuite developers
+// Copyright (c) 2013-2016 The btcsuite developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -11,6 +11,7 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/btcec"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
@@ -106,21 +107,21 @@ func TestSignTxOutput(t *testing.T) {
 		TxIn: []*wire.TxIn{
 			{
 				PreviousOutPoint: wire.OutPoint{
-					Hash:  wire.ShaHash{},
+					Hash:  chainhash.Hash{},
 					Index: 0,
 				},
 				Sequence: 4294967295,
 			},
 			{
 				PreviousOutPoint: wire.OutPoint{
-					Hash:  wire.ShaHash{},
+					Hash:  chainhash.Hash{},
 					Index: 1,
 				},
 				Sequence: 4294967295,
 			},
 			{
 				PreviousOutPoint: wire.OutPoint{
-					Hash:  wire.ShaHash{},
+					Hash:  chainhash.Hash{},
 					Index: 2,
 				},
 				Sequence: 4294967295,

@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2014 The btcsuite developers
+// Copyright (c) 2013-2016 The btcsuite developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -9,7 +9,7 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcutil"
 )
 
@@ -46,7 +46,7 @@ func TestHaveBlock(t *testing.T) {
 	// Since we're not dealing with the real block chain, disable
 	// checkpoints and set the coinbase maturity to 1.
 	chain.DisableCheckpoints(true)
-	blockchain.TstSetCoinbaseMaturity(1)
+	chain.TstSetCoinbaseMaturity(1)
 
 	for i := 1; i < len(blocks); i++ {
 		isOrphan, err := chain.ProcessBlock(blocks[i], blockchain.BFNone)
@@ -92,9 +92,9 @@ func TestHaveBlock(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		hash, err := wire.NewShaHashFromStr(test.hash)
+		hash, err := chainhash.NewHashFromStr(test.hash)
 		if err != nil {
-			t.Errorf("NewShaHashFromStr: %v", err)
+			t.Errorf("NewHashFromStr: %v", err)
 			continue
 		}
 

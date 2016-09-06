@@ -11,8 +11,8 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 const blockDbNamePrefix = "blocks"
@@ -39,7 +39,7 @@ func loadBlockDB() (database.DB, error) {
 // candidates at the last checkpoint that is already hard coded into btcchain
 // since there is no point in finding candidates before already existing
 // checkpoints.
-func findCandidates(chain *blockchain.BlockChain, latestHash *wire.ShaHash) ([]*chaincfg.Checkpoint, error) {
+func findCandidates(chain *blockchain.BlockChain, latestHash *chainhash.Hash) ([]*chaincfg.Checkpoint, error) {
 	// Start with the latest block of the main chain.
 	block, err := chain.BlockByHash(latestHash)
 	if err != nil {
@@ -102,7 +102,7 @@ func findCandidates(chain *blockchain.BlockChain, latestHash *wire.ShaHash) ([]*
 		if isCandidate {
 			checkpoint := chaincfg.Checkpoint{
 				Height: block.Height(),
-				Hash:   block.Sha(),
+				Hash:   block.Hash(),
 			}
 			candidates = append(candidates, &checkpoint)
 		}

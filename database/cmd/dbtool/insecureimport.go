@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
@@ -32,7 +33,7 @@ var (
 
 	// zeroHash is a simply a hash with all zeros.  It is defined here to
 	// avoid creating it multiple times.
-	zeroHash = wire.ShaHash{}
+	zeroHash = chainhash.Hash{}
 )
 
 // importResults houses the stats and result as an import operation.
@@ -119,7 +120,7 @@ func (bi *blockImporter) processBlock(serializedBlock []byte) (bool, error) {
 	// Skip blocks that already exist.
 	var exists bool
 	err = bi.db.View(func(tx database.Tx) error {
-		exists, err = tx.HasBlock(block.Sha())
+		exists, err = tx.HasBlock(block.Hash())
 		if err != nil {
 			return err
 		}
