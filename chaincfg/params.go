@@ -425,7 +425,7 @@ var CTIndigoNetParams = Params{
 	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more
 	ReduceMinDifficulty:      false,
 	MinDiffReductionTime:     0,
-	GenerateSupported:        false,
+	GenerateSupported:        true,
 
 	// Checkpoints ordered from oldest to newest.
 	Checkpoints: nil,
@@ -477,7 +477,7 @@ var CTRedNetParams = Params{
 	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more
 	ReduceMinDifficulty:      false,
 	MinDiffReductionTime:     0,
-	GenerateSupported:        false,
+	GenerateSupported:        true,
 
 	// Checkpoints ordered from oldest to newest.
 	Checkpoints: nil,
