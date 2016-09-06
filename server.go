@@ -668,7 +668,7 @@ func (sp *serverPeer) OnGetBlocks(p *peer.Peer, msg *wire.MsgGetBlocks) {
 	}
 
 	// Send the inventory message if there is anything to send.
-	if len(invMsg.InvList) > 0 {
+	//if len(invMsg.InvList) > 0 {
 		invListLen := len(invMsg.InvList)
 		if autoContinue && invListLen == wire.MaxBlocksPerMsg {
 			// Intentionally use a copy of the final hash so there
@@ -679,7 +679,7 @@ func (sp *serverPeer) OnGetBlocks(p *peer.Peer, msg *wire.MsgGetBlocks) {
 			sp.continueHash = &continueHash
 		}
 		p.QueueMessage(invMsg, nil)
-	}
+	//}
 }
 
 // OnGetHeaders is invoked when a peer receives a getheaders bitcoin
