@@ -9,11 +9,7 @@ import (
 	"io"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-=======
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
->>>>>>> btcsuite/master
 )
 
 // BlockVersion is the current latest supported block version.
@@ -60,11 +56,7 @@ func (h *BlockHeader) BlockHash() chainhash.Hash {
 	var buf bytes.Buffer
 	_ = writeBlockHeader(&buf, 0, h)
 
-<<<<<<< HEAD
 	return chainhash.ShaMulSha256SH(buf.Bytes())
-=======
-	return chainhash.DoubleHashH(buf.Bytes())
->>>>>>> btcsuite/master
 }
 
 // BtcDecode decodes r using the bitcoin protocol encoding into the receiver.

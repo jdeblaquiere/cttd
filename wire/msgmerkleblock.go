@@ -8,11 +8,7 @@ import (
 	"fmt"
 	"io"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-=======
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
->>>>>>> btcsuite/master
 )
 
 // maxFlagsPerMerkleBlock is the maximum number of flag bytes that could

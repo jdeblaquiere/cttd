@@ -6,10 +6,7 @@
 package chainhash
 
 import "github.com/btcsuite/fastsha256"
-<<<<<<< HEAD
-import "github.com/jadeblaquiere/btcd/btcec"
-=======
->>>>>>> btcsuite/master
+import "github.com/jadeblaquiere/ctcd/btcec"
 
 // HashB calculates hash(b) and returns the resulting bytes.
 func HashB(b []byte) []byte {
@@ -35,7 +32,6 @@ func DoubleHashH(b []byte) Hash {
 	first := fastsha256.Sum256(b)
 	return Hash(fastsha256.Sum256(first[:]))
 }
-<<<<<<< HEAD
 
 // ShaMulSha256SH calculates sha256(secp256k1mul(sha256(b))) and returns the resulting bytes
 // as a ShaHash.
@@ -47,5 +43,3 @@ func ShaMulSha256SH(b []byte) Hash {
     //fmt.Printf("f,s,t = %s, %s, %s\n", hex.EncodeToString(first[:]), hex.EncodeToString(second), hex.EncodeToString(third[:]))
 	return Hash(third)
 }
-=======
->>>>>>> btcsuite/master

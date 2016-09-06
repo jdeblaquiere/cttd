@@ -12,17 +12,10 @@ import (
 	"testing"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/peer"
 	"github.com/jadeblaquiere/ctcd/wire"
-=======
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/peer"
-	"github.com/btcsuite/btcd/wire"
->>>>>>> btcsuite/master
 	"github.com/btcsuite/go-socks/socks"
 )
 

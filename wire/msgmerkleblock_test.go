@@ -12,11 +12,7 @@ import (
 	"testing"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-=======
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
->>>>>>> btcsuite/master
 	"github.com/davecgh/go-spew/spew"
 )
 

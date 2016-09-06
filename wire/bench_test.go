@@ -13,11 +13,7 @@ import (
 	"os"
 	"testing"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-=======
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
->>>>>>> btcsuite/master
 )
 
 // genesisCoinbaseTx is the coinbase transaction for the genesis blocks for

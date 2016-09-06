@@ -9,13 +9,8 @@ import (
 	"math/big"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/wire"
-=======
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/wire"
->>>>>>> btcsuite/master
 )
 
 // These variables are the chain proof-of-work limit parameters for each default

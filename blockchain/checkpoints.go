@@ -7,19 +7,11 @@ package blockchain
 import (
 	"fmt"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcutil"
-=======
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/database"
-	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcutil"
->>>>>>> btcsuite/master
 )
 
 // CheckpointConfirmations is the number of blocks before the end of the current

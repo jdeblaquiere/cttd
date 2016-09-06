@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/btcec"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
@@ -21,17 +20,6 @@ import (
 	"github.com/jadeblaquiere/ctcrpcclient"
 	"github.com/jadeblaquiere/ctcutil"
 	"github.com/jadeblaquiere/ctcutil/hdkeychain"
-=======
-	"github.com/btcsuite/btcd/blockchain"
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcrpcclient"
-	"github.com/btcsuite/btcutil"
-	"github.com/btcsuite/btcutil/hdkeychain"
->>>>>>> btcsuite/master
 )
 
 var (
@@ -115,11 +103,7 @@ type memWallet struct {
 
 	net *chaincfg.Params
 
-<<<<<<< HEAD
 	rpc *ctcrpcclient.Client
-=======
-	rpc *btcrpcclient.Client
->>>>>>> btcsuite/master
 
 	sync.RWMutex
 }
@@ -188,11 +172,7 @@ func (m *memWallet) SyncedHeight() int32 {
 
 // SetRPCClient saves the passed rpc connection to btcd as the wallet's
 // personal rpc connection.
-<<<<<<< HEAD
 func (m *memWallet) SetRPCClient(rpcClient *ctcrpcclient.Client) {
-=======
-func (m *memWallet) SetRPCClient(rpcClient *btcrpcclient.Client) {
->>>>>>> btcsuite/master
 	m.rpc = rpcClient
 }
 

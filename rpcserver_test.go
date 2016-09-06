@@ -11,13 +11,8 @@ import (
 	"runtime/debug"
 	"testing"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/rpctest"
-=======
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/rpctest"
->>>>>>> btcsuite/master
 )
 
 func testGetBestBlock(r *rpctest.Harness, t *testing.T) {

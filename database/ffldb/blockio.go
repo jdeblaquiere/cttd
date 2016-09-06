@@ -17,15 +17,9 @@ import (
 	"path/filepath"
 	"sync"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/wire"
-=======
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/database"
-	"github.com/btcsuite/btcd/wire"
->>>>>>> btcsuite/master
 )
 
 const (

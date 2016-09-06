@@ -20,19 +20,11 @@ import (
 	"strings"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/database"
 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
 	"github.com/jadeblaquiere/ctcd/mempool"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
-=======
-	"github.com/btcsuite/btcd/database"
-	_ "github.com/btcsuite/btcd/database/ffldb"
-	"github.com/btcsuite/btcd/mempool"
-	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil"
->>>>>>> btcsuite/master
 	flags "github.com/btcsuite/go-flags"
 	"github.com/btcsuite/go-socks/socks"
 )

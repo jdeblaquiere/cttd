@@ -15,19 +15,11 @@ import (
 	"testing"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcrpcclient"
 	"github.com/jadeblaquiere/ctcutil"
-=======
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcrpcclient"
-	"github.com/btcsuite/btcutil"
->>>>>>> btcsuite/master
 )
 
 var (
@@ -76,15 +68,9 @@ type Harness struct {
 	// to.
 	ActiveNet *chaincfg.Params
 
-<<<<<<< HEAD
 	Node     *ctcrpcclient.Client
 	node     *node
 	handlers *ctcrpcclient.NotificationHandlers
-=======
-	Node     *btcrpcclient.Client
-	node     *node
-	handlers *btcrpcclient.NotificationHandlers
->>>>>>> btcsuite/master
 
 	wallet *memWallet
 
@@ -101,11 +87,7 @@ type Harness struct {
 // used.
 //
 // NOTE: This function is safe for concurrent access.
-<<<<<<< HEAD
 func New(activeNet *chaincfg.Params, handlers *ctcrpcclient.NotificationHandlers,
-=======
-func New(activeNet *chaincfg.Params, handlers *btcrpcclient.NotificationHandlers,
->>>>>>> btcsuite/master
 	extraArgs []string) (*Harness, error) {
 
 	harnessStateMtx.Lock()
@@ -149,11 +131,7 @@ func New(activeNet *chaincfg.Params, handlers *btcrpcclient.NotificationHandlers
 	numTestInstances++
 
 	if handlers == nil {
-<<<<<<< HEAD
 		handlers = &ctcrpcclient.NotificationHandlers{}
-=======
-		handlers = &btcrpcclient.NotificationHandlers{}
->>>>>>> btcsuite/master
 	}
 
 	// If a handler for the OnBlockConnected/OnBlockDisconnected callback
@@ -284,20 +262,12 @@ func (h *Harness) TearDown() error {
 // we're not able to establish a connection, this function returns with an
 // error.
 func (h *Harness) connectRPCClient() error {
-<<<<<<< HEAD
 	var client *ctcrpcclient.Client
-=======
-	var client *btcrpcclient.Client
->>>>>>> btcsuite/master
 	var err error
 
 	rpcConf := h.node.config.rpcConnConfig()
 	for i := 0; i < h.maxConnRetries; i++ {
-<<<<<<< HEAD
 		if client, err = ctcrpcclient.New(&rpcConf, h.handlers); err != nil {
-=======
-		if client, err = btcrpcclient.New(&rpcConf, h.handlers); err != nil {
->>>>>>> btcsuite/master
 			time.Sleep(time.Duration(i) * 50 * time.Millisecond)
 			continue
 		}
@@ -368,11 +338,7 @@ func (h *Harness) UnlockOutputs(inputs []*wire.TxIn) {
 // RPCConfig returns the harnesses current rpc configuration. This allows other
 // potential RPC clients created within tests to connect to a given test
 // harness instance.
-<<<<<<< HEAD
 func (h *Harness) RPCConfig() ctcrpcclient.ConnConfig {
-=======
-func (h *Harness) RPCConfig() btcrpcclient.ConnConfig {
->>>>>>> btcsuite/master
 	return h.node.config.rpcConnConfig()
 }
 

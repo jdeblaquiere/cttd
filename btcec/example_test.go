@@ -8,13 +8,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-<<<<<<< HEAD
 	"github.com/jadeblaquiere/ctcd/btcec"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-=======
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
->>>>>>> btcsuite/master
 )
 
 // This example demonstrates signing a message with a secp256k1 private key that

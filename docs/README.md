@@ -256,10 +256,6 @@ information.
 	  Provides a database interface for the Bitcoin block chain
     * [btcutil](https://github.com/jadeblaquiere/btcutil) - Provides Bitcoin-specific
 	  convenience functions and types
-<<<<<<< HEAD
     * [chainhash](https://github.com/jadeblaquiere/ctcd/tree/master/chaincfg/chainhash) -
-=======
-    * [chainhash](https://github.com/btcsuite/btcd/tree/master/chaincfg/chainhash) -
->>>>>>> btcsuite/master
           Provides a generic hash type and associated functions that allows the
           specific hash algorithm to be abstracted.
