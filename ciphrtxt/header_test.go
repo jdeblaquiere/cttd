@@ -13,6 +13,7 @@ import (
     "encoding/json"
     "fmt"
     "strconv"
+    "time"
 )
 
 type THeaderListResponse struct {
@@ -80,30 +81,80 @@ func TestDeserializeSerialize (t *testing.T) {
 }
 
 func TestOpenHeaderCache (t *testing.T) {
-    hc1, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb")
+    hc1, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
     if err != nil {
         t.Fail()
     }
     defer hc1.Close()
 
-    hc2, err := OpenHeaderCache("indigo.ciphrtxt.com", 7754, "")
+    hc2, err := OpenHeaderCache("indigo.ciphrtxt.com", 7754, "testdb/indigo.ciphrtxt.com")
     if err != nil {
         t.Fail()
     }
     defer hc2.Close()
 }
 
-func TestSyncHeaderCache (t *testing.T) {
-    hc1, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb")
+func TestHeaderCacheGetTime (t *testing.T) {
+    hc1, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
     if err != nil {
         t.Fail()
     }
     defer hc1.Close()
 
-    hc2, err := OpenHeaderCache("indigo.ciphrtxt.com", 7754, "")
+    hctime, err := hc1.getTime()
     if err != nil {
         t.Fail()
     }
-    defer hc2.Close()
+    
+    now := time.Now().Unix()
+    diff := int64(hctime) - now
+    if diff < 0 {
+        diff = 0 - diff
+    }
+    
+    if diff > 5 {
+        t.Fail()
+    }
+}
+
+func TestHeaderCacheGetHeaders (t *testing.T) {
+    hc1, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
+    if err != nil {
+        t.Fail()
+    }
+    defer hc1.Close()
+
+    now := time.Now().Unix()
+    mh, err := hc1.getHeadersSince(uint32(now-3600))
+    if err != nil {
+        t.Fail()
+    }
+    
+    if len(mh) == 0 {
+        t.Fail()
+    }
+    
+    //fmt.Printf("found %d headers\n", len(mh))
+    //for _, h := range mh {
+    //    fmt.Println(h.Serialize())
+    //}
+}
+
+func TestHeaderCacheSync (t *testing.T) {
+    hc1, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
+    if err != nil {
+        t.Fail()
+    }
+    defer hc1.Close()
+
+    err = hc1.Sync()
+    if err != nil {
+        t.Fail()
+    }
+    
+    //fmt.Printf("found %d headers\n", len(mh))
+    //for _, h := range mh {
+    //    fmt.Println(h.Serialize())
+    //}
 }
 
