@@ -9,6 +9,7 @@ import (
     //"math/big"
     "net/http"
     "io/ioutil"
+    "encoding/base64"
     "encoding/hex"
     "encoding/json"
     "fmt"
@@ -48,6 +49,10 @@ func TestDeserializeSerialize (t *testing.T) {
         count += 1
         
         if hdr != hdr_out {
+            fmt.Println("hdr mismatch!")
+            fmt.Println(" in  : " + hdr)
+            fmt.Println(" out : " + hdr_out)
+            fmt.Println()
             t.Fail()
         }
     

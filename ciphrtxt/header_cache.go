@@ -56,7 +56,7 @@ type HeaderCache struct {
 
 // NOTE : if dbpath is empty ("") header cache will be in-memory only
 
-func OpenHeaderCache(host string, port int, dbpath string) (hc *HeaderCache, err error) {
+func OpenHeaderCache(host string, port uint16, dbpath string) (hc *HeaderCache, err error) {
     hc = new(HeaderCache)
     hc.baseurl = fmt.Sprintf("http://%s:%d/", host, port)
     
@@ -148,6 +148,7 @@ func (hc *HeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
         return false, nil
     }
     value := []byte(h.Serialize())
+    //value := h.Serialize()[:]
     batch := new(leveldb.Batch)
     batch.Put(dbk.date, value)
     batch.Put(dbk.expire, value)
@@ -298,7 +299,7 @@ func (hc *HeaderCache) Sync() (err error) {
     }
     
     insCount := int(0)
-        
+
     for _, mh := range mhdrs {
         insert, err := hc.Insert(&mh)
         if err != nil {
@@ -308,11 +309,12 @@ func (hc *HeaderCache) Sync() (err error) {
             insCount += 1
         }
     }
-    
+
     hc.serverTime = serverTime
-    
+
     hc.Count += insCount
     fmt.Printf("insert %d message headers\n", insCount)
-    
+
     return nil
 }
+
