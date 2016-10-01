@@ -46,6 +46,7 @@ func TestDeserializeSerialize (t *testing.T) {
         h := new(RawMessageHeader)
         h.Deserialize(hdr)
         hdr_out := h.Serialize()
+        hdr_bin := h.BinaryHeaderV2()
         count += 1
         
         if hdr != hdr_out {
@@ -54,6 +55,17 @@ func TestDeserializeSerialize (t *testing.T) {
             fmt.Println(" out : " + hdr_out)
             fmt.Println()
             t.Fail()
+        }
+        
+        if hdr_bin != nil {
+            b64 := base64.StdEncoding.EncodeToString(hdr_bin[:])
+            if hdr != hdr_out {
+                fmt.Println("binary hdr mismatch!")
+                fmt.Println(" bin : " + b64)
+                fmt.Println(" out : " + hdr_out)
+                fmt.Println()
+                t.Fail()
+            }
         }
     
         dbk, err := h.DBKeys()
