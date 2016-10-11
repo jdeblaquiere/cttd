@@ -14,6 +14,7 @@ import (
     "github.com/syndtr/goleveldb/leveldb"
     "github.com/syndtr/goleveldb/leveldb/util"
     "strconv"
+    "sync"
     "time"
 )
 
@@ -48,6 +49,7 @@ type HeaderListResponse struct {
 type HeaderCache struct {
     baseurl string
     db *leveldb.DB
+    syncMutex sync.Mutex
     status StatusResponse
     serverTime uint32
     lastRefresh uint32
@@ -184,6 +186,33 @@ func (hc *HeaderCache) FindByI (I []byte) (h *RawMessageHeader, err error) {
     return h, nil
 }
 
+func (hc *HeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader, err error) {
+    emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
+    tag1 := fmt.Sprintf("D%08X%s0", tstamp, emptyMessage)
+    tag2 := "D" + "FFFFFFFF" + emptyMessage + "0"
+    
+    bin1, err := hex.DecodeString(tag1)
+    if err != nil {
+        return nil, err
+    }
+    bin2, err := hex.DecodeString(tag2)
+    if err != nil {
+        return nil, err
+    }
+    
+    iter := hc.db.NewIterator(&util.Range{Start: bin1, Limit: bin2}, nil)
+    
+    hdrs = make([]RawMessageHeader, 0)
+    for iter.Next() {
+        h := new(RawMessageHeader)
+        if h.Deserialize(string(iter.Value())) == nil {
+            return nil, errors.New("error parsing message")
+        }
+        hdrs = append(hdrs, *h)
+    }
+    return hdrs, nil
+}
+
 func (hc *HeaderCache) getTime() (serverTime uint32, err error) {
     var tr TimeResponse
 
@@ -277,6 +306,10 @@ func (hc *HeaderCache) pruneExpired() (err error) {
 }
 
 func (hc *HeaderCache) Sync() (err error) {
+    //should only have a single goroutine sync'ing at a time
+    hc.syncMutex.Lock()
+    defer hc.syncMutex.Unlock()
+    
     now := uint32(time.Now().Unix())
     
     if (now - hc.lastRefresh) < refreshMinDelay {
@@ -310,7 +343,7 @@ func (hc *HeaderCache) Sync() (err error) {
         }
     }
 
-    hc.serverTime = serverTime
+    hc.lastRefresh = serverTime
 
     hc.Count += insCount
     fmt.Printf("insert %d message headers\n", insCount)

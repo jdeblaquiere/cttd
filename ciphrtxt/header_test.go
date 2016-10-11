@@ -7,6 +7,7 @@ package ciphrtxt
 import (
     "testing"
     //"math/big"
+    "math/rand"
     "net/http"
     "io/ioutil"
     "encoding/base64"
@@ -14,6 +15,7 @@ import (
     "encoding/json"
     "fmt"
     "strconv"
+    "sync"
     "time"
 )
 
@@ -168,6 +170,54 @@ func TestHeaderCacheSync (t *testing.T) {
     if err != nil {
         t.Fail()
     }
+    
+    //fmt.Printf("found %d headers\n", len(mh))
+    //for _, h := range mh {
+    //    fmt.Println(h.Serialize())
+    //}
+}
+
+func TestHeaderGoroutines (t *testing.T) {
+    var wg sync.WaitGroup
+
+    hc1, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
+    if err != nil {
+        t.Fail()
+    }
+    defer hc1.Close()
+
+    wg.Add(10)
+    for gr := 0 ; gr < 10 ; gr++ {
+    
+        go func(hc *HeaderCache, gr int) {
+            defer wg.Done()
+            fmt.Printf("in GR %d\n", gr)
+            for i := 0 ; i < 10 ; i++ {
+                //fmt.Printf("in GR %d i = %d\n", gr, i)
+                err := hc.Sync()
+                if err != nil {
+                    t.Fail()
+                }
+
+                //count := rand.Intn(100)
+
+                for j := 0 ; j < 10 ; j++ {
+                    //fmt.Printf("in GR %d i = %d j = %d\n", gr, i, j)
+                    ago := int64(rand.Intn(60*60*24*7))
+
+                    _, err := hc.FindSince(uint32(time.Now().Unix() - ago))
+                    if err != nil {
+                        t.Fail()
+                    }
+                    
+                    //fmt.Printf("GR %d : fetched %d\n", gr, len(hdrs))
+                }
+            }
+            
+            fmt.Printf("GR %d done\n", gr)
+        }(hc1, gr)
+    }
+    wg.Wait()
     
     //fmt.Printf("found %d headers\n", len(mh))
     //for _, h := range mh {
