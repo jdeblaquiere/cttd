@@ -61,6 +61,110 @@ type Checkpoint struct {
 // Params defines a Bitcoin network by its parameters.  These parameters may be
 // used by Bitcoin applications to differentiate networks as well as addresses
 // and keys for one network from those intended for use on another network.
+type LegacyParams struct {
+	// Name defines a human-readable identifier for the network.
+	Name string
+
+	// Net defines the magic bytes used to identify the network.
+	Net wire.BitcoinNet
+
+	// DefaultPort defines the default peer-to-peer port for the network.
+	DefaultPort string
+
+	// DNSSeeds defines a list of DNS seeds for the network that are used
+	// as one method to discover peers.
+	DNSSeeds []string
+
+	// GenesisBlock defines the first block of the chain.
+	GenesisBlock *wire.LegacyMsgBlock
+
+	// GenesisHash is the starting block hash.
+	GenesisHash *chainhash.Hash
+
+	// PowLimit defines the highest allowed proof of work value for a block
+	// as a uint256.
+	PowLimit *big.Int
+
+	// PowLimitBits defines the highest allowed proof of work value for a
+	// block in compact form.
+	PowLimitBits uint32
+
+	// CoinbaseMaturity is the number of blocks required before newly mined
+	// coins (coinbase transactions) can be spent.
+	CoinbaseMaturity uint16
+
+	// SubsidyReductionInterval is the interval of blocks before the subsidy
+	// is reduced.
+	SubsidyReductionInterval int32
+
+	// TargetTimespan is the desired amount of time that should elapse
+	// before the block difficulty requirement is examined to determine how
+	// it should be changed in order to maintain the desired block
+	// generation rate.
+	TargetTimespan time.Duration
+
+	// TargetTimePerBlock is the desired amount of time to generate each
+	// block.
+	TargetTimePerBlock time.Duration
+
+	// RetargetAdjustmentFactor is the adjustment factor used to limit
+	// the minimum and maximum amount of adjustment that can occur between
+	// difficulty retargets.
+	RetargetAdjustmentFactor int64
+
+	// ReduceMinDifficulty defines whether the network should reduce the
+	// minimum required difficulty after a long enough period of time has
+	// passed without finding a block.  This is really only useful for test
+	// networks and should not be set on a main network.
+	ReduceMinDifficulty bool
+
+	// MinDiffReductionTime is the amount of time after which the minimum
+	// required difficulty should be reduced when a block hasn't been found.
+	//
+	// NOTE: This only applies if ReduceMinDifficulty is true.
+	MinDiffReductionTime time.Duration
+
+	// GenerateSupported specifies whether or not CPU mining is allowed.
+	GenerateSupported bool
+
+	// Checkpoints ordered from oldest to newest.
+	Checkpoints []Checkpoint
+
+	// Enforce current block version once network has
+	// upgraded.  This is part of BIP0034.
+	BlockEnforceNumRequired uint64
+
+	// Reject previous block versions once network has
+	// upgraded.  This is part of BIP0034.
+	BlockRejectNumRequired uint64
+
+	// The number of nodes to check.  This is part of BIP0034.
+	BlockUpgradeNumToCheck uint64
+
+	// Mempool parameters
+	RelayNonStdTxs bool
+
+	// Address encoding magics
+	PubKeyHashAddrID byte // First byte of a P2PKH address
+	ScriptHashAddrID byte // First byte of a P2SH address
+	PrivateKeyID     byte // First byte of a WIF private key
+
+	// BIP32 hierarchical deterministic extended key magics
+	HDPrivateKeyID [4]byte
+	HDPublicKeyID  [4]byte
+
+	// BIP44 coin type used in the hierarchical deterministic path for
+	// address generation.
+	HDCoinType uint32
+    
+    // Ciphrtxt Msgstore Service for Header Cache
+    CTMsgstoreHost  string
+    CTMsgstorePort  string
+}
+
+// Params defines a Bitcoin network by its parameters.  These parameters may be
+// used by Bitcoin applications to differentiate networks as well as addresses
+// and keys for one network from those intended for use on another network.
 type Params struct {
 	// Name defines a human-readable identifier for the network.
 	Name string
@@ -156,10 +260,14 @@ type Params struct {
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType uint32
+    
+    // Ciphrtxt Msgstore Service for Header Cache
+    CTMsgstoreHost  string
+    CTMsgstorePort  string
 }
 
 // MainNetParams defines the network parameters for the main Bitcoin network.
-var MainNetParams = Params{
+var MainNetParams = LegacyParams{
 	Name:        "mainnet",
 	Net:         wire.MainNet,
 	DefaultPort: "8333",
@@ -234,12 +342,16 @@ var MainNetParams = Params{
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType: 0,
+    
+    // Ciphrtxt Msgstore Service for Header Cache
+    CTMsgstoreHost:  "",
+    CTMsgstorePort:  "",
 }
 
 // RegressionNetParams defines the network parameters for the regression test
 // Bitcoin network.  Not to be confused with the test Bitcoin network (version
 // 3), this network is sometimes simply called "testnet".
-var RegressionNetParams = Params{
+var RegressionNetParams = LegacyParams{
 	Name:        "regtest",
 	Net:         wire.TestNet,
 	DefaultPort: "18444",
@@ -287,12 +399,16 @@ var RegressionNetParams = Params{
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType: 1,
+    
+    // Ciphrtxt Msgstore Service for Header Cache
+    CTMsgstoreHost:  "",
+    CTMsgstorePort:  "",
 }
 
 // TestNet3Params defines the network parameters for the test Bitcoin network
 // (version 3).  Not to be confused with the regression test network, this
 // network is sometimes simply called "testnet".
-var TestNet3Params = Params{
+var TestNet3Params = LegacyParams{
 	Name:        "testnet3",
 	Net:         wire.TestNet3,
 	DefaultPort: "18333",
@@ -346,6 +462,10 @@ var TestNet3Params = Params{
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType: 1,
+    
+    // Ciphrtxt Msgstore Service for Header Cache
+    CTMsgstoreHost:  "",
+    CTMsgstorePort:  "",
 }
 
 // SimNetParams defines the network parameters for the simulation test Bitcoin
@@ -355,7 +475,7 @@ var TestNet3Params = Params{
 // which are specifically specified are used to create the network rather than
 // following normal discovery rules.  This is important as otherwise it would
 // just turn into another public testnet.
-var SimNetParams = Params{
+var SimNetParams = LegacyParams{
 	Name:        "simnet",
 	Net:         wire.SimNet,
 	DefaultPort: "18555",
@@ -403,6 +523,10 @@ var SimNetParams = Params{
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType: 115, // ASCII for s
+    
+    // Ciphrtxt Msgstore Service for Header Cache
+    CTMsgstoreHost:  "",
+    CTMsgstorePort:  "",
 }
 
 // CTIndigoNetParams defines the network parameters for the ciphrtxt token (CT) ciphertxt-indigo
@@ -417,7 +541,7 @@ var CTIndigoNetParams = Params{
 	GenesisBlock:             &ctindigoGenesisBlock,
 	GenesisHash:              &ctindigoGenesisHash,
 	PowLimit:                 ctindigoNetPowLimit,
-	PowLimitBits:             0x1f07ffff,
+	PowLimitBits:             0x1f007fff,
 	CoinbaseMaturity:         100,
 	SubsidyReductionInterval: 210000,
 	TargetTimespan:           time.Hour * 2,       // 2 hours
@@ -455,6 +579,10 @@ var CTIndigoNetParams = Params{
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType: 99, // ASCII for c
+    
+    // Ciphrtxt Msgstore Service for Header Cache
+    CTMsgstoreHost:  "localhost",
+    CTMsgstorePort:  "7754",
 }
 
 // RedNetParams defines the network parameters for the ciphrtxt token (CT) ciphertxt-red
@@ -507,6 +635,10 @@ var CTRedNetParams = Params{
 	// BIP44 coin type used in the hierarchical deterministic path for
 	// address generation.
 	HDCoinType: 99, // ASCII for c
+
+    // Ciphrtxt Msgstore Service for Header Cache
+    CTMsgstoreHost:  "localhost",
+    CTMsgstorePort:  "7754",
 }
 
 var (
@@ -617,10 +749,10 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 
 func init() {
 	// Register all default networks when the package is initialized.
-	mustRegister(&MainNetParams)
-	mustRegister(&TestNet3Params)
-	mustRegister(&RegressionNetParams)
-	mustRegister(&SimNetParams)
+	//mustRegister(&MainNetParams)
+	//mustRegister(&TestNet3Params)
+	//mustRegister(&RegressionNetParams)
+	//mustRegister(&SimNetParams)
 	mustRegister(&CTIndigoNetParams)
 	mustRegister(&CTRedNetParams)
 }

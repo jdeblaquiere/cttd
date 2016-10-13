@@ -25,6 +25,7 @@ import (
 	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/ctcd/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/mempool"
 	"github.com/jadeblaquiere/ctcd/mining"
@@ -182,6 +183,7 @@ type server struct {
 	listeners            []net.Listener
 	chainParams          *chaincfg.Params
 	addrManager          *addrmgr.AddrManager
+    headerCache          *ciphrtxt.HeaderCache
 	sigCache             *txscript.SigCache
 	rpcServer            *rpcServer
 	blockManager         *blockManager
@@ -2459,11 +2461,26 @@ func newServer(listenAddrs []string, db database.DB, chainParams *chaincfg.Param
 			return nil, errors.New("no valid listen address")
 		}
 	}
+    
+    hcache := (*ciphrtxt.HeaderCache)(nil)
+    if len(activeNetParams.CTMsgstoreHost) > 0 && len(activeNetParams.CTMsgstorePort) > 0 {
+        // if this fails we have real issues.
+        port, err := strconv.ParseUint(activeNetParams.CTMsgstorePort, 10, 16)
+        if (err == nil) {        
+            dbdir := "hdrcache/db/" + activeNetParams.CTMsgstoreHost
+
+            hcache, err = ciphrtxt.OpenHeaderCache(activeNetParams.CTMsgstoreHost, uint16(port), dbdir)
+            if err != nil {
+                srvrLog.Warnf("Can't connect to HeaderCache or db: %v", err)
+            }
+        }
+    }
 
 	s := server{
 		listeners:            listeners,
 		chainParams:          chainParams,
 		addrManager:          amgr,
+        headerCache:          hcache,
 		newPeers:             make(chan *serverPeer, cfg.MaxPeers),
 		donePeers:            make(chan *serverPeer, cfg.MaxPeers),
 		banPeers:             make(chan *serverPeer, cfg.MaxPeers),

@@ -192,26 +192,16 @@ func TestHeaderGoroutines (t *testing.T) {
         go func(hc *HeaderCache, gr int) {
             defer wg.Done()
             fmt.Printf("in GR %d\n", gr)
-            for i := 0 ; i < 10 ; i++ {
+            for i := 0 ; i < 20 ; i++ {
                 //fmt.Printf("in GR %d i = %d\n", gr, i)
-                err := hc.Sync()
+                ago := int64(rand.Intn(60*60*24*7))
+
+                _, err := hc.FindSince(uint32(time.Now().Unix() - ago))
                 if err != nil {
                     t.Fail()
                 }
 
-                //count := rand.Intn(100)
-
-                for j := 0 ; j < 10 ; j++ {
-                    //fmt.Printf("in GR %d i = %d j = %d\n", gr, i, j)
-                    ago := int64(rand.Intn(60*60*24*7))
-
-                    _, err := hc.FindSince(uint32(time.Now().Unix() - ago))
-                    if err != nil {
-                        t.Fail()
-                    }
-                    
-                    //fmt.Printf("GR %d : fetched %d\n", gr, len(hdrs))
-                }
+                //fmt.Printf("GR %d : fetched %d\n", gr, len(hdrs))
             }
             
             fmt.Printf("GR %d done\n", gr)
@@ -225,3 +215,49 @@ func TestHeaderGoroutines (t *testing.T) {
     //}
 }
 
+func TestFindByI (t *testing.T) {
+    hc, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
+    if err != nil {
+        t.Fail()
+    }
+    defer hc.Close()
+
+    res, err := http.Get("http://ciphrtxt.com:7754/api/header/list/since/0")
+    if err != nil {
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    
+    body, err := ioutil.ReadAll(res.Body)
+    if err != nil {
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    
+    s := new(THeaderListResponse)
+    err = json.Unmarshal(body, &s)
+    if(err != nil){
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    
+    for _, hdr := range s.HeaderList {
+        h := new(RawMessageHeader)
+        h.Deserialize(hdr)
+        Ibin, err := hex.DecodeString(h.I)
+        if err != nil {
+            t.Fail()
+        }
+        
+        msg, err := hc.FindByI(Ibin)
+        if err != nil {
+            if uint32(time.Now().Unix()) < h.expire {
+                fmt.Println("Error: could not find message:", h.I)
+                t.Fail()
+            }
+        } else if msg.Serialize() != h.Serialize() {
+            fmt.Println("Error: message mismatch:", h.I)
+            t.Fail()
+        }
+    }
+}

@@ -8,12 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+    "path/filepath"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/ctcd/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/mining"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
@@ -57,6 +59,7 @@ type CPUMiner struct {
 	policy            *mining.Policy
 	txSource          mining.TxSource
 	server            *server
+    hCache            *ciphrtxt.HeaderCache
 	numWorkers        uint32
 	started           bool
 	discreteMining    bool
@@ -169,7 +172,7 @@ func (m *CPUMiner) submitBlock(block *btcutil.Block) bool {
 // This function will return early with false when conditions that trigger a
 // stale block such as a new block showing up or periodically when there are
 // new transactions and enough time has elapsed without finding a solution.
-func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, blockHeight int32,
+func (m *CPUMiner) solveLegacyBlock(msgBlock *wire.LegacyMsgBlock, blockHeight int32,
 	ticker *time.Ticker, quit chan struct{}) bool {
 
 	// Choose a random extra nonce offset for this block template and
@@ -197,7 +200,7 @@ func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, blockHeight int32,
 		// Update the extra nonce in the block template with the
 		// new value by regenerating the coinbase script and
 		// setting the merkle root to the new value.  The
-		UpdateExtraNonce(msgBlock, blockHeight, extraNonce+enOffset)
+		LegacyUpdateExtraNonce(msgBlock, blockHeight, extraNonce+enOffset)
 
 		// Search through the entire nonce range for a solution while
 		// periodically checking for early quit and stale block
@@ -228,7 +231,7 @@ func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, blockHeight int32,
 					return false
 				}
 
-				UpdateBlockTime(msgBlock, m.server.blockManager)
+				LegacyUpdateBlockTime(msgBlock, m.server.blockManager)
 
 			default:
 				// Non-blocking select to fall through
@@ -248,6 +251,117 @@ func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, blockHeight int32,
 				m.updateHashes <- hashesCompleted
 				return true
 			}
+		}
+	}
+
+	return false
+}
+
+// solveBlock attempts to find some combination of a nonce, extra nonce, and
+// current timestamp which makes the passed block hash to a value less than the
+// target difficulty.  The timestamp is updated periodically and the passed
+// block is modified with all tweaks during this process.  This means that
+// when the function returns true, the block is ready for submission.
+//
+// This function will return early with false when conditions that trigger a
+// stale block such as a new block showing up or periodically when there are
+// new transactions and enough time has elapsed without finding a solution.
+func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, blockHeight int32,
+	ticker *time.Ticker, quit chan struct{}) bool {
+
+	// Choose a random extra nonce offset for this block template and
+	// worker.
+	enOffset, err := wire.RandomUint64()
+	if err != nil {
+		minrLog.Errorf("Unexpected error while generating random "+
+			"extra nonce offset: %v", err)
+		enOffset = 0
+	}
+
+	// Create a couple of convenience variables.
+	header := &msgBlock.Header
+	targetDifficulty := blockchain.CompactToBig(header.Bits)
+
+	// Initial state.
+	lastGenerated := time.Now()
+	lastTxUpdate := m.txSource.LastUpdated()
+	hashesCompleted := uint64(0)
+
+	// Note that the entire extra nonce range is iterated and the offset is
+	// added relying on the fact that overflow will wrap around 0 as
+	// provided by the Go spec.
+	for extraNonce := uint64(0); extraNonce < maxExtraNonce; extraNonce++ {
+		// Update the extra nonce in the block template with the
+		// new value by regenerating the coinbase script and
+		// setting the merkle root to the new value.  The
+		UpdateExtraNonce(msgBlock, blockHeight, extraNonce+enOffset)
+        
+        binhdrs := make([]ciphrtxt.BinaryMessageHeaderV2, 0)
+        rhdrs, err := m.hCache.FindExpiringAfter(uint32(time.Now().Unix() + (60*60)))
+        if err != nil {
+            return false
+        }
+        for _, rh := range rhdrs {
+            bh := rh.BinaryHeaderV2()
+            if bh != nil {
+                binhdrs = append(binhdrs, *bh)
+            }
+        }
+
+		// Search through the entire nonce range for a solution while
+		// periodically checking for early quit and stale block
+		// conditions along with updates to the speed monitor.
+		//for i := uint32(0); i <= maxNonce; i++ {
+        for _, mhA := range binhdrs {
+            for _, mhB := range binhdrs {
+            
+                select {
+                case <-quit:
+                    return false
+
+                case <-ticker.C:
+                    m.updateHashes <- hashesCompleted
+                    hashesCompleted = 0
+
+                    // The current block is stale if the best block
+                    // has changed.
+                    bestHash, _ := m.server.blockManager.chainState.Best()
+                    if !header.PrevBlock.IsEqual(bestHash) {
+                        return false
+                    }
+
+                    // The current block is stale if the memory pool
+                    // has been updated since the block template was
+                    // generated and it has been at least one
+                    // minute.
+                    if lastTxUpdate != m.txSource.LastUpdated() &&
+                        time.Now().After(lastGenerated.Add(time.Minute)) {
+
+                        return false
+                    }
+
+                    UpdateBlockTime(msgBlock, m.server.blockManager)
+
+                default:
+                    // Non-blocking select to fall through
+                }
+
+                // Update the nonce and hash the block header.  Each
+                // hash is actually a double sha256 (two hashes), so
+                // increment the number of hashes completed for each
+                // attempt accordingly.
+                header.NonceHeaderA = mhA
+                header.NonceHeaderB = mhB
+                hash := header.BlockHash()
+                hashesCompleted += 2
+
+                // The block is solved when the new block hash is less
+                // than the target difficulty.  Yay!
+                if blockchain.HashToBig(&hash).Cmp(targetDifficulty) <= 0 {
+                    m.updateHashes <- hashesCompleted
+                    return true
+                }
+            }
 		}
 	}
 
@@ -406,6 +520,8 @@ func (m *CPUMiner) Start() {
 		return
 	}
 
+    m.hCache, _ = ciphrtxt.OpenHeaderCache("localhost", 7754, filepath.Join(defaultDataDir,"hdb/localhost"))
+
 	m.quit = make(chan struct{})
 	m.speedMonitorQuit = make(chan struct{})
 	m.wg.Add(2)
@@ -433,6 +549,9 @@ func (m *CPUMiner) Stop() {
 
 	close(m.quit)
 	m.wg.Wait()
+    
+    m.hCache.Close()
+    
 	m.started = false
 	minrLog.Infof("CPU miner stopped")
 }

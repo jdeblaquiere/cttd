@@ -175,6 +175,8 @@ func (hc *HeaderCache) Remove(h *RawMessageHeader) (err error) {
 }
 
 func (hc *HeaderCache) FindByI (I []byte) (h *RawMessageHeader, err error) {
+    hc.Sync()
+
     value, err := hc.db.Get(I, nil)
     if err != nil {
         return nil, err
@@ -187,9 +189,40 @@ func (hc *HeaderCache) FindByI (I []byte) (h *RawMessageHeader, err error) {
 }
 
 func (hc *HeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader, err error) {
+    hc.Sync()
+
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
     tag1 := fmt.Sprintf("D%08X%s0", tstamp, emptyMessage)
     tag2 := "D" + "FFFFFFFF" + emptyMessage + "0"
+    
+    bin1, err := hex.DecodeString(tag1)
+    if err != nil {
+        return nil, err
+    }
+    bin2, err := hex.DecodeString(tag2)
+    if err != nil {
+        return nil, err
+    }
+    
+    iter := hc.db.NewIterator(&util.Range{Start: bin1, Limit: bin2}, nil)
+    
+    hdrs = make([]RawMessageHeader, 0)
+    for iter.Next() {
+        h := new(RawMessageHeader)
+        if h.Deserialize(string(iter.Value())) == nil {
+            return nil, errors.New("error parsing message")
+        }
+        hdrs = append(hdrs, *h)
+    }
+    return hdrs, nil
+}
+
+func (hc *HeaderCache) FindExpiringAfter (tstamp uint32) (hdrs []RawMessageHeader, err error) {
+    hc.Sync()
+
+    emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
+    tag1 := fmt.Sprintf("E%08X%s0", tstamp, emptyMessage)
+    tag2 := "E" + "FFFFFFFF" + emptyMessage + "0"
     
     bin1, err := hex.DecodeString(tag1)
     if err != nil {
@@ -306,15 +339,16 @@ func (hc *HeaderCache) pruneExpired() (err error) {
 }
 
 func (hc *HeaderCache) Sync() (err error) {
-    //should only have a single goroutine sync'ing at a time
-    hc.syncMutex.Lock()
-    defer hc.syncMutex.Unlock()
-    
+    // if "fresh enough" (refreshMinDelay) then simply return
     now := uint32(time.Now().Unix())
     
     if (now - hc.lastRefresh) < refreshMinDelay {
         return nil
     }
+    
+    //should only have a single goroutine sync'ing at a time
+    hc.syncMutex.Lock()
+    defer hc.syncMutex.Unlock()
     
     serverTime, err := hc.getTime()
     if err != nil {
