@@ -5,6 +5,8 @@
 
 package chainhash
 
+import "fmt"
+import "encoding/hex"
 import "github.com/btcsuite/fastsha256"
 import "github.com/jadeblaquiere/ctcd/btcec"
 
@@ -36,6 +38,8 @@ func DoubleHashH(b []byte) Hash {
 // ShaMulSha256SH calculates sha256(secp256k1mul(sha256(b))) and returns the resulting bytes
 // as a ShaHash.
 func ShaMulSha256SH(b []byte) Hash {
+    //fmt.Printf("Header len = %d\n", len(b))
+    //fmt.Printf("Header = %s\n", hex.EncodeToString(b[:]))
 	first := fastsha256.Sum256(b)
     _, pub := btcec.PrivKeyFromBytes(btcec.S256(),first[:])
     second := pub.SerializeUncompressed()

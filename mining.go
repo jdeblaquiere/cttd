@@ -765,37 +765,6 @@ mempoolLoop:
 // consensus rules.  Finally, it will update the target difficulty if needed
 // based on the new time for the test networks since their target difficulty can
 // change based upon time.
-func LegacyUpdateBlockTime(msgBlock *wire.LegacyMsgBlock, bManager *blockManager) error {
-	// The new timestamp is potentially adjusted to ensure it comes after
-	// the median time of the last several blocks per the chain consensus
-	// rules.
-	newTimestamp, err := medianAdjustedTime(&bManager.chainState,
-		bManager.server.timeSource)
-	if err != nil {
-		return err
-	}
-	msgBlock.Header.Timestamp = newTimestamp
-
-	// If running on a network that requires recalculating the difficulty,
-	// do so now.
-	if activeNetParams.ReduceMinDifficulty {
-		difficulty, err := bManager.chain.CalcNextRequiredDifficulty(
-			newTimestamp)
-		if err != nil {
-			return err
-		}
-		msgBlock.Header.Bits = difficulty
-	}
-
-	return nil
-}
-
-// UpdateBlockTime updates the timestamp in the header of the passed block to
-// the current time while taking into account the median time of the last
-// several blocks to ensure the new time is after that time per the chain
-// consensus rules.  Finally, it will update the target difficulty if needed
-// based on the new time for the test networks since their target difficulty can
-// change based upon time.
 func UpdateBlockTime(msgBlock *wire.MsgBlock, bManager *blockManager) error {
 	// The new timestamp is potentially adjusted to ensure it comes after
 	// the median time of the last several blocks per the chain consensus
@@ -818,35 +787,6 @@ func UpdateBlockTime(msgBlock *wire.MsgBlock, bManager *blockManager) error {
 		msgBlock.Header.Bits = difficulty
 	}
 
-	return nil
-}
-
-// LegacyUpdateExtraNonce updates the extra nonce in the coinbase script of the passed
-// block by regenerating the coinbase script with the passed value and block
-// height.  It also recalculates and updates the new merkle root that results
-// from changing the coinbase script.
-func LegacyUpdateExtraNonce(msgBlock *wire.LegacyMsgBlock, blockHeight int32, extraNonce uint64) error {
-	coinbaseScript, err := standardCoinbaseScript(blockHeight, extraNonce)
-	if err != nil {
-		return err
-	}
-	if len(coinbaseScript) > blockchain.MaxCoinbaseScriptLen {
-		return fmt.Errorf("coinbase transaction script length "+
-			"of %d is out of range (min: %d, max: %d)",
-			len(coinbaseScript), blockchain.MinCoinbaseScriptLen,
-			blockchain.MaxCoinbaseScriptLen)
-	}
-	msgBlock.Transactions[0].TxIn[0].SignatureScript = coinbaseScript
-
-	// TODO(davec): A btcutil.Block should use saved in the state to avoid
-	// recalculating all of the other transaction hashes.
-	// block.Transactions[0].InvalidateCache()
-
-	// Recalculate the merkle root with the updated extra nonce.
-	panic("LegacyUpdateExtraNonce incomplete")
-    //block := btcutil.NewBlock(msgBlock)
-	//merkles := blockchain.BuildMerkleTreeStore(block.Transactions())
-	//msgBlock.Header.MerkleRoot = *merkles[len(merkles)-1]
 	return nil
 }
 

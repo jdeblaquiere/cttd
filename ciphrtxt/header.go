@@ -41,11 +41,15 @@ type SerializedMessageHeaderV1 [MessageHeaderLengthV1]byte
 // nonce is calculated to ensure the hash of the long header has nbits zeros
 // (see also Authenticated Encryption with Additional Data, AEAD, and Hashcash)
 
-const ShortMessageHeaderLengthV2 = (4+4+4+33+33+33)   
-const ShortMessageHeaderLengthB64V2 = ((ShortMessageHeaderLengthV2 * 4) / 3)
+//const ShortMessageHeaderLengthV2 = (4+4+4+33+33+33)   
+const ShortMessageHeaderLengthV2 = (111)   
+//const ShortMessageHeaderLengthB64V2 = ((ShortMessageHeaderLengthV2 * 4) / 3)
+const ShortMessageHeaderLengthB64V2 = (148)
 
-const MessageHeaderLengthV2 = (ShortMessageHeaderLengthV2+32+32+5)   
-const MessageHeaderLengthB64V2 = ((MessageHeaderLengthV2 * 4) / 3)
+//const MessageHeaderLengthV2 = (ShortMessageHeaderLengthV2+32+32+5)   
+const MessageHeaderLengthV2 = (180)   
+//const MessageHeaderLengthB64V2 = ((MessageHeaderLengthV2 * 4) / 3)
+const MessageHeaderLengthB64V2 = (240)
 
 type SerializedMessageHeaderV2 [MessageHeaderLengthB64V2]byte
 type BinaryMessageHeaderV2 [MessageHeaderLengthV2]byte

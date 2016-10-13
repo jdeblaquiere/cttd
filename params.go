@@ -6,7 +6,6 @@ package main
 
 import (
 	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/wire"
 )
 
 // activeNetParams is a pointer to the parameters specific to the
@@ -15,51 +14,9 @@ var activeNetParams = &ctindigoNetParams
 
 // params is used to group parameters for various networks such as the main
 // network and test networks.
-type legacyParams struct {
-	*chaincfg.LegacyParams
-	rpcPort string
-}
-
-// params is used to group parameters for various networks such as the main
-// network and test networks.
 type params struct {
 	*chaincfg.Params
 	rpcPort string
-}
-
-// mainNetParams contains parameters specific to the main network
-// (wire.MainNet).  NOTE: The RPC port is intentionally different than the
-// reference implementation because btcd does not handle wallet requests.  The
-// separate wallet process listens on the well-known port and forwards requests
-// it does not handle on to btcd.  This approach allows the wallet process
-// to emulate the full reference implementation RPC API.
-var mainNetParams = legacyParams{
-	LegacyParams:  &chaincfg.MainNetParams,
-	rpcPort: "8334",
-}
-
-// regressionNetParams contains parameters specific to the regression test
-// network (wire.TestNet).  NOTE: The RPC port is intentionally different
-// than the reference implementation - see the mainNetParams comment for
-// details.
-var regressionNetParams = legacyParams{
-	LegacyParams:  &chaincfg.RegressionNetParams,
-	rpcPort: "18334",
-}
-
-// testNet3Params contains parameters specific to the test network (version 3)
-// (wire.TestNet3).  NOTE: The RPC port is intentionally different than the
-// reference implementation - see the mainNetParams comment for details.
-var testNet3Params = legacyParams{
-	LegacyParams:  &chaincfg.TestNet3Params,
-	rpcPort: "18334",
-}
-
-// simNetParams contains parameters specific to the simulation test network
-// (wire.SimNet).
-var simNetParams = legacyParams{
-	LegacyParams:  &chaincfg.SimNetParams,
-	rpcPort: "18556",
 }
 
 // ctindigoNetParams contains parameters specific to the CT Indigo test network
@@ -86,10 +43,5 @@ var ctredNetParams = params{
 // "testnet3" is planned for the future, at which point this function can be
 // removed and the network parameter's name used instead.
 func netName(chainParams *params) string {
-	switch chainParams.Net {
-	case wire.TestNet3:
-		return "testnet"
-	default:
-		return chainParams.Name
-	}
+	return chainParams.Name
 }
