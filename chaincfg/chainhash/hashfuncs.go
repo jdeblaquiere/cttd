@@ -5,8 +5,8 @@
 
 package chainhash
 
-import "fmt"
-import "encoding/hex"
+//import "fmt"
+//import "encoding/hex"
 import "github.com/btcsuite/fastsha256"
 import "github.com/jadeblaquiere/ctcd/btcec"
 
