@@ -95,7 +95,8 @@ type Params struct {
 
 	// SubsidyReductionInterval is the interval of blocks before the subsidy
 	// is reduced.
-	SubsidyReductionInterval int32
+	//SubsidyReductionInterval int32
+    SubsidyInitialHalflife int32
 
 	// TargetTimespan is the desired amount of time that should elapse
 	// before the block difficulty requirement is examined to determine how
@@ -176,7 +177,8 @@ var CTIndigoNetParams = Params{
 	PowLimit:                 ctindigoNetPowLimit,
 	PowLimitBits:             0x1f007fff,
 	CoinbaseMaturity:         100,
-	SubsidyReductionInterval: 210000,
+	//SubsidyReductionInterval: 210000,
+    SubsidyInitialHalflife:   10080,
 	TargetTimespan:           time.Hour * 2,       // 2 hours
 	TargetTimePerBlock:       time.Minute * 1,     // 1 minute
 	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more
@@ -232,7 +234,8 @@ var CTRedNetParams = Params{
 	PowLimit:               ctredNetPowLimit,
 	PowLimitBits:           0x1f07ffff,
 	CoinbaseMaturity:         100,
-	SubsidyReductionInterval: 210000,
+	//SubsidyReductionInterval: 210000,
+    SubsidyInitialHalflife:   10080,
 	TargetTimespan:           time.Hour * 2,       // 2 hours
 	TargetTimePerBlock:       time.Minute * 1,     // 1 minute
 	RetargetAdjustmentFactor: 4,                   // 25% less, 400% more

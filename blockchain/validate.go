@@ -42,9 +42,9 @@ const (
 	// coinbases to start with the serialized block height.
 	serializedHeightVersion = 2
 
-	// baseSubsidy is the starting subsidy amount for mined blocks.  This
+	// baseSubsidyCoins is the starting subsidy amount for mined blocks.  This
 	// value is halved every SubsidyHalvingInterval blocks.
-	baseSubsidy = 50 * btcutil.SatoshiPerBitcoin
+	baseSubsidyCoins = 1024
 )
 
 var (
@@ -156,35 +156,42 @@ func IsFinalizedTransaction(tx *btcutil.Tx, blockHeight int32, blockTime time.Ti
 // isBIP0030Node returns whether or not the passed node represents one of the
 // two blocks that violate the BIP0030 rule which prevents transactions from
 // overwriting old ones.
-func isBIP0030Node(node *blockNode) bool {
-	if node.height == 91842 && node.hash.IsEqual(block91842Hash) {
-		return true
-	}
-
-	if node.height == 91880 && node.hash.IsEqual(block91880Hash) {
-		return true
-	}
-
-	return false
-}
+//func isBIP0030Node(node *blockNode) bool {
+//	if node.height == 91842 && node.hash.IsEqual(block91842Hash) {
+//		return true
+//	}
+//
+//	if node.height == 91880 && node.hash.IsEqual(block91880Hash) {
+//		return true
+//	}
+//
+//	return false
+//}
 
 // CalcBlockSubsidy returns the subsidy amount a block at the provided height
 // should have. This is mainly used for determining how much the coinbase for
 // newly generated blocks awards as well as validating the coinbase for blocks
 // has the expected value.
 //
-// The subsidy is halved every SubsidyReductionInterval blocks.  Mathematically
-// this is: baseSubsidy / 2^(height/SubsidyReductionInterval)
+// The subsidy decays in epochs. The first epoch is approximately 7 days long
+// and each epoch is twice as long as the previous. The reward rate for each
+// epoch is half the previous, but the total rewards for each epoch are 
+// approximately equal as it is essentially half as much for twice as long.
 //
-// At the target block generation rate for the main network, this is
-// approximately every 4 years.
+// All rewards are integer coins. There are 10 epochs, starting with 1024
+// coins for the genesis block and trailing off to 1 coin per block for the
+// final 3584 day (9.8 year) epoch, after which the reward goes to zero,
+// yielding 67M coins
+//
 func CalcBlockSubsidy(height int32, chainParams *chaincfg.Params) int64 {
-	if chainParams.SubsidyReductionInterval == 0 {
-		return baseSubsidy
+    shl := int64(chainParams.SubsidyInitialHalflife)
+	if shl == 0 {
+		return baseSubsidyCoins * btcutil.SatoshiPerBitcoin
 	}
 
 	// Equivalent to: baseSubsidy / 2^(height/subsidyHalvingInterval)
-	return baseSubsidy >> uint(height/chainParams.SubsidyReductionInterval)
+	//return baseSubsidy >> uint(height/chainParams.SubsidyReductionInterval)
+    return ((baseSubsidyCoins * shl) / (int64(height) + shl)) * btcutil.SatoshiPerBitcoin
 }
 
 // CheckTransactionSanity performs some preliminary checks on a transaction to
@@ -973,20 +980,20 @@ func (b *BlockChain) checkConnectBlock(node *blockNode, block *btcutil.Block, vi
 	// check must be skipped for those blocks. The isBIP0030Node function is
 	// used to determine if this block is one of the two blocks that must be
 	// skipped.
-	enforceBIP0030 := !isBIP0030Node(node)
-	if enforceBIP0030 {
-		err := b.checkBIP0030(node, block, view)
-		if err != nil {
-			return err
-		}
-	}
+	//enforceBIP0030 := !isBIP0030Node(node)
+	//if enforceBIP0030 {
+    err := b.checkBIP0030(node, block, view)
+    if err != nil {
+        return err
+    }
+	//}
 
 	// Load all of the utxos referenced by the inputs for all transactions
 	// in the block don't already exist in the utxo view from the database.
 	//
 	// These utxo entries are needed for verification of things such as
 	// transaction inputs, counting pay-to-script-hashes, and scripts.
-	err := view.fetchInputUtxos(b.db, block)
+	err = view.fetchInputUtxos(b.db, block)
 	if err != nil {
 		return err
 	}
