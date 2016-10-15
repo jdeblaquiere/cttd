@@ -13,6 +13,7 @@ import (
 	"math"
 	mrand "math/rand"
 	"net"
+    "path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -2467,7 +2468,7 @@ func newServer(listenAddrs []string, db database.DB, chainParams *chaincfg.Param
         // if this fails we have real issues.
         port, err := strconv.ParseUint(activeNetParams.CTMsgstorePort, 10, 16)
         if (err == nil) {        
-            dbdir := "hdrcache/db/" + activeNetParams.CTMsgstoreHost
+            dbdir := filepath.Join(defaultDataDir,"hdb",activeNetParams.CTMsgstoreHost)
 
             hcache, err = ciphrtxt.OpenHeaderCache(activeNetParams.CTMsgstoreHost, uint16(port), dbdir)
             if err != nil {

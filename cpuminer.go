@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-    "path/filepath"
+    //"path/filepath"
 	"runtime"
 	"sync"
 	"time"
@@ -426,7 +426,12 @@ func (m *CPUMiner) Start() {
 		return
 	}
 
-    m.hCache, _ = ciphrtxt.OpenHeaderCache("localhost", 7754, filepath.Join(defaultDataDir,"hdb/localhost"))
+    // Can't mine blocks if we don't have a headerCache.
+	if m.hCache == nil {
+		return
+	}
+
+    //m.hCache, _ = ciphrtxt.OpenHeaderCache("localhost", 7754, filepath.Join(defaultDataDir,"hdb/localhost"))
 
 	m.quit = make(chan struct{})
 	m.speedMonitorQuit = make(chan struct{})
@@ -456,7 +461,7 @@ func (m *CPUMiner) Stop() {
 	close(m.quit)
 	m.wg.Wait()
     
-    m.hCache.Close()
+    //m.hCache.Close()
     
 	m.started = false
 	minrLog.Infof("CPU miner stopped")
@@ -632,6 +637,7 @@ func newCPUMiner(policy *mining.Policy, s *server) *CPUMiner {
 	return &CPUMiner{
 		policy:            policy,
 		txSource:          s.txMemPool,
+        hCache:            s.headerCache,
 		server:            s,
 		numWorkers:        defaultNumWorkers,
 		updateNumWorkers:  make(chan struct{}),
