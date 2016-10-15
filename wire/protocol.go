@@ -113,16 +113,16 @@ type BitcoinNet uint32
 // better idea to simply disconnect clients that are misbehaving over TCP.
 const (
 	// MainNet represents the main bitcoin network.
-	MainNet BitcoinNet = 0xd9b4bef9
+	// MainNet BitcoinNet = 0xd9b4bef9
 
 	// TestNet represents the regression test network.
-	TestNet BitcoinNet = 0xdab5bffa
+	// TestNet BitcoinNet = 0xdab5bffa
 
 	// TestNet3 represents the test network (version 3).
-	TestNet3 BitcoinNet = 0x0709110b
+	// TestNet3 BitcoinNet = 0x0709110b
 
 	// SimNet represents the simulation test network.
-	SimNet BitcoinNet = 0x12141c16
+	// SimNet BitcoinNet = 0x12141c16
 
 	// CTIndigoNet represents the ciphrtxt-indigo test network.
 	CTIndigoNet BitcoinNet = 0xbedeadfe
@@ -134,10 +134,11 @@ const (
 // bnStrings is a map of bitcoin networks back to their constant names for
 // pretty printing.
 var bnStrings = map[BitcoinNet]string{
-	MainNet:  "MainNet",
-	TestNet:  "TestNet",
-	TestNet3: "TestNet3",
-	SimNet:   "SimNet",
+	//MainNet:  "MainNet",
+	//TestNet:  "TestNet",
+	//TestNet3: "TestNet3",
+	//SimNet:   "SimNet",
+	CTIndigoNet:   "CTIndigoNet",
 	CTRedNet:   "CTRedNet",
 }
 

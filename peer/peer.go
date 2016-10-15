@@ -1154,9 +1154,10 @@ func (p *Peer) writeMessage(msg wire.Message) error {
 // to send malformed messages without the peer being disconnected.
 func (p *Peer) isAllowedReadError(err error) bool {
 	// Only allow read errors in regression test mode.
-	if p.cfg.ChainParams.Net != wire.TestNet {
-		return false
-	}
+	//if p.cfg.ChainParams.Net != wire.TestNet {
+	//	return false
+	//}
+    return false
 
 	// Don't allow the error if it's not specifically a malformed message error.
 	if _, ok := err.(*wire.MessageError); !ok {
