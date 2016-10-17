@@ -1405,6 +1405,7 @@ func newBlockManager(s *server, indexManager blockchain.IndexManager) (*blockMan
 	var err error
 	bm.chain, err = blockchain.New(&blockchain.Config{
 		DB:            s.db,
+        HeaderCache:   s.headerCache,
 		ChainParams:   s.chainParams,
 		TimeSource:    s.timeSource,
 		Notifications: bm.handleNotifyMsg,

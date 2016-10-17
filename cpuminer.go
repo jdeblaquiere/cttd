@@ -208,7 +208,7 @@ func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, blockHeight int32,
             return false
         }
         for _, rh := range rhdrs {
-            bh := rh.BinaryHeaderV2()
+            bh := rh.ExportBinaryHeaderV2()
             if bh != nil {
                 binhdrs = append(binhdrs, *bh)
             }

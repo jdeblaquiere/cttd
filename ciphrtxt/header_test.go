@@ -48,12 +48,21 @@ func TestDeserializeSerialize (t *testing.T) {
         h := new(RawMessageHeader)
         h.Deserialize(hdr)
         hdr_out := h.Serialize()
-        hdr_bin := h.BinaryHeaderV2()
+        hdr_bin := h.ExportBinaryHeaderV2()
+        hh := ImportBinaryHeaderV2(hdr_bin[:])
         count += 1
         
         if hdr != hdr_out {
             fmt.Println("hdr mismatch!")
             fmt.Println(" in  : " + hdr)
+            fmt.Println(" out : " + hdr_out)
+            fmt.Println()
+            t.Fail()
+        }
+        
+        if hh.Serialize() != hdr_out {
+            fmt.Println("hdr mismatch!")
+            fmt.Println(" in  : " + hh.Serialize())
             fmt.Println(" out : " + hdr_out)
             fmt.Println()
             t.Fail()
@@ -70,7 +79,7 @@ func TestDeserializeSerialize (t *testing.T) {
             }
         }
     
-        dbk, err := h.DBKeys()
+        dbk, err := h.dbKeys()
         if(err != nil){
             fmt.Println("whoops:", err)
             t.Fail()
@@ -215,6 +224,48 @@ func TestHeaderGoroutines (t *testing.T) {
     //}
 }
 
+func TestTimes (t *testing.T) {
+    hc, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
+    if err != nil {
+        t.Fail()
+    }
+    defer hc.Close()
+
+    // last hour as golang time.Time, with a 1 minute propagation time margin
+    startTime := time.Now().Add(time.Duration(-61 * time.Minute))
+    // messages should expire after startTime + 7 days
+    expireTime := startTime.Add(time.Duration((7 * 24) * time.Hour))
+
+    // validate based on messages from the last hour
+    now := time.Now().Unix()
+    mh, err := hc.getHeadersSince(uint32(now-3600))
+    if err != nil {
+        fmt.Println("error getHeaderSince - test failed")
+        t.Fail()
+    }
+    
+    if len(mh) == 0 {
+        fmt.Println("no message headers received - test failed")
+        t.Fail()
+    }
+    
+    for _, h := range mh {
+        if h.MessageTime().Before(startTime) {
+            fmt.Println("Message before Start")
+            fmt.Println("Start  : " + startTime.Format("Mon Jan _2 15:04:05 2006"))
+            fmt.Println("Message: " + h.MessageTime().Format("Mon Jan _2 15:04:05 2006"))
+            t.Fail()
+        }
+        if h.ExpireTime().Before(expireTime) {
+            fmt.Println("Expire before + 7d")
+            fmt.Println("Expire : " + expireTime.Format("Mon Jan _2 15:04:05 2006"))
+            fmt.Println("Now + 7: " + h.ExpireTime().Format("Mon Jan _2 15:04:05 2006"))
+            t.Fail()
+        }
+    }
+    
+}
+
 func TestFindByI (t *testing.T) {
     hc, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
     if err != nil {
@@ -244,7 +295,7 @@ func TestFindByI (t *testing.T) {
     for _, hdr := range s.HeaderList {
         h := new(RawMessageHeader)
         h.Deserialize(hdr)
-        Ibin, err := hex.DecodeString(h.I)
+        Ibin, err := h.IKey()
         if err != nil {
             t.Fail()
         }

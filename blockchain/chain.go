@@ -14,6 +14,7 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/ctcd/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcd/wire"
@@ -160,6 +161,7 @@ type BlockChain struct {
 	// separate mutex.
 	checkpointsByHeight map[int32]*chaincfg.Checkpoint
 	db                  database.DB
+	headerCache         *ciphrtxt.HeaderCache
 	chainParams         *chaincfg.Params
 	timeSource          MedianTimeSource
 	notifications       NotificationCallback
@@ -1457,6 +1459,13 @@ type Config struct {
 	// This field can be nil if the caller does not wish to make use of an
 	// index manager.
 	IndexManager IndexManager
+    
+    // HeaderCache provides a connection to the header cache which is
+    // used to validate that block nonces are referencing headers which 
+    // are in the message store cache
+    //
+    // If HeaderCache is nil, this check will be skipped
+    HeaderCache *ciphrtxt.HeaderCache
 }
 
 // New returns a BlockChain instance using the provided configuration details.
@@ -1486,6 +1495,7 @@ func New(config *Config) (*BlockChain, error) {
 	b := BlockChain{
 		checkpointsByHeight: checkpointsByHeight,
 		db:                  config.DB,
+		headerCache:         config.HeaderCache,
 		chainParams:         params,
 		timeSource:          config.TimeSource,
 		notifications:       config.Notifications,

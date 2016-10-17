@@ -3609,7 +3609,7 @@ func verifyChain(s *rpcServer, level, depth int32) error {
 		// Level 1 does basic chain sanity checks.
 		if level > 0 {
 			err := blockchain.CheckBlockSanity(block,
-				activeNetParams.PowLimit, s.server.timeSource)
+				activeNetParams.PowLimit, s.server.timeSource, s.server.headerCache)
 			if err != nil {
 				rpcsLog.Errorf("Verify is unable to validate "+
 					"block at hash %v height %d: %v",

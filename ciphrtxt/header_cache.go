@@ -123,7 +123,7 @@ type dbkeys struct {
     I []byte
 }
 
-func (h *RawMessageHeader) DBKeys() (dbk *dbkeys, err error) {
+func (h *RawMessageHeader) dbKeys() (dbk *dbkeys, err error) {
     dbk = new(dbkeys)
     dbk.date, err = hex.DecodeString(fmt.Sprintf("D%08X%s0", h.time, h.I))
     if err != nil {
@@ -141,7 +141,7 @@ func (h *RawMessageHeader) DBKeys() (dbk *dbkeys, err error) {
 }
 
 func (hc *HeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
-    dbk, err := h.DBKeys()
+    dbk, err := h.dbKeys()
     if err != nil {
         return false, err
     }
@@ -163,7 +163,7 @@ func (hc *HeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
 }
 
 func (hc *HeaderCache) Remove(h *RawMessageHeader) (err error) {
-    dbk, err := h.DBKeys()
+    dbk, err := h.dbKeys()
     if err != nil {
         return err
     }
@@ -318,7 +318,7 @@ func (hc *HeaderCache) pruneExpired() (err error) {
         if hdr.Deserialize(string(iter.Value())) == nil {
             return errors.New("unable to parse database value")
         }
-        dbk, err := hdr.DBKeys()
+        dbk, err := hdr.dbKeys()
         if err != nil {
             return err
         }

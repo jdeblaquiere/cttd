@@ -12,6 +12,7 @@ import (
     "fmt"
     "strconv"
     "strings"
+    "time"
 )
 
 const MessageHeaderLengthV1 =  5 + 1 + // "M0100" + ":"
@@ -104,6 +105,13 @@ func (z *RawMessageHeader) deserializeV2(s string) *RawMessageHeader {
         fmt.Println("base64 conversion failed")
         return nil
     }
+    return z.importBinaryHeaderV2(smh[:])
+}
+
+func (z *RawMessageHeader) importBinaryHeaderV2(smh []byte) *RawMessageHeader {
+    if len(smh) < ShortMessageHeaderLengthV2 {
+        return nil
+    }
     if bytes.Compare(smh[:4],[]byte("M\x02\x00\x00")) != 0 {
         fmt.Println("v0200 version string mismatch")
         return nil
@@ -117,7 +125,7 @@ func (z *RawMessageHeader) deserializeV2(s string) *RawMessageHeader {
     z.I = hex.EncodeToString(smh[12:45])
     z.J = hex.EncodeToString(smh[45:78])
     z.K = hex.EncodeToString(smh[78:111])
-    if len(s) >= MessageHeaderLengthB64V2 {
+    if len(smh) >= MessageHeaderLengthV2 {
         var ui8 uint8
         var ui32 uint32
         z.r = string(smh[111:143])
@@ -152,7 +160,7 @@ func (z *RawMessageHeader) serializeV1() *SerializedMessageHeaderV1 {
     return smh
 }
 
-func (z *RawMessageHeader) binaryHeaderV2() *BinaryMessageHeaderV2 {
+func (z *RawMessageHeader) exportBinaryHeaderV2() *BinaryMessageHeaderV2 {
     buf := new(bytes.Buffer)
     buf.WriteString("M\x02\x00\x00")
     binary.Write(buf, binary.BigEndian, z.time)
@@ -190,7 +198,7 @@ func (z *RawMessageHeader) binaryHeaderV2() *BinaryMessageHeaderV2 {
 }
 
 func (z *RawMessageHeader) serializeV2() *SerializedMessageHeaderV2 {
-    bmh := z.binaryHeaderV2()
+    bmh := z.exportBinaryHeaderV2()
     b64 := make([]byte, 240)
     base64.StdEncoding.Encode(b64, bmh[:])
     //fmt.Println("as b64 " + string(b64))
@@ -223,10 +231,31 @@ func (z *RawMessageHeader) SerializeV2() *SerializedMessageHeaderV2 {
     }
 }
 
-func (z *RawMessageHeader) BinaryHeaderV2() *BinaryMessageHeaderV2 {
+func (z *RawMessageHeader) ExportBinaryHeaderV2() *BinaryMessageHeaderV2 {
     if strings.Compare(z.version,"0100") == 0 {
         return nil
     } else {
-        return z.binaryHeaderV2()
+        return z.exportBinaryHeaderV2()
     }
+}
+
+func ImportBinaryHeaderV2(smh []byte) *RawMessageHeader {
+    z := new(RawMessageHeader)
+    return z.importBinaryHeaderV2(smh)
+}
+
+func (z *RawMessageHeader) MessageTime() time.Time {
+    return time.Unix(int64(z.time), 0)
+}
+
+func (z *RawMessageHeader) ExpireTime() time.Time {
+    return time.Unix(int64(z.expire), 0)
+}
+
+func (z *RawMessageHeader) IKey() (k []byte, err error) {
+    k, err = hex.DecodeString(z.I)
+    if err != nil {
+        return nil, err
+    }
+    return k, nil
 }

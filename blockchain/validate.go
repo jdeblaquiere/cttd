@@ -6,6 +6,7 @@ package blockchain
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"math/big"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/ctcd/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
@@ -37,6 +39,11 @@ const (
 	// medianTimeBlocks is the number of previous blocks which should be
 	// used to calculate the median time used to validate block timestamps.
 	medianTimeBlocks = 11
+
+	// allowedClockDrift is the tolerance for clock skew when validating
+    // message header nonces. Only nonces which expire after now + drift
+    // will be compared against the header cache
+	allowedClockDrift = 15 * 60
 
 	// serializedHeightVersion is the block version which changed block
 	// coinbases to start with the serialized block height.
@@ -455,16 +462,88 @@ func checkBlockHeaderSanity(header *wire.BlockHeader, powLimit *big.Int, timeSou
 	return nil
 }
 
+// checkBlockHeaderNonces checks the message headers used as nonces to solve the
+// block. All headers are validated as syntactically correct headers (which 
+// themselves contain a sha256 nonce). Unexpired messages are also validated to
+// exist in the message cache. 
+//
+// The flags do not modify the behavior of this function directly, however they
+// are needed to pass along to checkBlockHeaderSanity.
+func checkBlockHeaderNonces(header *wire.BlockHeader, timeSource MedianTimeSource, hc *ciphrtxt.HeaderCache) error {
+    headerA := ciphrtxt.ImportBinaryHeaderV2(header.NonceHeaderA[:])
+    if headerA == nil {
+        str := fmt.Sprintf("Failed to import NonceA : ", 
+            hex.EncodeToString(header.NonceHeaderA[:]))
+        return ruleError(ErrNonceValidation, str)
+    }
+    
+    headerB := ciphrtxt.ImportBinaryHeaderV2(header.NonceHeaderB[:])
+    if headerB == nil {
+        str := fmt.Sprintf("Failed to import NonceB : ", 
+            hex.EncodeToString(header.NonceHeaderB[:]))
+        return ruleError(ErrNonceValidation, str)
+    }
+    
+    if hc == nil {
+        return nil
+    }
+    
+    minExpireTime := timeSource.AdjustedTime().Add(time.Second *
+		allowedClockDrift)
+    
+    
+    if headerA.ExpireTime().After(minExpireTime) {
+        ikey, err := headerA.IKey()
+        if err != nil {
+            str := fmt.Sprintf("Unable to parse message hex key : ", 
+                hex.EncodeToString(header.NonceHeaderA[:]))
+            return ruleError(ErrNonceValidation, str)
+        }
+        
+        _, err = hc.FindByI(ikey)
+        if err != nil {
+            str := fmt.Sprintf("Message not found in HeaderCache : ", 
+                hex.EncodeToString(header.NonceHeaderA[:]))
+            return ruleError(ErrNonceValidation, str)
+        }
+    } 
+    
+    if headerB.ExpireTime().After(minExpireTime) {
+        ikey, err := headerB.IKey()
+        if err != nil {
+            str := fmt.Sprintf("Unable to parse message hex key : ", 
+                hex.EncodeToString(header.NonceHeaderA[:]))
+            return ruleError(ErrNonceValidation, str)
+        }
+        
+        _, err = hc.FindByI(ikey)
+        if err != nil {
+            str := fmt.Sprintf("Message not found in HeaderCache : ", 
+                hex.EncodeToString(header.NonceHeaderA[:]))
+            return ruleError(ErrNonceValidation, str)
+        }
+    } 
+    
+    fmt.Println("checkBlockHeaderNonces passed for " + header.BlockHash().String())
+    
+    return nil
+}
+
 // checkBlockSanity performs some preliminary checks on a block to ensure it is
 // sane before continuing with block processing.  These checks are context free.
 //
 // The flags do not modify the behavior of this function directly, however they
 // are needed to pass along to checkBlockHeaderSanity.
-func checkBlockSanity(block *btcutil.Block, powLimit *big.Int, timeSource MedianTimeSource, flags BehaviorFlags) error {
+func checkBlockSanity(block *btcutil.Block, powLimit *big.Int, timeSource MedianTimeSource, flags BehaviorFlags, hc *ciphrtxt.HeaderCache) error {
 	msgBlock := block.MsgBlock()
 	header := &msgBlock.Header
 	err := checkBlockHeaderSanity(header, powLimit, timeSource, flags)
 	if err != nil {
+		return err
+	}
+
+	err = checkBlockHeaderNonces(header , timeSource, hc)
+    if err != nil {
 		return err
 	}
 
@@ -566,8 +645,8 @@ func checkBlockSanity(block *btcutil.Block, powLimit *big.Int, timeSource Median
 
 // CheckBlockSanity performs some preliminary checks on a block to ensure it is
 // sane before continuing with block processing.  These checks are context free.
-func CheckBlockSanity(block *btcutil.Block, powLimit *big.Int, timeSource MedianTimeSource) error {
-	return checkBlockSanity(block, powLimit, timeSource, BFNone)
+func CheckBlockSanity(block *btcutil.Block, powLimit *big.Int, timeSource MedianTimeSource, hc *ciphrtxt.HeaderCache) error {
+	return checkBlockSanity(block, powLimit, timeSource, BFNone, hc)
 }
 
 // ExtractCoinbaseHeight attempts to extract the height of the block from the
