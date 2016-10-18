@@ -1,8 +1,8 @@
-// Copyright (c) 2013-2015 The btcsuite developers
+// Copyright (c) 2013-2016 The btcsuite developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package main
+package mempool
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/btcec"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
@@ -35,13 +36,13 @@ func TestCalcMinRequiredTxRelayFee(t *testing.T) {
 		{
 			"100 bytes with default minimum relay fee",
 			100,
-			defaultMinRelayTxFee,
+			DefaultMinRelayTxFee,
 			100,
 		},
 		{
 			"max standard tx size with default minimum relay fee",
 			maxStandardTxSize,
-			defaultMinRelayTxFee,
+			DefaultMinRelayTxFee,
 			100000,
 		},
 		{
@@ -279,7 +280,7 @@ func TestDust(t *testing.T) {
 // TestCheckTransactionStandard tests the checkTransactionStandard API.
 func TestCheckTransactionStandard(t *testing.T) {
 	// Create some dummy, but otherwise standard, data for transactions.
-	prevOutHash, err := wire.NewShaHashFromStr("01")
+	prevOutHash, err := chainhash.NewHashFromStr("01")
 	if err != nil {
 		t.Fatalf("NewShaHashFromStr: unexpected error: %v", err)
 	}
@@ -469,7 +470,7 @@ func TestCheckTransactionStandard(t *testing.T) {
 	for _, test := range tests {
 		// Ensure standardness is as expected.
 		err := checkTransactionStandard(btcutil.NewTx(&test.tx),
-			test.height, timeSource, defaultMinRelayTxFee)
+			test.height, timeSource, DefaultMinRelayTxFee)
 		if err == nil && test.isStandard {
 			// Test passes since function returned standard for a
 			// transaction which is intended to be standard.

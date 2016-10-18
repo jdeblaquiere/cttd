@@ -13,12 +13,13 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
 )
 
-var zeroHash = wire.ShaHash{}
+var zeroHash = chainhash.Hash{}
 
 // importResults houses the stats and result as an import operation.
 type importResults struct {
@@ -103,8 +104,8 @@ func (bi *blockImporter) processBlock(serializedBlock []byte) (bool, error) {
 	bi.receivedLogTx += int64(len(block.MsgBlock().Transactions))
 
 	// Skip blocks that already exist.
-	blockSha := block.Sha()
-	exists, err := bi.chain.HaveBlock(blockSha)
+	blockHash := block.Hash()
+	exists, err := bi.chain.HaveBlock(blockHash)
 	if err != nil {
 		return false, err
 	}
@@ -134,7 +135,7 @@ func (bi *blockImporter) processBlock(serializedBlock []byte) (bool, error) {
 	}
 	if isOrphan {
 		return false, fmt.Errorf("import file contains an orphan "+
-			"block: %v", blockSha)
+			"block: %v", blockHash)
 	}
 
 	return true, nil

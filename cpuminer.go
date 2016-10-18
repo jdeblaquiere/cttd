@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The btcsuite developers
+// Copyright (c) 2014-2016 The btcsuite developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -8,11 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+    //"path/filepath"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/jadeblaquiere/ctcd/blockchain"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/ctcd/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/mining"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
@@ -56,6 +59,7 @@ type CPUMiner struct {
 	policy            *mining.Policy
 	txSource          mining.TxSource
 	server            *server
+    hCache            *ciphrtxt.HeaderCache
 	numWorkers        uint32
 	started           bool
 	discreteMining    bool
@@ -155,7 +159,7 @@ func (m *CPUMiner) submitBlock(block *btcutil.Block) bool {
 	// The block was accepted.
 	coinbaseTx := block.MsgBlock().Transactions[0].TxOut[0]
 	minrLog.Infof("Block submitted via CPU miner accepted (hash %s, "+
-		"amount %v)", block.Sha(), btcutil.Amount(coinbaseTx.Value))
+		"amount %v)", block.Hash(), btcutil.Amount(coinbaseTx.Value))
 	return true
 }
 
@@ -197,56 +201,73 @@ func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, blockHeight int32,
 		// new value by regenerating the coinbase script and
 		// setting the merkle root to the new value.  The
 		UpdateExtraNonce(msgBlock, blockHeight, extraNonce+enOffset)
+        
+        binhdrs := make([]ciphrtxt.BinaryMessageHeaderV2, 0)
+        rhdrs, err := m.hCache.FindExpiringAfter(uint32(time.Now().Unix() + (60*60)))
+        if err != nil {
+            return false
+        }
+        for _, rh := range rhdrs {
+            bh := rh.ExportBinaryHeaderV2()
+            if bh != nil {
+                binhdrs = append(binhdrs, *bh)
+            }
+        }
 
 		// Search through the entire nonce range for a solution while
 		// periodically checking for early quit and stale block
 		// conditions along with updates to the speed monitor.
-		for i := uint32(0); i <= maxNonce; i++ {
-			select {
-			case <-quit:
-				return false
+		//for i := uint32(0); i <= maxNonce; i++ {
+        for _, mhA := range binhdrs {
+            for _, mhB := range binhdrs {
+            
+                select {
+                case <-quit:
+                    return false
 
-			case <-ticker.C:
-				m.updateHashes <- hashesCompleted
-				hashesCompleted = 0
+                case <-ticker.C:
+                    m.updateHashes <- hashesCompleted
+                    hashesCompleted = 0
 
-				// The current block is stale if the best block
-				// has changed.
-				bestHash, _ := m.server.blockManager.chainState.Best()
-				if !header.PrevBlock.IsEqual(bestHash) {
-					return false
-				}
+                    // The current block is stale if the best block
+                    // has changed.
+                    bestHash, _ := m.server.blockManager.chainState.Best()
+                    if !header.PrevBlock.IsEqual(bestHash) {
+                        return false
+                    }
 
-				// The current block is stale if the memory pool
-				// has been updated since the block template was
-				// generated and it has been at least one
-				// minute.
-				if lastTxUpdate != m.txSource.LastUpdated() &&
-					time.Now().After(lastGenerated.Add(time.Minute)) {
+                    // The current block is stale if the memory pool
+                    // has been updated since the block template was
+                    // generated and it has been at least one
+                    // minute.
+                    if lastTxUpdate != m.txSource.LastUpdated() &&
+                        time.Now().After(lastGenerated.Add(time.Minute)) {
 
-					return false
-				}
+                        return false
+                    }
 
-				UpdateBlockTime(msgBlock, m.server.blockManager)
+                    UpdateBlockTime(msgBlock, m.server.blockManager)
 
-			default:
-				// Non-blocking select to fall through
-			}
+                default:
+                    // Non-blocking select to fall through
+                }
 
-			// Update the nonce and hash the block header.  Each
-			// hash is actually a double sha256 (two hashes), so
-			// increment the number of hashes completed for each
-			// attempt accordingly.
-			header.Nonce = i
-			hash := header.BlockSha()
-			hashesCompleted += 2
+                // Update the nonce and hash the block header.  Each
+                // hash is actually a double sha256 (two hashes), so
+                // increment the number of hashes completed for each
+                // attempt accordingly.
+                header.NonceHeaderA = mhA
+                header.NonceHeaderB = mhB
+                hash := header.BlockHash()
+                hashesCompleted += 2
 
-			// The block is solved when the new block hash is less
-			// than the target difficulty.  Yay!
-			if blockchain.ShaHashToBig(&hash).Cmp(targetDifficulty) <= 0 {
-				m.updateHashes <- hashesCompleted
-				return true
-			}
+                // The block is solved when the new block hash is less
+                // than the target difficulty.  Yay!
+                if blockchain.HashToBig(&hash).Cmp(targetDifficulty) <= 0 {
+                    m.updateHashes <- hashesCompleted
+                    return true
+                }
+            }
 		}
 	}
 
@@ -405,6 +426,13 @@ func (m *CPUMiner) Start() {
 		return
 	}
 
+    // Can't mine blocks if we don't have a headerCache.
+	if m.hCache == nil {
+		return
+	}
+
+    //m.hCache, _ = ciphrtxt.OpenHeaderCache("localhost", 7754, filepath.Join(defaultDataDir,"hdb/localhost"))
+
 	m.quit = make(chan struct{})
 	m.speedMonitorQuit = make(chan struct{})
 	m.wg.Add(2)
@@ -432,6 +460,9 @@ func (m *CPUMiner) Stop() {
 
 	close(m.quit)
 	m.wg.Wait()
+    
+    //m.hCache.Close()
+    
 	m.started = false
 	minrLog.Infof("CPU miner stopped")
 }
@@ -508,7 +539,7 @@ func (m *CPUMiner) NumWorkers() int32 {
 // detecting when it is performing stale work and reacting accordingly by
 // generating a new block template.  When a block is solved, it is submitted.
 // The function returns a list of the hashes of generated blocks.
-func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*wire.ShaHash, error) {
+func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 	m.Lock()
 
 	// Respond with an error if there's virtually 0 chance of CPU-mining a block.
@@ -538,7 +569,7 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*wire.ShaHash, error) {
 	minrLog.Tracef("Generating %d blocks", n)
 
 	i := uint32(0)
-	blockHashes := make([]*wire.ShaHash, n, n)
+	blockHashes := make([]*chainhash.Hash, n, n)
 
 	// Start a ticker which is used to signal checks for stale work and
 	// updates to the speed monitor.
@@ -583,7 +614,7 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*wire.ShaHash, error) {
 		if m.solveBlock(template.Block, curHeight+1, ticker, nil) {
 			block := btcutil.NewBlock(template.Block)
 			m.submitBlock(block)
-			blockHashes[i] = block.Sha()
+			blockHashes[i] = block.Hash()
 			i++
 			if i == n {
 				minrLog.Tracef("Generated %d blocks", i)
@@ -606,6 +637,7 @@ func newCPUMiner(policy *mining.Policy, s *server) *CPUMiner {
 	return &CPUMiner{
 		policy:            policy,
 		txSource:          s.txMemPool,
+        hCache:            s.headerCache,
 		server:            s,
 		numWorkers:        defaultNumWorkers,
 		updateNumWorkers:  make(chan struct{}),

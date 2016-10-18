@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2015 The btcsuite developers
+// Copyright (c) 2013-2016 The btcsuite developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -8,15 +8,18 @@ import (
 	"bytes"
 	"io"
 	"time"
+
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+    "github.com/jadeblaquiere/ctcd/ciphrtxt"
 )
 
 // BlockVersion is the current latest supported block version.
-const BlockVersion = 4
+const BlockVersion = 101
 
 // MaxBlockHeaderPayload is the maximum number of bytes a block header can be.
-// Version 4 bytes + Timestamp 4 bytes + Bits 4 bytes + Nonce 4 bytes +
-// PrevBlock and MerkleRoot hashes.
-const MaxBlockHeaderPayload = 16 + (HashSize * 2)
+// Version 4 bytes + Timestamp 4 bytes + Bits 4 bytes + 
+// PrevBlock and MerkleRoot hashes + 2 binary message header nonces
+const MaxBlockHeaderPayload = 12 + (chainhash.HashSize * 2) + (ciphrtxt.MessageHeaderLengthV2 * 2)
 
 // BlockHeader defines information about a block and is used in the bitcoin
 // block (MsgBlock) and headers (MsgHeaders) messages.
@@ -25,10 +28,10 @@ type BlockHeader struct {
 	Version int32
 
 	// Hash of the previous block in the block chain.
-	PrevBlock ShaHash
+	PrevBlock chainhash.Hash
 
 	// Merkle tree reference to hash of all transactions for the block.
-	MerkleRoot ShaHash
+	MerkleRoot chainhash.Hash
 
 	// Time the block was created.  This is, unfortunately, encoded as a
 	// uint32 on the wire and therefore is limited to 2106.
@@ -37,16 +40,21 @@ type BlockHeader struct {
 	// Difficulty target for the block.
 	Bits uint32
 
-	// Nonce used to generate the block.
-	Nonce uint32
+	// NonceHeader A,B are used in place of traditional integer Nonce - these are
+    // headers from the message store which can be validated by every node
+    // (until expired), after expiration the header exists in the blockchain only
+    // Two headers are used to provide N**2 combinations 
+    NonceHeaderA   ciphrtxt.BinaryMessageHeaderV2 
+    NonceHeaderB   ciphrtxt.BinaryMessageHeaderV2 
 }
 
 // blockHeaderLen is a constant that represents the number of bytes for a block
 // header.
-const blockHeaderLen = 80
+// const blockHeaderLen = ((4 + 32 + 32 + 4 + 4) + (2 * ciphrtxt.MessageHeaderLengthV2 ))
+const blockHeaderLen = 436
 
-// BlockSha computes the block identifier hash for the given block header.
-func (h *BlockHeader) BlockSha() ShaHash {
+// BlockHash computes the block identifier hash for the given block header.
+func (h *BlockHeader) BlockHash() chainhash.Hash {
 	// Encode the header and double sha256 everything prior to the number of
 	// transactions.  Ignore the error returns since there is no way the
 	// encode could fail except being out of memory which would cause a
@@ -54,7 +62,8 @@ func (h *BlockHeader) BlockSha() ShaHash {
 	var buf bytes.Buffer
 	_ = writeBlockHeader(&buf, 0, h)
 
-	return ShaMulSha256SH(buf.Bytes())
+	return chainhash.ShaMulSha256SH(buf.Bytes())
+	//return chainhash.DoubleHashH(buf.Bytes())
 }
 
 // BtcDecode decodes r using the bitcoin protocol encoding into the receiver.
@@ -96,8 +105,8 @@ func (h *BlockHeader) Serialize(w io.Writer) error {
 // NewBlockHeader returns a new BlockHeader using the provided previous block
 // hash, merkle root hash, difficulty bits, and nonce used to generate the
 // block with defaults for the remaining fields.
-func NewBlockHeader(prevHash *ShaHash, merkleRootHash *ShaHash, bits uint32,
-	nonce uint32) *BlockHeader {
+func NewBlockHeader(prevHash *chainhash.Hash, merkleRootHash *chainhash.Hash,
+	bits uint32, nonceA ciphrtxt.BinaryMessageHeaderV2, nonceB ciphrtxt.BinaryMessageHeaderV2) *BlockHeader {
 
 	// Limit the timestamp to one second precision since the protocol
 	// doesn't support better.
@@ -107,7 +116,8 @@ func NewBlockHeader(prevHash *ShaHash, merkleRootHash *ShaHash, bits uint32,
 		MerkleRoot: *merkleRootHash,
 		Timestamp:  time.Unix(time.Now().Unix(), 0),
 		Bits:       bits,
-		Nonce:      nonce,
+		NonceHeaderA:      nonceA,
+		NonceHeaderB:      nonceB,
 	}
 }
 
@@ -116,7 +126,7 @@ func NewBlockHeader(prevHash *ShaHash, merkleRootHash *ShaHash, bits uint32,
 // decoding from the wire.
 func readBlockHeader(r io.Reader, pver uint32, bh *BlockHeader) error {
 	err := readElements(r, &bh.Version, &bh.PrevBlock, &bh.MerkleRoot,
-		(*uint32Time)(&bh.Timestamp), &bh.Bits, &bh.Nonce)
+		(*uint32Time)(&bh.Timestamp), &bh.Bits, &bh.NonceHeaderA, &bh.NonceHeaderB)
 	if err != nil {
 		return err
 	}
@@ -130,7 +140,7 @@ func readBlockHeader(r io.Reader, pver uint32, bh *BlockHeader) error {
 func writeBlockHeader(w io.Writer, pver uint32, bh *BlockHeader) error {
 	sec := uint32(bh.Timestamp.Unix())
 	err := writeElements(w, bh.Version, &bh.PrevBlock, &bh.MerkleRoot,
-		sec, bh.Bits, bh.Nonce)
+		sec, bh.Bits, &bh.NonceHeaderA, &bh.NonceHeaderB)
 	if err != nil {
 		return err
 	}

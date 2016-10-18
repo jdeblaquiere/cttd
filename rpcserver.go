@@ -31,7 +31,10 @@ import (
 	"github.com/jadeblaquiere/ctcd/btcec"
 	"github.com/jadeblaquiere/ctcd/btcjson"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/ctcd/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/ctcd/mempool"
 	"github.com/jadeblaquiere/ctcd/mining"
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcd/wire"
@@ -64,7 +67,7 @@ const (
 	// consists of a zero hash plus the internal sha256 padding.  See
 	// the getworkDataLen comment for details about the internal sha256
 	// padding format.
-	hash1Len = (1 + ((wire.HashSize + 8) / fastsha256.BlockSize)) *
+	hash1Len = (1 + ((chainhash.HashSize + 8) / fastsha256.BlockSize)) *
 		fastsha256.BlockSize
 
 	// gbtNonceRange is two 32-bit big-endian hexadecimal integers which
@@ -304,7 +307,7 @@ func rpcDecodeHexError(gotHex string) *btcjson.RPCError {
 // rpcNoTxInfoError is a convenience function for returning a nicely formatted
 // RPC error which indiactes there is no information available for the provided
 // transaction hash.
-func rpcNoTxInfoError(txHash *wire.ShaHash) *btcjson.RPCError {
+func rpcNoTxInfoError(txHash *chainhash.Hash) *btcjson.RPCError {
 	return btcjson.NewRPCError(btcjson.ErrRPCNoTxInfo,
 		fmt.Sprintf("No information available about transaction %v",
 			txHash))
@@ -323,17 +326,17 @@ type workState struct {
 	sync.Mutex
 	lastTxUpdate  time.Time
 	lastGenerated time.Time
-	prevHash      *wire.ShaHash
+	prevHash      *chainhash.Hash
 	msgBlock      *wire.MsgBlock
 	extraNonce    uint64
-	blockInfo     map[wire.ShaHash]*workStateBlockInfo
+	blockInfo     map[chainhash.Hash]*workStateBlockInfo
 }
 
 // newWorkState returns a new instance of a workState with all internal fields
 // initialized and ready to use.
 func newWorkState() *workState {
 	return &workState{
-		blockInfo: make(map[wire.ShaHash]*workStateBlockInfo),
+		blockInfo: make(map[chainhash.Hash]*workStateBlockInfo),
 	}
 }
 
@@ -343,10 +346,10 @@ type gbtWorkState struct {
 	sync.Mutex
 	lastTxUpdate  time.Time
 	lastGenerated time.Time
-	prevHash      *wire.ShaHash
+	prevHash      *chainhash.Hash
 	minTimestamp  time.Time
 	template      *BlockTemplate
-	notifyMap     map[wire.ShaHash]map[int64]chan struct{}
+	notifyMap     map[chainhash.Hash]map[int64]chan struct{}
 	timeSource    blockchain.MedianTimeSource
 }
 
@@ -354,7 +357,7 @@ type gbtWorkState struct {
 // fields initialized and ready to use.
 func newGbtWorkState(timeSource blockchain.MedianTimeSource) *gbtWorkState {
 	return &gbtWorkState{
-		notifyMap:  make(map[wire.ShaHash]map[int64]chan struct{}),
+		notifyMap:  make(map[chainhash.Hash]map[int64]chan struct{}),
 		timeSource: timeSource,
 	}
 }
@@ -534,7 +537,7 @@ func handleCreateRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan 
 	// some validity checks.
 	mtx := wire.NewMsgTx()
 	for _, input := range c.Inputs {
-		txHash, err := wire.NewShaHashFromStr(input.Txid)
+		txHash, err := chainhash.NewHashFromStr(input.Txid)
 		if err != nil {
 			return nil, rpcDecodeHexError(input.Txid)
 		}
@@ -781,7 +784,7 @@ func handleDecodeRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan 
 
 	// Create and return the result.
 	txReply := btcjson.TxRawDecodeResult{
-		Txid:     mtx.TxSha().String(),
+		Txid:     mtx.TxHash().String(),
 		Version:  mtx.Version,
 		Locktime: mtx.LockTime,
 		Vin:      createVinList(&mtx),
@@ -1005,7 +1008,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 	c := cmd.(*btcjson.GetBlockCmd)
 
 	// Load the raw block bytes from the database.
-	hash, err := wire.NewShaHashFromStr(c.Hash)
+	hash, err := chainhash.NewHashFromStr(c.Hash)
 	if err != nil {
 		return nil, rpcDecodeHexError(c.Hash)
 	}
@@ -1063,7 +1066,8 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		Version:       blockHeader.Version,
 		MerkleRoot:    blockHeader.MerkleRoot.String(),
 		PreviousHash:  blockHeader.PrevBlock.String(),
-		Nonce:         blockHeader.Nonce,
+		NonceHeaderA:         blockHeader.NonceHeaderA[:],
+		NonceHeaderB:         blockHeader.NonceHeaderB[:],
 		Time:          blockHeader.Timestamp.Unix(),
 		Confirmations: uint64(1 + best.Height - blockHeight),
 		Height:        int64(blockHeight),
@@ -1077,7 +1081,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		transactions := blk.Transactions()
 		txNames := make([]string, len(transactions))
 		for i, tx := range transactions {
-			txNames[i] = tx.Sha().String()
+			txNames[i] = tx.Hash().String()
 		}
 
 		blockReply.Tx = txNames
@@ -1086,7 +1090,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		rawTxns := make([]btcjson.TxRawResult, len(txns))
 		for i, tx := range txns {
 			rawTxn, err := createTxRawResult(s.server.chainParams,
-				tx.MsgTx(), tx.Sha().String(), blockHeader,
+				tx.MsgTx(), tx.Hash().String(), blockHeader,
 				hash.String(), blockHeight, best.Height)
 			if err != nil {
 				return nil, err
@@ -1124,7 +1128,7 @@ func handleGetBlockHeader(s *rpcServer, cmd interface{}, closeChan <-chan struct
 	c := cmd.(*btcjson.GetBlockHeaderCmd)
 
 	// Load the raw header bytes from the database.
-	hash, err := wire.NewShaHashFromStr(c.Hash)
+	hash, err := chainhash.NewHashFromStr(c.Hash)
 	if err != nil {
 		return nil, rpcDecodeHexError(c.Hash)
 	}
@@ -1184,7 +1188,8 @@ func handleGetBlockHeader(s *rpcServer, cmd interface{}, closeChan <-chan struct
 		MerkleRoot:    blockHeader.MerkleRoot.String(),
 		NextHash:      nextHashString,
 		PreviousHash:  blockHeader.PrevBlock.String(),
-		Nonce:         uint64(blockHeader.Nonce),
+		NonceHeaderA:         blockHeader.NonceHeaderA[:],
+		NonceHeaderB:         blockHeader.NonceHeaderB[:],
 		Time:          blockHeader.Timestamp.Unix(),
 		Bits:          strconv.FormatInt(int64(blockHeader.Bits), 16),
 		Difficulty:    getDifficultyRatio(blockHeader.Bits),
@@ -1194,7 +1199,7 @@ func handleGetBlockHeader(s *rpcServer, cmd interface{}, closeChan <-chan struct
 
 // encodeTemplateID encodes the passed details into an ID that can be used to
 // uniquely identify a block template.
-func encodeTemplateID(prevHash *wire.ShaHash, lastGenerated time.Time) string {
+func encodeTemplateID(prevHash *chainhash.Hash, lastGenerated time.Time) string {
 	return fmt.Sprintf("%s-%d", prevHash.String(), lastGenerated.Unix())
 }
 
@@ -1203,13 +1208,13 @@ func encodeTemplateID(prevHash *wire.ShaHash, lastGenerated time.Time) string {
 // that are using long polling for block templates.  The ID consists of the
 // previous block hash for the associated template and the time the associated
 // template was generated.
-func decodeTemplateID(templateID string) (*wire.ShaHash, int64, error) {
+func decodeTemplateID(templateID string) (*chainhash.Hash, int64, error) {
 	fields := strings.Split(templateID, "-")
 	if len(fields) != 2 {
 		return nil, 0, errors.New("invalid longpollid format")
 	}
 
-	prevHash, err := wire.NewShaHashFromStr(fields[0])
+	prevHash, err := chainhash.NewHashFromStr(fields[0])
 	if err != nil {
 		return nil, 0, errors.New("invalid longpollid format")
 	}
@@ -1225,7 +1230,7 @@ func decodeTemplateID(templateID string) (*wire.ShaHash, int64, error) {
 // notified when block templates are stale.
 //
 // This function MUST be called with the state locked.
-func (state *gbtWorkState) notifyLongPollers(latestHash *wire.ShaHash, lastGenerated time.Time) {
+func (state *gbtWorkState) notifyLongPollers(latestHash *chainhash.Hash, lastGenerated time.Time) {
 	// Notify anything that is waiting for a block template update from a
 	// hash which is not the hash of the tip of the best chain since their
 	// work is now invalid.
@@ -1272,12 +1277,12 @@ func (state *gbtWorkState) notifyLongPollers(latestHash *wire.ShaHash, lastGener
 // NotifyBlockConnected uses the newly-connected block to notify any long poll
 // clients with a new block template when their existing block template is
 // stale due to the newly connected block.
-func (state *gbtWorkState) NotifyBlockConnected(blockSha *wire.ShaHash) {
+func (state *gbtWorkState) NotifyBlockConnected(blockHash *chainhash.Hash) {
 	go func() {
 		state.Lock()
 		defer state.Unlock()
 
-		state.notifyLongPollers(blockSha, state.lastTxUpdate)
+		state.notifyLongPollers(blockHash, state.lastTxUpdate)
 	}()
 }
 
@@ -1311,7 +1316,7 @@ func (state *gbtWorkState) NotifyMempoolTx(lastUpdated time.Time) {
 // without requiring a different channel for each client.
 //
 // This function MUST be called with the state locked.
-func (state *gbtWorkState) templateUpdateChan(prevHash *wire.ShaHash, lastGenerated int64) chan struct{} {
+func (state *gbtWorkState) templateUpdateChan(prevHash *chainhash.Hash, lastGenerated int64) chan struct{} {
 	// Either get the current list of channels waiting for updates about
 	// changes to block template for the previous hash or create a new one.
 	channels, ok := state.notifyMap[*prevHash]
@@ -1460,7 +1465,57 @@ func (state *gbtWorkState) updateBlockTemplate(s *rpcServer, useCoinbaseValue bo
 		// while accounting for the median time of the past several
 		// blocks per the chain consensus rules.
 		UpdateBlockTime(msgBlock, s.server.blockManager)
-		msgBlock.Header.Nonce = 0
+		msgBlock.Header.NonceHeaderA = [ciphrtxt.MessageHeaderLengthV2]byte{
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, /* |....| */
+         }
+         
+		msgBlock.Header.NonceHeaderB = [ciphrtxt.MessageHeaderLengthV2]byte{
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* |........| */
+             0x00, 0x00, 0x00, 0x00, /* |....| */
+         }
 
 		rpcsLog.Debugf("Updated block template (timestamp %v, "+
 			"target %s)", msgBlock.Header.Timestamp,
@@ -1500,9 +1555,9 @@ func (state *gbtWorkState) blockTemplateResult(useCoinbaseValue bool, submitOld 
 	// the adjustments to the various lengths and indices.
 	numTx := len(msgBlock.Transactions)
 	transactions := make([]btcjson.GetBlockTemplateResultTx, 0, numTx-1)
-	txIndex := make(map[wire.ShaHash]int64, numTx)
+	txIndex := make(map[chainhash.Hash]int64, numTx)
 	for i, tx := range msgBlock.Transactions {
-		txHash := tx.TxSha()
+		txHash := tx.TxHash()
 		txIndex[txHash] = int64(i)
 
 		// Skip the coinbase transaction.
@@ -1594,7 +1649,7 @@ func (state *gbtWorkState) blockTemplateResult(useCoinbaseValue bool, submitOld 
 
 		resultTx := btcjson.GetBlockTemplateResultTx{
 			Data:    hex.EncodeToString(txBuf.Bytes()),
-			Hash:    tx.TxSha().String(),
+			Hash:    tx.TxHash().String(),
 			Depends: []int64{},
 			Fee:     template.Fees[0],
 			SigOps:  template.SigOpCounts[0],
@@ -2106,6 +2161,11 @@ func handleGetNetworkHashPS(s *rpcServer, cmd interface{}, closeChan <-chan stru
 		endHeight = best.Height
 	}
 
+	// Calculate the number of blocks per retarget interval based on the
+	// chain parameters.
+	blocksPerRetarget := int32(s.server.chainParams.TargetTimespan /
+		s.server.chainParams.TargetTimePerBlock)
+
 	// Calculate the starting block height based on the passed number of
 	// blocks.  When the passed value is negative, use the last block the
 	// difficulty changed as the starting height.  Also make sure the
@@ -2116,7 +2176,7 @@ func handleGetNetworkHashPS(s *rpcServer, cmd interface{}, closeChan <-chan stru
 	}
 	var startHeight int32
 	if numBlocks <= 0 {
-		startHeight = endHeight - ((endHeight % blockchain.BlocksPerRetarget) + 1)
+		startHeight = endHeight - ((endHeight % blocksPerRetarget) + 1)
 	} else {
 		startHeight = endHeight - numBlocks
 	}
@@ -2224,56 +2284,17 @@ func handleGetPeerInfo(s *rpcServer, cmd interface{}, closeChan <-chan struct{})
 func handleGetRawMempool(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
 	c := cmd.(*btcjson.GetRawMempoolCmd)
 	mp := s.server.txMemPool
-	descs := mp.TxDescs()
 
 	if c.Verbose != nil && *c.Verbose {
-		result := make(map[string]*btcjson.GetRawMempoolVerboseResult,
-			len(descs))
-
-		best := s.chain.BestSnapshot()
-
-		mp.RLock()
-		defer mp.RUnlock()
-		for _, desc := range descs {
-			// Calculate the current priority based on the inputs to
-			// the transaction.  Use zero if one or more of the
-			// input transactions can't be found for some reason.
-			tx := desc.Tx
-			var currentPriority float64
-			utxos, err := mp.fetchInputUtxos(tx)
-			if err == nil {
-				currentPriority = calcPriority(tx.MsgTx(),
-					utxos, best.Height+1)
-			}
-
-			mpd := &btcjson.GetRawMempoolVerboseResult{
-				Size:             int32(tx.MsgTx().SerializeSize()),
-				Fee:              btcutil.Amount(desc.Fee).ToBTC(),
-				Time:             desc.Added.Unix(),
-				Height:           int64(desc.Height),
-				StartingPriority: desc.StartingPriority,
-				CurrentPriority:  currentPriority,
-				Depends:          make([]string, 0),
-			}
-			for _, txIn := range tx.MsgTx().TxIn {
-				hash := &txIn.PreviousOutPoint.Hash
-				if s.server.txMemPool.haveTransaction(hash) {
-					mpd.Depends = append(mpd.Depends,
-						hash.String())
-				}
-			}
-
-			result[tx.Sha().String()] = mpd
-		}
-
-		return result, nil
+		return mp.RawMempoolVerbose(), nil
 	}
 
 	// The response is simply an array of the transaction hashes if the
 	// verbose flag is not set.
+	descs := mp.TxDescs()
 	hashStrings := make([]string, len(descs))
 	for i := range hashStrings {
-		hashStrings[i] = descs[i].Tx.Sha().String()
+		hashStrings[i] = descs[i].Tx.Hash().String()
 	}
 
 	return hashStrings, nil
@@ -2283,8 +2304,8 @@ func handleGetRawMempool(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 func handleGetRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
 	c := cmd.(*btcjson.GetRawTransactionCmd)
 
-	// Convert the provided transaction hash hex to a ShaHash.
-	txHash, err := wire.NewShaHashFromStr(c.Txid)
+	// Convert the provided transaction hash hex to a Hash.
+	txHash, err := chainhash.NewHashFromStr(c.Txid)
 	if err != nil {
 		return nil, rpcDecodeHexError(c.Txid)
 	}
@@ -2297,7 +2318,7 @@ func handleGetRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan str
 	// Try to fetch the transaction from the memory pool and if that fails,
 	// try the block database.
 	var mtx *wire.MsgTx
-	var blkHash *wire.ShaHash
+	var blkHash *chainhash.Hash
 	var blkHeight int32
 	tx, err := s.server.txMemPool.FetchTransaction(txHash)
 	if err != nil {
@@ -2451,15 +2472,15 @@ func reverseUint32Array(b []byte) {
 func handleGetTxOut(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
 	c := cmd.(*btcjson.GetTxOutCmd)
 
-	// Convert the provided transaction hash hex to a ShaHash.
-	txHash, err := wire.NewShaHashFromStr(c.Txid)
+	// Convert the provided transaction hash hex to a Hash.
+	txHash, err := chainhash.NewHashFromStr(c.Txid)
 	if err != nil {
 		return nil, rpcDecodeHexError(c.Txid)
 	}
 
 	// If requested and the tx is available in the mempool try to fetch it
 	// from there, otherwise attempt to fetch from the block database.
-	var bestBlockSha string
+	var bestBlockHash string
 	var confirmations int32
 	var txVersion int32
 	var value int64
@@ -2494,7 +2515,7 @@ func handleGetTxOut(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		}
 
 		best := s.chain.BestSnapshot()
-		bestBlockSha = best.Hash.String()
+		bestBlockHash = best.Hash.String()
 		confirmations = 0
 		txVersion = mtx.Version
 		value = txOut.Value
@@ -2516,7 +2537,7 @@ func handleGetTxOut(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		}
 
 		best := s.chain.BestSnapshot()
-		bestBlockSha = best.Hash.String()
+		bestBlockHash = best.Hash.String()
 		confirmations = 1 + best.Height - entry.BlockHeight()
 		txVersion = entry.Version()
 		value = entry.AmountByIndex(c.Vout)
@@ -2540,7 +2561,7 @@ func handleGetTxOut(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 	}
 
 	txOutReply := &btcjson.GetTxOutResult{
-		BestBlock:     bestBlockSha,
+		BestBlock:     bestBlockHash,
 		Confirmations: int64(confirmations),
 		Value:         btcutil.Amount(value).ToBTC(),
 		Version:       txVersion,
@@ -2579,7 +2600,7 @@ func handleGetWorkRequest(s *rpcServer) (interface{}, error) {
 		// variations if the best block changed.
 		if state.prevHash != nil && !state.prevHash.IsEqual(latestHash) {
 			state.extraNonce = 0
-			state.blockInfo = make(map[wire.ShaHash]*workStateBlockInfo)
+			state.blockInfo = make(map[chainhash.Hash]*workStateBlockInfo)
 		}
 
 		// Reset the previous best hash the block template was generated
@@ -2693,8 +2714,8 @@ func handleGetWorkRequest(s *rpcServer) (interface{}, error) {
 	// useless, but it is required for compatibility with the reference
 	// implementation.
 	var hash1 [hash1Len]byte
-	hash1[wire.HashSize] = 0x80
-	binary.BigEndian.PutUint64(hash1[len(hash1)-8:], wire.HashSize*8)
+	hash1[chainhash.HashSize] = 0x80
+	binary.BigEndian.PutUint64(hash1[len(hash1)-8:], chainhash.HashSize*8)
 
 	// The final result reverses each of the fields to little endian.
 	// In particular, the data, hash1, and midstate fields are treated as
@@ -2776,7 +2797,8 @@ func handleGetWorkSubmission(s *rpcServer, hexData string) (interface{}, error) 
 	msgBlock := blockInfo.msgBlock
 	block := btcutil.NewBlock(msgBlock)
 	msgBlock.Header.Timestamp = submittedHeader.Timestamp
-	msgBlock.Header.Nonce = submittedHeader.Nonce
+	msgBlock.Header.NonceHeaderA = submittedHeader.NonceHeaderA
+	msgBlock.Header.NonceHeaderB = submittedHeader.NonceHeaderB
 	msgBlock.Transactions[0].TxIn[0].SignatureScript = blockInfo.signatureScript
 	merkles := blockchain.BuildMerkleTreeStore(block.Transactions())
 	msgBlock.Header.MerkleRoot = *merkles[len(merkles)-1]
@@ -2820,7 +2842,7 @@ func handleGetWorkSubmission(s *rpcServer, hexData string) (interface{}, error) 
 	}
 
 	// The block was accepted.
-	rpcsLog.Infof("Block submitted via getwork accepted: %s", block.Sha())
+	rpcsLog.Infof("Block submitted via getwork accepted: %s", block.Hash())
 	return true, nil
 }
 
@@ -2935,7 +2957,7 @@ func handlePing(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (inter
 // possible.
 type retrievedTx struct {
 	txBytes []byte
-	blkHash *wire.ShaHash // Only set when transaction is in a block.
+	blkHash *chainhash.Hash // Only set when transaction is in a block.
 	tx      *btcutil.Tx
 }
 
@@ -2955,7 +2977,7 @@ func fetchInputTxos(s *rpcServer, tx *wire.MsgTx) (map[wire.OutPoint]wire.TxOut,
 			if origin.Index >= uint32(len(txOuts)) {
 				errStr := fmt.Sprintf("unable to find output "+
 					"%v referenced from transaction %s:%d",
-					origin, tx.TxSha(), txInIndex)
+					origin, tx.TxHash(), txInIndex)
 				return nil, internalRPCError(errStr, "")
 			}
 
@@ -2996,7 +3018,7 @@ func fetchInputTxos(s *rpcServer, tx *wire.MsgTx) (map[wire.OutPoint]wire.TxOut,
 		if origin.Index >= uint32(len(msgTx.TxOut)) {
 			errStr := fmt.Sprintf("unable to find output %v "+
 				"referenced from transaction %s:%d", origin,
-				tx.TxSha(), txInIndex)
+				tx.TxHash(), txInIndex)
 			return nil, internalRPCError(errStr, "")
 		}
 		originOutputs[*origin] = *msgTx.TxOut[origin.Index]
@@ -3354,7 +3376,7 @@ func handleSearchRawTransactions(s *rpcServer, cmd interface{}, closeChan <-chan
 
 		result := &srtList[i]
 		result.Hex = hexTxns[i]
-		result.Txid = mtx.TxSha().String()
+		result.Txid = mtx.TxHash().String()
 		result.Vin, err = createVinListPrevOut(s, mtx, chainParams,
 			vinExtra, filterAddrMap)
 		if err != nil {
@@ -3450,12 +3472,12 @@ func handleSendRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan st
 		// so log it as an actual error.  In both cases, a JSON-RPC
 		// error is returned to the client with the deserialization
 		// error code (to match bitcoind behavior).
-		if _, ok := err.(RuleError); ok {
-			rpcsLog.Debugf("Rejected transaction %v: %v", tx.Sha(),
+		if _, ok := err.(mempool.RuleError); ok {
+			rpcsLog.Debugf("Rejected transaction %v: %v", tx.Hash(),
 				err)
 		} else {
 			rpcsLog.Errorf("Failed to process transaction %v: %v",
-				tx.Sha(), err)
+				tx.Hash(), err)
 		}
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCDeserialization,
@@ -3467,10 +3489,10 @@ func handleSendRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan st
 
 	// Keep track of all the sendrawtransaction request txns so that they
 	// can be rebroadcast if they don't make their way into a block.
-	iv := wire.NewInvVect(wire.InvTypeTx, tx.Sha())
+	iv := wire.NewInvVect(wire.InvTypeTx, tx.Hash())
 	s.server.AddRebroadcastInventory(iv, tx)
 
-	return tx.Sha().String(), nil
+	return tx.Hash().String(), nil
 }
 
 // handleSetGenerate implements the setgenerate command.
@@ -3511,7 +3533,10 @@ func handleSetGenerate(s *rpcServer, cmd interface{}, closeChan <-chan struct{})
 
 // handleStop implements the stop command.
 func handleStop(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
-	s.server.Stop()
+	select {
+	case s.requestProcessShutdown <- struct{}{}:
+	default:
+	}
 	return "btcd stopping.", nil
 }
 
@@ -3542,7 +3567,7 @@ func handleSubmitBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{})
 		return fmt.Sprintf("rejected: %s", err.Error()), nil
 	}
 
-	rpcsLog.Infof("Accepted block %s via submitblock", block.Sha())
+	rpcsLog.Infof("Accepted block %s via submitblock", block.Hash())
 	return nil, nil
 }
 
@@ -3584,11 +3609,11 @@ func verifyChain(s *rpcServer, level, depth int32) error {
 		// Level 1 does basic chain sanity checks.
 		if level > 0 {
 			err := blockchain.CheckBlockSanity(block,
-				activeNetParams.PowLimit, s.server.timeSource)
+				activeNetParams.PowLimit, s.server.timeSource, s.server.headerCache)
 			if err != nil {
 				rpcsLog.Errorf("Verify is unable to validate "+
 					"block at hash %v height %d: %v",
-					block.Sha(), height, err)
+					block.Hash(), height, err)
 				return err
 			}
 		}
@@ -3649,7 +3674,7 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	var buf bytes.Buffer
 	wire.WriteVarString(&buf, 0, "Bitcoin Signed Message:\n")
 	wire.WriteVarString(&buf, 0, c.Message)
-	expectedMessageHash := wire.DoubleSha256(buf.Bytes())
+	expectedMessageHash := chainhash.DoubleHashB(buf.Bytes())
 	pk, wasCompressed, err := btcec.RecoverCompact(btcec.S256(), sig,
 		expectedMessageHash)
 	if err != nil {
@@ -3681,23 +3706,24 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 // rpcServer holds the items the rpc server may need to access (config,
 // shutdown, main server, etc.)
 type rpcServer struct {
-	started      int32
-	shutdown     int32
-	policy       *mining.Policy
-	server       *server
-	chain        *blockchain.BlockChain
-	authsha      [fastsha256.Size]byte
-	limitauthsha [fastsha256.Size]byte
-	ntfnMgr      *wsNotificationManager
-	numClients   int32
-	statusLines  map[int]string
-	statusLock   sync.RWMutex
-	wg           sync.WaitGroup
-	listeners    []net.Listener
-	workState    *workState
-	gbtWorkState *gbtWorkState
-	helpCacher   *helpCacher
-	quit         chan int
+	started                int32
+	shutdown               int32
+	policy                 *mining.Policy
+	server                 *server
+	chain                  *blockchain.BlockChain
+	authsha                [fastsha256.Size]byte
+	limitauthsha           [fastsha256.Size]byte
+	ntfnMgr                *wsNotificationManager
+	numClients             int32
+	statusLines            map[int]string
+	statusLock             sync.RWMutex
+	wg                     sync.WaitGroup
+	listeners              []net.Listener
+	workState              *workState
+	gbtWorkState           *gbtWorkState
+	helpCacher             *helpCacher
+	requestProcessShutdown chan struct{}
+	quit                   chan int
 }
 
 // httpStatusLine returns a response Status-Line (RFC 2616 Section 6.1)
@@ -3779,6 +3805,13 @@ func (s *rpcServer) Stop() error {
 	s.wg.Wait()
 	rpcsLog.Infof("RPC server shutdown complete")
 	return nil
+}
+
+// RequestedProcessShutdown returns a channel that is sent to when an authorized
+// RPC client requests the process to shutdown.  If the request can not be read
+// immediately, it is dropped.
+func (s *rpcServer) RequestedProcessShutdown() <-chan struct{} {
+	return s.requestProcessShutdown
 }
 
 // limitConnections responds with a 503 service unavailable and returns true if
@@ -4162,14 +4195,15 @@ func genCertPair(certFile, keyFile string) error {
 // newRPCServer returns a new instance of the rpcServer struct.
 func newRPCServer(listenAddrs []string, policy *mining.Policy, s *server) (*rpcServer, error) {
 	rpc := rpcServer{
-		policy:       policy,
-		server:       s,
-		chain:        s.blockManager.chain,
-		statusLines:  make(map[int]string),
-		workState:    newWorkState(),
-		gbtWorkState: newGbtWorkState(s.timeSource),
-		helpCacher:   newHelpCacher(),
-		quit:         make(chan int),
+		policy:                 policy,
+		server:                 s,
+		chain:                  s.blockManager.chain,
+		statusLines:            make(map[int]string),
+		workState:              newWorkState(),
+		gbtWorkState:           newGbtWorkState(s.timeSource),
+		helpCacher:             newHelpCacher(),
+		requestProcessShutdown: make(chan struct{}),
+		quit: make(chan int),
 	}
 	if cfg.RPCUser != "" && cfg.RPCPass != "" {
 		login := cfg.RPCUser + ":" + cfg.RPCPass

@@ -188,6 +188,10 @@ const (
 	// such signature verification failures and execution past the end of
 	// the stack.
 	ErrScriptValidation
+
+	// ErrNonceValidation indicates the message header nonces which solve
+    // the block are malformed or not available via the message service
+	ErrNonceValidation
 )
 
 // Map of ErrorCode values back to their constant names for pretty printing.
@@ -230,6 +234,7 @@ var errorCodeStrings = map[ErrorCode]string{
 	ErrBadCoinbaseHeight:     "ErrBadCoinbaseHeight",
 	ErrScriptMalformed:       "ErrScriptMalformed",
 	ErrScriptValidation:      "ErrScriptValidation",
+	ErrNonceValidation:       "ErrNonceValidation",
 }
 
 // String returns the ErrorCode as a human-readable name.

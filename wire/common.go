@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2015 The btcsuite developers
+// Copyright (c) 2013-2016 The btcsuite developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -13,8 +13,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/btcsuite/fastsha256"
-	"github.com/jadeblaquiere/ctcd/btcec"
+	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
 )
 
 const (
@@ -280,7 +279,7 @@ func readElement(r io.Reader, element interface{}) error {
 		}
 		return nil
 
-	case *ShaHash:
+	case *chainhash.Hash:
 		_, err := io.ReadFull(r, e[:])
 		if err != nil {
 			return err
@@ -414,7 +413,7 @@ func writeElement(w io.Writer, element interface{}) error {
 		}
 		return nil
 
-	case *ShaHash:
+	case *chainhash.Hash:
 		_, err := w.Write(e[:])
 		if err != nil {
 			return err
@@ -694,29 +693,4 @@ func randomUint64(r io.Reader) (uint64, error) {
 // RandomUint64 returns a cryptographically random uint64 value.
 func RandomUint64() (uint64, error) {
 	return randomUint64(rand.Reader)
-}
-
-// DoubleSha256 calculates sha256(sha256(b)) and returns the resulting bytes.
-func DoubleSha256(b []byte) []byte {
-	first := fastsha256.Sum256(b)
-	second := fastsha256.Sum256(first[:])
-	return second[:]
-}
-
-// DoubleSha256SH calculates sha256(sha256(b)) and returns the resulting bytes
-// as a ShaHash.
-func DoubleSha256SH(b []byte) ShaHash {
-	first := fastsha256.Sum256(b)
-	return ShaHash(fastsha256.Sum256(first[:]))
-}
-
-// ShaMulSha256SH calculates sha256(secp256k1mul(sha256(b))) and returns the resulting bytes
-// as a ShaHash.
-func ShaMulSha256SH(b []byte) ShaHash {
-	first := fastsha256.Sum256(b)
-    _, pub := btcec.PrivKeyFromBytes(btcec.S256(),first[:])
-    second := pub.SerializeUncompressed()
-    third := fastsha256.Sum256(second[:])
-    //fmt.Printf("f,s,t = %s, %s, %s\n", hex.EncodeToString(first[:]), hex.EncodeToString(second), hex.EncodeToString(third[:]))
-	return ShaHash(third)
 }

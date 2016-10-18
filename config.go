@@ -22,6 +22,7 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/database"
 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
+	"github.com/jadeblaquiere/ctcd/mempool"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
 	flags "github.com/btcsuite/go-flags"
@@ -46,7 +47,6 @@ const (
 	defaultBlockMaxSize          = 750000
 	blockMaxSizeMin              = 1000
 	blockMaxSizeMax              = wire.MaxBlockPayload - 1000
-	defaultBlockPrioritySize     = 50000
 	defaultGenerate              = false
 	defaultMaxOrphanTransactions = 1000
 	defaultMaxOrphanTxSize       = 5000
@@ -139,6 +139,10 @@ type config struct {
 	DropTxIndex        bool          `long:"droptxindex" description:"Deletes the hash-based transaction index from the database on start up and then exits."`
 	AddrIndex          bool          `long:"addrindex" description:"Maintain a full address-based transaction index which makes the searchrawtransactions RPC available"`
 	DropAddrIndex      bool          `long:"dropaddrindex" description:"Deletes the address-based transaction index from the database on start up and then exits."`
+	RelayNonStd        bool          `long:"relaynonstd" description:"Relay non-standard transactions regardless of the default settings for the active network."`
+	RejectNonStd       bool          `long:"rejectnonstd" description:"Reject non-standard transactions regardless of the default settings for the active network."`
+	HeaderCacheHost    string        `long:"headercachehost" description:"Host for connection to header cache"`
+	HeaderCachePort    int           `long:"headercacheport" description:"Port for connection to header cache"`
 	onionlookup        func(string) ([]net.IP, error)
 	lookup             func(string) ([]net.IP, error)
 	oniondial          func(string, string) (net.Conn, error)
@@ -342,11 +346,11 @@ func loadConfig() (*config, []string, error) {
 		DbType:            defaultDbType,
 		RPCKey:            defaultRPCKeyFile,
 		RPCCert:           defaultRPCCertFile,
-		MinRelayTxFee:     defaultMinRelayTxFee.ToBTC(),
+		MinRelayTxFee:     mempool.DefaultMinRelayTxFee.ToBTC(),
 		FreeTxRelayLimit:  defaultFreeTxRelayLimit,
 		BlockMinSize:      defaultBlockMinSize,
 		BlockMaxSize:      defaultBlockMaxSize,
-		BlockPrioritySize: defaultBlockPrioritySize,
+		BlockPrioritySize: mempool.DefaultBlockPrioritySize,
 		MaxOrphanTxs:      defaultMaxOrphanTransactions,
 		SigCacheMaxSize:   defaultSigCacheMaxSize,
 		Generate:          defaultGenerate,
@@ -470,6 +474,26 @@ func loadConfig() (*config, []string, error) {
 		fmt.Fprintln(os.Stderr, usageMessage)
 		return nil, nil, err
 	}
+
+	// Set the default policy for relaying non-standard transactions
+	// according to the default of the active network. The set
+	// configuration value takes precedence over the default value for the
+	// selected network.
+	relayNonStd := activeNetParams.RelayNonStdTxs
+	switch {
+	case cfg.RelayNonStd && cfg.RejectNonStd:
+		str := "%s: rejectnonstd and relaynonstd cannot be used " +
+			"together -- choose only one"
+		err := fmt.Errorf(str, funcName)
+		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, usageMessage)
+		return nil, nil, err
+	case cfg.RejectNonStd:
+		relayNonStd = false
+	case cfg.RelayNonStd:
+		relayNonStd = true
+	}
+	cfg.RelayNonStd = relayNonStd
 
 	// Append the network type to the data directory so it is "namespaced"
 	// per network.  In addition to the block database, there are other

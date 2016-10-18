@@ -12,6 +12,7 @@ import (
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
 	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/ctcd/mempool"
 	"github.com/jadeblaquiere/ctcd/peer"
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/btcsuite/btclog"
@@ -136,6 +137,7 @@ func useLogger(subsystemID string, logger btclog.Logger) {
 
 	case "TXMP":
 		txmpLog = logger
+		mempool.UseLogger(logger)
 	}
 }
 
