@@ -1,13 +1,6 @@
 package: github.com/jadeblaquiere/ctcd
 import:
 - package: github.com/btcsuite/btclog
-- package: github.com/jadeblaquiere/ctcutil
-  subpackages:
-  - .
-  - bloom
-  - base58
-  - hdkeychain
-- package: github.com/btcsuite/btcrpcclient
 - package: github.com/btcsuite/fastsha256
 - package: github.com/btcsuite/go-flags
 - package: github.com/btcsuite/go-socks
@@ -35,3 +28,8 @@ import:
 - package: github.com/davecgh/go-spew
   subpackages:
   - spew
+- package: github.com/jadeblaquiere/ctcrpcclient
+- package: github.com/syndtr/goleveldb
+  subpackages:
+  - leveldb
+  - leveldb/util
