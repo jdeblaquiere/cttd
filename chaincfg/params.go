@@ -257,7 +257,7 @@ var CTRedNetParams = Params{
 
     // Ciphrtxt Msgstore Service for Header Cache
     CTMsgstoreHost:  "localhost",
-    CTMsgstorePort:  "7754",
+    CTMsgstorePort:  "17751",
 }
 
 var (

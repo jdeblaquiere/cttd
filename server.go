@@ -2467,13 +2467,22 @@ func newServer(listenAddrs []string, db database.DB, chainParams *chaincfg.Param
     if len(activeNetParams.CTMsgstoreHost) > 0 && len(activeNetParams.CTMsgstorePort) > 0 {
         // if this fails we have real issues.
         port, err := strconv.ParseUint(activeNetParams.CTMsgstorePort, 10, 16)
-        if (err == nil) {        
-            dbdir := filepath.Join(defaultDataDir,"hdb",activeNetParams.CTMsgstoreHost)
+        if (err == nil) {
+            host := activeNetParams.CTMsgstoreHost
+            if len(cfg.HeaderCacheHost) > 0 {
+                host = cfg.HeaderCacheHost
+            }
+            if cfg.HeaderCachePort != 0 {
+                port = uint64(cfg.HeaderCachePort)
+            }
+            dbdir := filepath.Join(defaultDataDir,"hdb",host)
 
-            hcache, err = ciphrtxt.OpenHeaderCache(activeNetParams.CTMsgstoreHost, uint16(port), dbdir)
+            hcache, err = ciphrtxt.OpenHeaderCache(host, uint16(port), dbdir)
             if err != nil {
                 srvrLog.Warnf("Can't connect to HeaderCache or db: %v", err)
             }
+            
+            srvrLog.Infof("Opened MSGSTORE at: %s:%d", host, port)
         }
     }
 
