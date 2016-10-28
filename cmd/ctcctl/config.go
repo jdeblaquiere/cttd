@@ -275,7 +275,7 @@ func createDefaultConfigFile(destinationPath string) error {
 	os.MkdirAll(filepath.Dir(destinationPath), 0700)
 
 	// Read btcd.conf from its default path
-	btcdConfigPath := filepath.Join(btcdHomeDir, "btcd.conf")
+	btcdConfigPath := filepath.Join(btcdHomeDir, "ctcd.conf")
 	btcdConfigFile, err := os.Open(btcdConfigPath)
 	if err != nil {
 		return err
