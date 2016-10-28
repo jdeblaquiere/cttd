@@ -51,7 +51,7 @@ type BlockHeader struct {
 // blockHeaderLen is a constant that represents the number of bytes for a block
 // header.
 // const blockHeaderLen = ((4 + 32 + 32 + 4 + 4) + (2 * ciphrtxt.MessageHeaderLengthV2 ))
-const blockHeaderLen = 436
+const blockHeaderLen = 460
 
 // BlockHash computes the block identifier hash for the given block header.
 func (h *BlockHeader) BlockHash() chainhash.Hash {
