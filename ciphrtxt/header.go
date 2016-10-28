@@ -33,24 +33,26 @@ type SerializedMessageHeaderV1 [MessageHeaderLengthV1]byte
 // I (point)          => 33 bytes => 256-bit ECC point, compressed
 // J (point)          => 33 bytes => 256-bit ECC point, compressed
 // K (point)          => 33 bytes => 256-bit ECC point, compressed
-// short (subtotal)   =============> 111 bytes (148 bytes in base64 encoding)
+// blocklength        =>  4 bytes => 32 bit block length
+// reserved           =>  8 bytes => 64 bits reserved (should be zero)
+// short (subtotal)   =============> 123 bytes (164 bytes in base64 encoding)
 // r, s               => 64 bytes => 2*256-bit ECDSA signature
 // nonce              =>  5 bytes => 40-bit Nonce
 // sig + nonce        =============> 69 bytes (92 bytes in base64 encoding)
-//                      180 bytes (240 bytes in base64)
+//                      192 bytes (256 bytes in base64)
 // the encrypted message is signed along with the short header and then the
 // nonce is calculated to ensure the hash of the long header has nbits zeros
 // (see also Authenticated Encryption with Additional Data, AEAD, and Hashcash)
 
-//const ShortMessageHeaderLengthV2 = (4+4+4+33+33+33)   
-const ShortMessageHeaderLengthV2 = (111)   
+//const ShortMessageHeaderLengthV2 = (4+4+4+33+33+33+4+8)   
+const ShortMessageHeaderLengthV2 = (123)   
 //const ShortMessageHeaderLengthB64V2 = ((ShortMessageHeaderLengthV2 * 4) / 3)
-const ShortMessageHeaderLengthB64V2 = (148)
+const ShortMessageHeaderLengthB64V2 = (164)
 
 //const MessageHeaderLengthV2 = (ShortMessageHeaderLengthV2+32+32+5)   
-const MessageHeaderLengthV2 = (180)   
+const MessageHeaderLengthV2 = (192)   
 //const MessageHeaderLengthB64V2 = ((MessageHeaderLengthV2 * 4) / 3)
-const MessageHeaderLengthB64V2 = (240)
+const MessageHeaderLengthB64V2 = (256)
 
 type SerializedMessageHeaderV2 [MessageHeaderLengthB64V2]byte
 type BinaryMessageHeaderV2 [MessageHeaderLengthV2]byte
@@ -65,6 +67,8 @@ type RawMessageHeader struct {
     I       string
     J       string
     K       string
+    blocklen    uint32
+    reserved    uint64
     r       string
     s       string
     nonce   uint64
@@ -125,14 +129,16 @@ func (z *RawMessageHeader) importBinaryHeaderV2(smh []byte) *RawMessageHeader {
     z.I = hex.EncodeToString(smh[12:45])
     z.J = hex.EncodeToString(smh[45:78])
     z.K = hex.EncodeToString(smh[78:111])
+    z.blocklen = binary.BigEndian.Uint32(smh[111:115])
+    z.reserved = binary.BigEndian.Uint64(smh[115:123])
     if len(smh) >= MessageHeaderLengthV2 {
         var ui8 uint8
         var ui32 uint32
-        z.r = string(smh[111:143])
-        z.s = string(smh[143:175])
-        bufnonce := bytes.NewBuffer(smh[175:176])
+        z.r = string(smh[123:155])
+        z.s = string(smh[155:187])
+        bufnonce := bytes.NewBuffer(smh[187:188])
         binary.Read(bufnonce, binary.BigEndian, &ui8)
-        bufnonce = bytes.NewBuffer(smh[176:180])
+        bufnonce = bytes.NewBuffer(smh[188:192])
         binary.Read(bufnonce, binary.BigEndian, &ui32)
         z.nonce = ((uint64)(ui8) << 32)
         z.nonce += (uint64)(ui32)
@@ -183,6 +189,8 @@ func (z *RawMessageHeader) exportBinaryHeaderV2() *BinaryMessageHeaderV2 {
     buf.WriteString(string(I))
     buf.WriteString(string(J))
     buf.WriteString(string(K))
+    binary.Write(buf, binary.BigEndian, z.blocklen)
+    binary.Write(buf, binary.BigEndian, z.reserved)
     buf.WriteString(z.r)
     buf.WriteString(z.s)
     binary.Write(buf, binary.BigEndian, uint8(z.nonce >> 32))
@@ -199,7 +207,7 @@ func (z *RawMessageHeader) exportBinaryHeaderV2() *BinaryMessageHeaderV2 {
 
 func (z *RawMessageHeader) serializeV2() *SerializedMessageHeaderV2 {
     bmh := z.exportBinaryHeaderV2()
-    b64 := make([]byte, 240)
+    b64 := make([]byte, MessageHeaderLengthB64V2)
     base64.StdEncoding.Encode(b64, bmh[:])
     //fmt.Println("as b64 " + string(b64))
     smh := new(SerializedMessageHeaderV2)

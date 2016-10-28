@@ -24,7 +24,7 @@ type THeaderListResponse struct {
 }
 
 func TestDeserializeSerialize (t *testing.T) {
-    res, err := http.Get("http://ciphrtxt.com:7754/api/header/list/since/0")
+    res, err := http.Get("http://indigo.ciphrtxt.com:7754/api/header/list/since/0")
     if err != nil {
         fmt.Println("whoops:", err)
         t.Fail()
