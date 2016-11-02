@@ -1,6 +1,29 @@
-// Copyright (c) 2016 The ciphrtxt developers
-// Use of this source code is governed by an ISC
-// license that can be found in the LICENSE file.
+// Copyright (c) 2016, Joseph deBlaquiere <jadeblaquiere@yahoo.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of ciphrtxt nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 package ciphrtxt
 
@@ -195,8 +218,8 @@ func TestHeaderGoroutines (t *testing.T) {
     }
     defer hc1.Close()
 
-    wg.Add(10)
-    for gr := 0 ; gr < 10 ; gr++ {
+    wg.Add(20)
+    for gr := 0 ; gr < 20 ; gr++ {
     
         go func(hc *HeaderCache, gr int) {
             defer wg.Done()
@@ -264,6 +287,35 @@ func TestTimes (t *testing.T) {
         }
     }
     
+}
+
+func TestHashvals (t *testing.T) {
+    hc, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
+    if err != nil {
+        t.Fail()
+    }
+    defer hc.Close()
+
+    // validate based on messages from the last hour
+    now := time.Now().Unix()
+    mh, err := hc.getHeadersSince(uint32(now-3600))
+    if err != nil {
+        fmt.Println("error getHeaderSince - test failed")
+        t.Fail()
+    }
+    
+    if len(mh) == 0 {
+        fmt.Println("no message headers received - test failed")
+        t.Fail()
+    }
+    
+    for _, h := range mh {
+        hx := hex.EncodeToString(h.Hash())
+        if hx[:4] != "0000" {
+            fmt.Println("Found Message Hash: " + hx)
+            t.Fail()
+        }
+    }
 }
 
 func TestFindByI (t *testing.T) {

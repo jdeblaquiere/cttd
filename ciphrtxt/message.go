@@ -1,0 +1,103 @@
+// Copyright (c) 2016, Joseph deBlaquiere <jadeblaquiere@yahoo.com>
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// * Redistributions of source code must retain the above copyright notice, this
+//   list of conditions and the following disclaimer.
+//
+// * Redistributions in binary form must reproduce the above copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution.
+//
+// * Neither the name of ciphrtxt nor the names of its
+//   contributors may be used to endorse or promote products derived from
+//   this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+package ciphrtxt
+
+import (
+    //"bytes"
+    //"encoding/base64"
+    //"encoding/hex"
+    //"encoding/binary"
+    //"fmt"
+    //"io/ioutil"
+    "os"
+    //"strconv"
+    //"strings"
+    "time"
+)
+
+type MessageFile struct {
+    RawMessageHeader
+    Filepath    string
+    Size        uint64
+    Servertime  uint32
+}
+
+func Ingest(filepath string) *MessageFile {
+    f, err := os.Open(filepath)
+    if err != nil {
+        return nil
+    }
+    
+    finfo, err := f.Stat()
+    if err != nil {
+        return nil
+    }
+    
+    // read header
+    smh := make([]byte, MessageHeaderLengthB64V2)
+    hlen, err := f.Read(smh)
+    if err != nil {
+        return nil
+    }
+    if hlen != MessageHeaderLengthB64V2 {
+        return nil
+    }
+    
+    z := new(MessageFile)
+    
+    // parse message header
+    if z.RawMessageHeader.Deserialize(string(smh)) == nil {
+        return nil
+    }
+    
+    // validate header hash
+    hh := z.RawMessageHeader.Hash()
+    if (hh[0] != 0) || (hh[1] != 0) {
+        return nil
+    }
+    
+    // check that file size is = blocklen + 1 blocks
+    if (int64(z.blocklen + 1) * MessageHeaderLengthB64V2) != finfo.Size() {
+        return nil
+    }
+    
+    z.Filepath = filepath
+    z.Size = uint64(finfo.Size())
+    z.Servertime = uint32(time.Now().Unix())
+    
+    return z
+}
+
+func (z *MessageFile) Move(filepath string) error {
+    err := os.Rename(z.Filepath, filepath)
+    if err != nil {
+        return err
+    }
+    z.Filepath = filepath
+    return nil
+}
