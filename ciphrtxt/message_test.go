@@ -95,16 +95,44 @@ func TestMessageIngestMove (t *testing.T) {
                 fmt.Println("whoops:", err)
                     t.Fail()
                 }
-                filemove := "./messages/" + hex.EncodeToString(I)
-                fmt.Printf("moving to %s\n", filemove)
+                Ihex := hex.EncodeToString(I)
+                filemove := "./messages/store/" + Ihex[:4] + "/" + Ihex 
+                //fmt.Printf("moving to %s\n", filemove)
                 err = m.Move(filemove)
                 if err != nil {
                     fmt.Println("whoops:", err)
                     t.Fail()
                 }
+                mse := m.Serialize()
+                //fmt.Printf("Encoded as %s\n", hex.EncodeToString(mse))
+                mde := new(MessageFile).Deserialize(mse)
+                if mde.Size != m.Size {
+                    fmt.Println("Deserialize(Serialize()) size mismatch")
+                    t.Fail()
+                }
+                if mde.Servertime != m.Servertime {
+                    fmt.Println("Deserialize(Serialize()) servertime mismatch")
+                    t.Fail()
+                }
+                if mde.Filepath != m.Filepath {
+                    fmt.Println("Deserialize(Serialize()) filepath mismatch")
+                    t.Fail()
+                }
+                //fmt.Printf("File path is %s\n", m.Filepath)
             }
         }
     }
 }
+
+func TestOpenMessageStore (t *testing.T) {
+    ms, err := OpenMessageStore("./messages")
+    if err != nil {
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    
+    ms.pruneExpired()
+}
+
 
 // http://indigo.bounceme.net:7754/api/message/download/0233da40ddd1bd53672f310025dc5e1f07a8a8768f4efe7ed9abfa296ec7863916

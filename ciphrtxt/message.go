@@ -28,10 +28,10 @@
 package ciphrtxt
 
 import (
-    //"bytes"
+    "bytes"
     //"encoding/base64"
     //"encoding/hex"
-    //"encoding/binary"
+    "encoding/binary"
     //"fmt"
     //"io/ioutil"
     "os"
@@ -42,9 +42,9 @@ import (
 
 type MessageFile struct {
     RawMessageHeader
-    Filepath    string
     Size        uint64
     Servertime  uint32
+    Filepath    string
 }
 
 func Ingest(filepath string) *MessageFile {
@@ -100,4 +100,36 @@ func (z *MessageFile) Move(filepath string) error {
     }
     z.Filepath = filepath
     return nil
+}
+
+func (z *MessageFile) Serialize() []byte {
+    buf := new(bytes.Buffer)
+    header := z.RawMessageHeader.ExportBinaryHeaderV2()
+    buf.Write(header[:])
+    binary.Write(buf, binary.BigEndian, z.Size)
+    binary.Write(buf, binary.BigEndian, z.Servertime)
+    binary.Write(buf, binary.BigEndian, int32(len(z.Filepath)))
+    buf.WriteString(z.Filepath)
+    bmh := make([]byte, buf.Len())
+    copy(bmh[:], buf.Bytes()[:])
+    return bmh
+}
+
+func (z *MessageFile) Deserialize(bmh []byte) *MessageFile {
+    if len(bmh) < (MessageHeaderLengthV2 + 16) {
+        return nil
+    }
+    if z.RawMessageHeader.importBinaryHeaderV2(bmh) == nil {
+        return nil
+    }
+    z.Size = binary.BigEndian.Uint64(bmh[MessageHeaderLengthV2:MessageHeaderLengthV2+8])
+    z.Servertime = binary.BigEndian.Uint32(bmh[MessageHeaderLengthV2+8:MessageHeaderLengthV2+12])
+    lenfilepath := binary.BigEndian.Uint32(bmh[MessageHeaderLengthV2+12:MessageHeaderLengthV2+16])
+    if len(bmh) < (MessageHeaderLengthV2 + 16 + int(lenfilepath)) {
+        return nil
+    }
+    fpath := make([]byte, lenfilepath)
+    copy(fpath[:], bmh[MessageHeaderLengthV2+16:MessageHeaderLengthV2+16+lenfilepath])
+    z.Filepath = string(fpath)
+    return z
 }
