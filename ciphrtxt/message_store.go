@@ -98,16 +98,16 @@ func OpenMessageStore(filepath string) (ms *MessageStore, err error) {
             dbkey, err := hex.DecodeString(f.Name())
             if err != nil {
                 fmt.Printf("Error parsing %s as hex\n", f.Name())
-                return nil, err
-            }   
+                continue
+            }
             _, err = ms.db.Get(dbkey, nil)
             if err != nil {
                 fmt.Printf("%s not found in db, inserting\n", f.Name())
                 fpath := p + "/" + f.Name()
                 ins, err := ms.InsertFile(fpath)
                 if err != nil {
-                    fmt.Printf("Failed to insert message\n", fpath)
-                    return nil, err
+                    fmt.Printf("Failed to insert message %s\n", fpath)
+                    continue
                 }
                 if ins {
                     fmt.Printf("inserted %s into db\n", f.Name())
@@ -116,7 +116,38 @@ func OpenMessageStore(filepath string) (ms *MessageStore, err error) {
         }
     }
     
+    err = ms.recount()
+    if err != nil {
+        return nil, err
+    }
+    
+    fmt.Printf("MessageStore open, found %d messages\n", ms.Count)
     return ms, nil
+}
+
+func (ms *MessageStore) recount() (err error) {
+    emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
+    expiredBegin, err := hex.DecodeString("E" + "00000000" + emptyMessage + "0")
+    if err != nil {
+        return err
+    }
+    expiredEnd, err := hex.DecodeString("E" + "FFFFFFFF" + emptyMessage + "0")
+    if err != nil {
+        return err
+    }
+    
+    iter := ms.db.NewIterator(&util.Range{Start: expiredBegin,Limit: expiredEnd}, nil)
+
+    count := int(0)
+        
+    for iter.Next() {
+        count += 1
+    }
+    iter.Release()
+
+    ms.Count = count
+    
+    return nil
 }
 
 func (ms *MessageStore) InsertFile(filepath string) (insert bool, err error) {

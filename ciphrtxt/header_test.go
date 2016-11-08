@@ -364,3 +364,73 @@ func TestFindByI (t *testing.T) {
         }
     }
 }
+
+func TestLocalHeaderCache (t *testing.T) {
+    lhc, err := OpenLocalHeaderCache("headers")
+    if err != nil {
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    defer lhc.Close()
+    
+    lhc.AddPeer("indigo.ciphrtxt.com",7754)
+    lhc.AddPeer("violet.ciphrtxt.com",7754)
+    
+    lhc.Sync()
+    
+    for i := 60 ; i > 0 ; i-- {
+        fmt.Printf("\rsleeping %d seconds  ", i)
+        time.Sleep(time.Second * 1)
+    }
+    fmt.Println(" ... done")
+    
+    lhc.Sync()
+}
+
+func TestLocalFindByI (t *testing.T) {
+    lhc, err := OpenLocalHeaderCache("headers")
+    if err != nil {
+        t.Fail()
+    }
+    defer lhc.Close()
+
+    res, err := http.Get("http://ciphrtxt.com:7754/api/header/list/since/0")
+    if err != nil {
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    
+    body, err := ioutil.ReadAll(res.Body)
+    if err != nil {
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    
+    s := new(THeaderListResponse)
+    err = json.Unmarshal(body, &s)
+    if(err != nil){
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    
+    for _, hdr := range s.HeaderList {
+        h := new(RawMessageHeader)
+        h.Deserialize(hdr)
+        Ibin, err := h.IKey()
+        if err != nil {
+            t.Fail()
+        }
+        
+        msg, err := lhc.FindByI(Ibin)
+        if err != nil {
+            if uint32(time.Now().Unix()) < h.expire {
+                fmt.Println("Error: could not find message:", h.I)
+                t.Fail()
+            }
+        } else if msg.Serialize() != h.Serialize() {
+            fmt.Println("Error: message mismatch:", h.I)
+            t.Fail()
+        }
+    }
+}
+

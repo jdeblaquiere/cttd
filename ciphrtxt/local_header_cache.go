@@ -28,101 +28,64 @@
 package ciphrtxt
 
 import (
-    "net/http"
-    "io/ioutil"
+    //"net/http"
+    //"io/ioutil"
     "encoding/hex"
-    "encoding/json"
+    //"encoding/json"
     "fmt"
     "errors"
     "github.com/syndtr/goleveldb/leveldb"
     "github.com/syndtr/goleveldb/leveldb/util"
+    "math/rand"
     "strconv"
     "sync"
     "time"
 )
 
-const apiStatus string = "api/status/"
-const apiTime string = "api/time/"
-const apiHeadersSince string = "api/header/list/since/"
+const lhcRefreshMinDelay = 10
 
-const refreshMinDelay = 10
-
-// {"pubkey": "030b5a7b432ec22920e20063cb16eb70dcb62dfef28d15eb19c1efeec35400b34b", "storage": {"max_file_size": 268435456, "capacity": 137438953472, "messages": 6252, "used": 17828492}}
-
-type StatusStorageResponse struct {
-    Messages int `json:"messages"`
-    Maxfilesize int `json:"max_file_size"`
-    Capacity int `json:"capacity"`
-    Used int `json:"used"`
+type peerCache struct {
+    hc    *HeaderCache
+    lastRefresh   uint32
 }
 
-type StatusResponse struct {
-    Pubkey string `json:"pubkey"`
-    Status StatusStorageResponse `json:"storage"`
-}
-
-type TimeResponse struct {
-    Time int `json:"time"`
-}
-
-type HeaderListResponse struct {
-    Headers []string `json:"header_list"`
-}
-
-type HeaderCache struct {
-    baseurl string
+type LocalHeaderCache struct {
+    basepath string
     db *leveldb.DB
     syncMutex sync.Mutex
-    status StatusResponse
     serverTime uint32
     lastRefresh uint32
     Count int
+    Peers []*peerCache
 }
 
 // NOTE : if dbpath is empty ("") header cache will be in-memory only
 
-func OpenHeaderCache(host string, port uint16, dbpath string) (hc *HeaderCache, err error) {
-    hc = new(HeaderCache)
-    hc.baseurl = fmt.Sprintf("http://%s:%d/", host, port)
+func OpenLocalHeaderCache(filepath string) (lhc *LocalHeaderCache, err error) {
+    lhc = new(LocalHeaderCache)
+    lhc.basepath = filepath
     
-    c := &http.Client{
-        Timeout: time.Second * 10,
-    }
-    
-    res, err := c.Get(hc.baseurl + apiStatus)
-    if err != nil {
-        return nil, err
-    }
-    
-    body, err := ioutil.ReadAll(res.Body)
-    if err != nil {
-        return nil, err
-    }
-    
-    err = json.Unmarshal(body, &hc.status)
-    if err != nil {
-        return nil, err
-    }
+    dbpath := filepath + "/localdb"
     
     if len(dbpath) == 0 {
         return nil, errors.New("refusing to open empty db path")
     }
     
-    hc.db, err = leveldb.OpenFile(dbpath, nil)
+    lhc.db, err = leveldb.OpenFile(dbpath, nil)
     if err != nil {
         return nil, err
     }
     
-    err = hc.recount()
+    err = lhc.recount()
     if err != nil {
         return nil, err
     }
     
-    fmt.Printf("HeaderCache %s open, found %d message headers\n", hc.baseurl, hc.Count)
-    return hc, nil
+    fmt.Printf("LocalHeaderCache open, found %d message headers\n", lhc.Count)
+    return lhc, nil
 }
 
-func (hc *HeaderCache) recount() (err error) {
+func (lhc *LocalHeaderCache) recount() (err error) {
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
     expiredBegin, err := hex.DecodeString("E" + "00000000" + emptyMessage + "0")
     if err != nil {
@@ -133,7 +96,7 @@ func (hc *HeaderCache) recount() (err error) {
         return err
     }
     
-    iter := hc.db.NewIterator(&util.Range{Start: expiredBegin,Limit: expiredEnd}, nil)
+    iter := lhc.db.NewIterator(&util.Range{Start: expiredBegin,Limit: expiredEnd}, nil)
 
     count := int(0)
         
@@ -142,47 +105,24 @@ func (hc *HeaderCache) recount() (err error) {
     }
     iter.Release()
 
-    hc.Count = count
+    lhc.Count = count
     
     return nil
 }
 
-func (hc *HeaderCache) Close() {
-    if hc.db != nil {
-        hc.db.Close()
-        hc.db = nil
+func (lhc *LocalHeaderCache) Close() {
+    if lhc.db != nil {
+        lhc.db.Close()
+        lhc.db = nil
     }
 }
 
-type dbkeys struct {
-    date []byte
-    expire []byte
-    I []byte
-}
-
-func (h *RawMessageHeader) dbKeys() (dbk *dbkeys, err error) {
-    dbk = new(dbkeys)
-    dbk.date, err = hex.DecodeString(fmt.Sprintf("D%08X%s0", h.time, h.I))
-    if err != nil {
-        return nil, err
-    }
-    dbk.expire, err = hex.DecodeString(fmt.Sprintf("E%08X%s0", h.expire, h.I))
-    if err != nil {
-        return nil, err
-    }
-    dbk.I, err = hex.DecodeString(h.I)
-    if err != nil {
-        return nil, err
-    }
-    return dbk, err
-}
-
-func (hc *HeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
+func (lhc *LocalHeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
     dbk, err := h.dbKeys()
     if err != nil {
         return false, err
     }
-    _, err = hc.db.Get(dbk.I, nil)
+    _, err = lhc.db.Get(dbk.I, nil)
     if err == nil {
         return false, nil
     }
@@ -192,15 +132,15 @@ func (hc *HeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
     batch.Put(dbk.date, value)
     batch.Put(dbk.expire, value)
     batch.Put(dbk.I, value)
-    err = hc.db.Write(batch, nil)
+    err = lhc.db.Write(batch, nil)
     if err != nil {
         return false, err
     }
-    hc.Count += 1
+    lhc.Count += 1
     return true, nil
 }
 
-func (hc *HeaderCache) Remove(h *RawMessageHeader) (err error) {
+func (lhc *LocalHeaderCache) Remove(h *RawMessageHeader) (err error) {
     dbk, err := h.dbKeys()
     if err != nil {
         return err
@@ -209,14 +149,14 @@ func (hc *HeaderCache) Remove(h *RawMessageHeader) (err error) {
     batch.Delete(dbk.date)
     batch.Delete(dbk.expire)
     batch.Delete(dbk.I)
-    hc.Count -= 1
-    return hc.db.Write(batch, nil)
+    lhc.Count -= 1
+    return lhc.db.Write(batch, nil)
 }
 
-func (hc *HeaderCache) FindByI (I []byte) (h *RawMessageHeader, err error) {
-    hc.Sync()
+func (lhc *LocalHeaderCache) FindByI (I []byte) (h *RawMessageHeader, err error) {
+    lhc.Sync()
 
-    value, err := hc.db.Get(I, nil)
+    value, err := lhc.db.Get(I, nil)
     if err != nil {
         return nil, err
     }
@@ -227,8 +167,8 @@ func (hc *HeaderCache) FindByI (I []byte) (h *RawMessageHeader, err error) {
     return h, nil
 }
 
-func (hc *HeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader, err error) {
-    hc.Sync()
+func (lhc *LocalHeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader, err error) {
+    lhc.Sync()
 
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
     tag1 := fmt.Sprintf("D%08X%s0", tstamp, emptyMessage)
@@ -243,7 +183,7 @@ func (hc *HeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader, err e
         return nil, err
     }
     
-    iter := hc.db.NewIterator(&util.Range{Start: bin1, Limit: bin2}, nil)
+    iter := lhc.db.NewIterator(&util.Range{Start: bin1, Limit: bin2}, nil)
     
     hdrs = make([]RawMessageHeader, 0)
     for iter.Next() {
@@ -256,8 +196,8 @@ func (hc *HeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader, err e
     return hdrs, nil
 }
 
-func (hc *HeaderCache) FindExpiringAfter (tstamp uint32) (hdrs []RawMessageHeader, err error) {
-    hc.Sync()
+func (lhc *LocalHeaderCache) FindExpiringAfter (tstamp uint32) (hdrs []RawMessageHeader, err error) {
+    lhc.Sync()
 
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
     tag1 := fmt.Sprintf("E%08X%s0", tstamp, emptyMessage)
@@ -272,7 +212,7 @@ func (hc *HeaderCache) FindExpiringAfter (tstamp uint32) (hdrs []RawMessageHeade
         return nil, err
     }
     
-    iter := hc.db.NewIterator(&util.Range{Start: bin1, Limit: bin2}, nil)
+    iter := lhc.db.NewIterator(&util.Range{Start: bin1, Limit: bin2}, nil)
     
     hdrs = make([]RawMessageHeader, 0)
     for iter.Next() {
@@ -285,65 +225,12 @@ func (hc *HeaderCache) FindExpiringAfter (tstamp uint32) (hdrs []RawMessageHeade
     return hdrs, nil
 }
 
-func (hc *HeaderCache) getTime() (serverTime uint32, err error) {
-    var tr TimeResponse
-
-    c := &http.Client{
-        Timeout: time.Second * 10,
-    }
-    
-    res, err := c.Get(hc.baseurl + apiTime)
-    if err != nil {
-        return 0, err
-    }
-    
-    body, err := ioutil.ReadAll(res.Body)
-    if err != nil {
-        return 0, err
-    }
-    
-    err = json.Unmarshal(body, &tr)
-    if err != nil {
-        return 0, err
-    }
-    
-    hc.serverTime = uint32(tr.Time)
-    return hc.serverTime, nil
+func (lhc *LocalHeaderCache) getTime() (serverTime uint32, err error) {
+    lhc.serverTime = uint32(time.Now().Unix())
+    return lhc.serverTime, nil
 }
 
-func (hc *HeaderCache) getHeadersSince(since uint32) (mh []RawMessageHeader, err error) {
-    c := &http.Client{
-        Timeout: time.Second * 60,
-    }
-    
-    res, err := c.Get(hc.baseurl + apiHeadersSince + strconv.FormatInt(int64(since),10))
-    if err != nil {
-        return nil, err
-    }
-    
-    body, err := ioutil.ReadAll(res.Body)
-    if err != nil {
-        return nil, err
-    }
-    
-    s := new(HeaderListResponse)
-    err = json.Unmarshal(body, &s)
-    if err != nil {
-        return nil, err
-    }
-    
-    mh = make([]RawMessageHeader, 0)
-    for _, hdr := range s.Headers {
-        h := new(RawMessageHeader)
-        if h.Deserialize(hdr) == nil {
-            return nil, errors.New("error parsing message")
-        }
-        mh = append(mh, *h)
-    }
-    return mh, nil
-}
-
-func (hc *HeaderCache) pruneExpired() (err error) {
+func (lhc *LocalHeaderCache) pruneExpired() (err error) {
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
     expiredBegin, err := hex.DecodeString("E" + "00000000" + emptyMessage + "0")
     if err != nil {
@@ -355,7 +242,7 @@ func (hc *HeaderCache) pruneExpired() (err error) {
         return err
     }
 
-    iter := hc.db.NewIterator(&util.Range{Start: expiredBegin,Limit: expiredEnd}, nil)
+    iter := lhc.db.NewIterator(&util.Range{Start: expiredBegin,Limit: expiredEnd}, nil)
     batch := new(leveldb.Batch)
     hdr := new(RawMessageHeader)
     
@@ -376,46 +263,100 @@ func (hc *HeaderCache) pruneExpired() (err error) {
     }
     iter.Release()
     
-    err = hc.db.Write(batch, nil)
+    err = lhc.db.Write(batch, nil)
     if err == nil {
-        hc.Count -= delCount
-        fmt.Printf("dropping %d message headers\n", delCount)
+        lhc.Count -= delCount
+        fmt.Printf("LocalHeaderCache: dropping %d message headers\n", delCount)
     }
     
     return err
 }
 
-func (hc *HeaderCache) Sync() (err error) {
+func (lhc *LocalHeaderCache) Sync() (err error) {
     // if "fresh enough" (refreshMinDelay) then simply return
     now := uint32(time.Now().Unix())
     
-    if (now - hc.lastRefresh) < refreshMinDelay {
+    if (now - lhc.lastRefresh) < lhcRefreshMinDelay {
         return nil
     }
     
     //should only have a single goroutine sync'ing at a time
-    hc.syncMutex.Lock()
-    defer hc.syncMutex.Unlock()
+    lhc.syncMutex.Lock()
+    defer lhc.syncMutex.Unlock()
     
-    serverTime, err := hc.getTime()
-    if err != nil {
-        return err
-    }
-    
-    err = hc.pruneExpired()
-    if err != nil {
-        return err
-    }
-    
-    mhdrs, err := hc.getHeadersSince(hc.lastRefresh)
+    err = lhc.pruneExpired()
     if err != nil {
         return err
     }
     
     insCount := int(0)
+    
+    ordinal := rand.Perm(len(lhc.Peers))
+    for i := 0; i < len(lhc.Peers) ; i++ {
+        p := lhc.Peers[ordinal[i]]
+        
+        p.hc.Sync()
+        
+        if p.hc.lastRefresh > p.lastRefresh {
+            mhdrs, err := p.hc.FindSince(p.lastRefresh)
+            if err != nil {
+                return err
+            }
+    
+            insCount := int(0)
+
+            for _, mh := range mhdrs {
+                insert, err := lhc.Insert(&mh)
+                if err != nil {
+                    return err
+                }
+                if insert {
+                    insCount += 1
+                }
+            }
+
+            fmt.Printf("LocalHeaderCache: inserted %d message headers\n", insCount)    
+        }
+    }
+
+    lhc.lastRefresh = now
+
+    lhc.Count += insCount
+    fmt.Printf("LocalHeaderCache: insert %d message headers\n", insCount)
+    
+    fmt.Printf("LocalHeaderCache: %d active message headers\n", lhc.Count)
+
+    return nil
+}
+
+func (lhc *LocalHeaderCache) AddPeer(host string, port uint16) (err error) {
+    dbpath := lhc.basepath + "/remote/" + host + "_" + string(port) + "/hdb"
+    
+    pc := new(peerCache)
+    
+    rhc, err := OpenHeaderCache(host, port, dbpath)
+    if err != nil {
+        return err
+    }
+    
+    err = rhc.Sync()
+    if err != nil {
+        return err
+    }
+    
+    mhdrs, err := rhc.FindSince(0)
+    if err != nil {
+        return err
+    }
+    
+    pc.hc = rhc
+    pc.lastRefresh = rhc.lastRefresh
+    lhc.Peers = append(lhc.Peers, pc)
+
+    insCount := int(0)
 
     for _, mh := range mhdrs {
-        insert, err := hc.Insert(&mh)
+        insert, err := lhc.Insert(&mh)
         if err != nil {
             return err
         }
@@ -423,10 +364,12 @@ func (hc *HeaderCache) Sync() (err error) {
             insCount += 1
         }
     }
+    
+    fmt.Printf("LocalHeaderCache: inserted %d message headers\n", insCount)
 
-    hc.lastRefresh = serverTime
-
-    fmt.Printf("insert %d message headers\n", insCount)
+    lhc.recount()
+    
+    fmt.Printf("LocalHeaderCache: %d active message headers\n", lhc.Count)
 
     return nil
 }
