@@ -52,6 +52,7 @@ func Ingest(filepath string) *MessageFile {
     if err != nil {
         return nil
     }
+    defer f.Close()
     
     finfo, err := f.Stat()
     if err != nil {
@@ -80,7 +81,7 @@ func Ingest(filepath string) *MessageFile {
     if (hh[0] != 0) || (hh[1] != 0) {
         return nil
     }
-    
+
     // check that file size is = blocklen + 1 blocks
     if (int64(z.blocklen + 1) * MessageHeaderLengthB64V2) != finfo.Size() {
         return nil

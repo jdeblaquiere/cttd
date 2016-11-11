@@ -111,6 +111,13 @@ func (lhc *LocalHeaderCache) recount() (err error) {
 }
 
 func (lhc *LocalHeaderCache) Close() {
+    for _, p := range lhc.Peers {
+        if p.hc != nil {
+            p.hc.Close()
+            p.hc = nil
+        }
+    }
+    
     if lhc.db != nil {
         lhc.db.Close()
         lhc.db = nil
@@ -118,7 +125,8 @@ func (lhc *LocalHeaderCache) Close() {
 }
 
 func (lhc *LocalHeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
-    dbk, err := h.dbKeys()
+    servertime := uint32(time.Now().Unix())
+    dbk, err := h.dbKeys(servertime)
     if err != nil {
         return false, err
     }
@@ -130,6 +138,7 @@ func (lhc *LocalHeaderCache) Insert(h *RawMessageHeader) (insert bool, err error
     //value := h.Serialize()[:]
     batch := new(leveldb.Batch)
     batch.Put(dbk.date, value)
+    batch.Put(dbk.servertime, value)
     batch.Put(dbk.expire, value)
     batch.Put(dbk.I, value)
     err = lhc.db.Write(batch, nil)
@@ -141,12 +150,22 @@ func (lhc *LocalHeaderCache) Insert(h *RawMessageHeader) (insert bool, err error
 }
 
 func (lhc *LocalHeaderCache) Remove(h *RawMessageHeader) (err error) {
-    dbk, err := h.dbKeys()
+    I, err := hex.DecodeString(h.I)
+    if err != nil {
+        return err
+    }
+    value, err := lhc.db.Get(I, nil)
+    if err != nil {
+        return err
+    }
+    servertime := deserializeUint32(value[MessageHeaderLengthV2:MessageHeaderLengthV2+4])
+    dbk, err := h.dbKeys(servertime)
     if err != nil {
         return err
     }
     batch := new(leveldb.Batch)
     batch.Delete(dbk.date)
+    batch.Delete(dbk.servertime)
     batch.Delete(dbk.expire)
     batch.Delete(dbk.I)
     lhc.Count -= 1
@@ -171,8 +190,8 @@ func (lhc *LocalHeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader,
     lhc.Sync()
 
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
-    tag1 := fmt.Sprintf("D%08X%s0", tstamp, emptyMessage)
-    tag2 := "D" + "FFFFFFFF" + emptyMessage + "0"
+    tag1 := fmt.Sprintf("C%08X%s0", tstamp, emptyMessage)
+    tag2 := "C" + "FFFFFFFF" + emptyMessage + "0"
     
     bin1, err := hex.DecodeString(tag1)
     if err != nil {
@@ -193,6 +212,92 @@ func (lhc *LocalHeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader,
         }
         hdrs = append(hdrs, *h)
     }
+    return hdrs, nil
+}
+
+func (lhc *LocalHeaderCache) findSector (seg ShardSector) (hdrs []RawMessageHeader, err error) {
+    var tag1, tag2, tag3, tag4 string
+    var bin1, bin2, bin3, bin4 []byte
+    
+    start := seg.start
+    ring := seg.ring
+
+    lhc.Sync()
+    
+    //fmt.Printf("LocalHeaderCache.findSector %04x, %d\n", start, ring)
+
+    if ((start < 0x0200) || (start > 0x03ff)) {
+        return nil, fmt.Errorf("LocalHeaderCache.findSector start value out of range")
+    }
+
+    if ((ring < 0) || (ring > 9)) {
+        return nil, fmt.Errorf("LocalHeaderCache.findSector ring value out of range")
+    }
+
+    ringsz := 512 >> ring
+    end := start + ringsz
+    
+    emptyMessage := "00000000000000000000000000000000000000000000000000000000000000"
+    tag1 = fmt.Sprintf("%04X%s", start, emptyMessage)
+    
+    if end > 0x400 {
+        tag2 = fmt.Sprintf("0400%s", emptyMessage)
+        tag3 = fmt.Sprintf("0000%s", emptyMessage)
+        tag4 = fmt.Sprintf("%04X%s", ((end & 0x03FF) | (0x0200)) , emptyMessage)
+        
+        //fmt.Printf("fs: tag1 = %s\n", tag1)
+        //fmt.Printf("fs: tag2 = %s\n", tag2)
+        //fmt.Printf("fs: tag3 = %s\n", tag3)
+        //fmt.Printf("fs: tag4 = %s\n", tag4)
+        
+        bin3, err = hex.DecodeString(tag3)
+        if err != nil {
+            return nil, err
+        }
+        bin4, err = hex.DecodeString(tag4)
+        if err != nil {
+            return nil, err
+        }
+    } else {
+        tag2 = fmt.Sprintf("%04X%s", end, emptyMessage)
+        
+        //fmt.Printf("fs: tag1 = %s\n", tag1)
+        //fmt.Printf("fs: tag2 = %s\n", tag2)
+    }
+    
+    bin1, err = hex.DecodeString(tag1)
+    if err != nil {
+        return nil, err
+    }
+    bin2, err = hex.DecodeString(tag2)
+    if err != nil {
+        return nil, err
+    }
+    
+    iter := lhc.db.NewIterator(&util.Range{Start: bin1, Limit: bin2}, nil)
+    
+    hdrs = make([]RawMessageHeader, 0)
+    for iter.Next() {
+        h := new(RawMessageHeader)
+        if h.Deserialize(string(iter.Value())) == nil {
+            return nil, errors.New("error parsing message")
+        }
+        hdrs = append(hdrs, *h)
+    }
+    
+    if (end > 0x400) {
+        iter := lhc.db.NewIterator(&util.Range{Start: bin3, Limit: bin4}, nil)
+    
+        for iter.Next() {
+            h := new(RawMessageHeader)
+            if h.Deserialize(string(iter.Value())) == nil {
+                return nil, errors.New("error parsing message")
+            }
+            hdrs = append(hdrs, *h)
+        }
+    }
+    
+    //fmt.Printf("found %d headers\n", len(hdrs))
     return hdrs, nil
 }
 
@@ -249,14 +354,17 @@ func (lhc *LocalHeaderCache) pruneExpired() (err error) {
     delCount := int(0)
         
     for iter.Next() {
-        if hdr.Deserialize(string(iter.Value())) == nil {
+        value := iter.Value()
+        if hdr.Deserialize(string(value)) == nil {
             return errors.New("unable to parse database value")
         }
-        dbk, err := hdr.dbKeys()
+        servertime := deserializeUint32(value[MessageHeaderLengthV2:MessageHeaderLengthV2+4])
+        dbk, err := hdr.dbKeys(servertime)
         if err != nil {
             return err
         }
         batch.Delete(dbk.date)
+        batch.Delete(dbk.servertime)
         batch.Delete(dbk.expire)
         batch.Delete(dbk.I)
         delCount += 1
@@ -330,7 +438,7 @@ func (lhc *LocalHeaderCache) Sync() (err error) {
 }
 
 func (lhc *LocalHeaderCache) AddPeer(host string, port uint16) (err error) {
-    dbpath := lhc.basepath + "/remote/" + host + "_" + string(port) + "/hdb"
+    dbpath := lhc.basepath + "/remote/" + host + "_" + strconv.Itoa(int(port)) + "/hdb"
     
     pc := new(peerCache)
     

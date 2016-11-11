@@ -38,6 +38,7 @@ import (
     "encoding/hex"
     //"encoding/json"
     "fmt"
+    "math/rand"
     "os"
     "strconv"
     //"sync"
@@ -125,14 +126,38 @@ func TestMessageIngestMove (t *testing.T) {
 }
 
 func TestOpenMessageStore (t *testing.T) {
-    ms, err := OpenMessageStore("./messages")
+    lhc, err := OpenLocalHeaderCache("headers")
     if err != nil {
         fmt.Println("whoops:", err)
         t.Fail()
     }
+    defer lhc.Close()
+    
+    rand.Seed(time.Now().Unix())
+    startbin := rand.Intn(0x200) + 0x200
+
+    ms, err := OpenMessageStore("./messages", lhc, startbin)
+    if err != nil {
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    defer ms.Close()
     
     ms.pruneExpired()
+    
+    lhc.AddPeer("indigo.ciphrtxt.com",7754)
+    lhc.AddPeer("violet.ciphrtxt.com",7754)
+    
+    lhc.Sync()
+    
+    ms.populate(0)
+    
+    for i := 60 ; i > 0 ; i-- {
+        fmt.Printf("\rsleeping %d seconds  ", i)
+        time.Sleep(time.Second * 1)
+    }
+    fmt.Println(" ... done")
+    
+    ms.Sync()
 }
 
-
-// http://indigo.bounceme.net:7754/api/message/download/0233da40ddd1bd53672f310025dc5e1f07a8a8768f4efe7ed9abfa296ec7863916

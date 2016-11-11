@@ -72,6 +72,9 @@ func TestDeserializeSerialize (t *testing.T) {
         h.Deserialize(hdr)
         hdr_out := h.Serialize()
         hdr_bin := h.ExportBinaryHeaderV2()
+        if hdr_bin == nil {
+            continue
+        }
         hh := ImportBinaryHeaderV2(hdr_bin[:])
         count += 1
         
@@ -102,13 +105,15 @@ func TestDeserializeSerialize (t *testing.T) {
             }
         }
     
-        dbk, err := h.dbKeys()
+        servertime := uint32(time.Now().Unix())
+        dbk, err := h.dbKeys(servertime)
         if(err != nil){
             fmt.Println("whoops:", err)
             t.Fail()
         }
         //fmt.Println(hdr)
         //fmt.Println("    " + hex.EncodeToString(dbk.date))
+        //fmt.Println("    " + hex.EncodeToString(dbk.servertime))
         //fmt.Println("    " + hex.EncodeToString(dbk.expire))
         //fmt.Println("    " + hex.EncodeToString(dbk.I))
         //fmt.Println()
@@ -413,6 +418,8 @@ func TestLocalFindByI (t *testing.T) {
         t.Fail()
     }
     
+    lhc.Sync()
+    
     for _, hdr := range s.HeaderList {
         h := new(RawMessageHeader)
         h.Deserialize(hdr)
@@ -434,3 +441,109 @@ func TestLocalFindByI (t *testing.T) {
     }
 }
 
+func TestLocalFindSector (t *testing.T) {
+    var ring uint
+
+    lhc, err := OpenLocalHeaderCache("headers")
+    if err != nil {
+        fmt.Println("whoops:", err)
+        t.Fail()
+    }
+    defer lhc.Close()
+
+    oneHrAgo := uint32(time.Now().Unix() - (60*60))
+    
+    for r := 9; r >= 0; r-- {
+        ring = uint(r)
+        start := rand.Intn(0x200) + 0x200
+        ringsz := 512 >> ring
+        end := start + ringsz
+        
+        allHeaders, err := lhc.FindSince(oneHrAgo)
+        if err != nil {
+            fmt.Println("whoops:", err)
+            t.Fail()
+        }
+        
+        seg := ShardSector {
+            start: start,
+            ring: ring,
+        }
+        segHeaders, err := lhc.findSector(seg)
+        if err != nil {
+            fmt.Println("whoops:", err)
+            t.Fail()
+        }
+        
+        if (segHeaders != nil) {
+            for _, s := range segHeaders {
+                i64, err := strconv.ParseUint(string(s.I[:4]), 16, 64)
+                if err != nil {
+                    fmt.Println("whoops:", err)
+                    t.Fail()
+                }
+                i := int(i64)
+                if end > 0x400 {
+                    if (i < start) && (i >= (end - 0x200)) {
+                        fmt.Printf("Error, %d outside of range [%d, %d)\n", i, start, end)
+                        t.Fail()
+                    }
+                } else {
+                    if (i < start) || (i >= end) {
+                        fmt.Printf("Error, %d outside of range [%d, %d)\n", i, start, end)
+                        t.Fail()
+                    }
+                }
+                contains, err := seg.Contains(s.I)
+                if err != nil {
+                    fmt.Println("whoops:", err)
+                    t.Fail()
+                }
+                if contains == false {
+                    fmt.Printf("Error, %d outside of range [%d, %d)\n", i, start, end)
+                    t.Fail()
+                }
+            }
+            
+            if (allHeaders != nil) {
+                for _, h := range allHeaders {
+                    var found bool = false
+                
+                    i64, err := strconv.ParseUint(string(h.I[:4]), 16, 64)
+                    if err != nil {
+                        t.Fail()
+                    }
+                    i := int(i64)
+                    if end > 0x400 {
+                        if (i < start) && (i >= (end - 0x200)) {
+                            continue
+                        }
+                    } else {
+                        if (i < start) || (i >= end) {
+                            continue
+                        }
+                    }
+                    
+                    //fmt.Printf("Seeking %04x - %s for range [%04x, %04x)\n", i, string(h.I), start, end)
+                    
+                    for _, s := range segHeaders {
+                        if s.time < oneHrAgo {
+                            continue
+                        }
+                        
+                        if s.I == h.I {
+                            found = true
+                            break
+                        }
+                    }
+                    if found == false {
+                        if h.time > oneHrAgo {
+                            fmt.Printf("Error, %04x, %s not found for range [%04x, %04x)\n", i, string(h.I), start, end)
+                            t.Fail()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
