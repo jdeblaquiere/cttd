@@ -219,8 +219,8 @@ func (lhc *LocalHeaderCache) findSector (seg ShardSector) (hdrs []RawMessageHead
     var tag1, tag2, tag3, tag4 string
     var bin1, bin2, bin3, bin4 []byte
     
-    start := seg.start
-    ring := seg.ring
+    start := seg.Start
+    ring := seg.Ring
 
     lhc.Sync()
     

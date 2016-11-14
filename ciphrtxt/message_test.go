@@ -150,7 +150,12 @@ func TestOpenMessageStore (t *testing.T) {
     
     lhc.Sync()
     
-    ms.populate(0)
+    target := ShardSector{
+        Start: startbin,
+        Ring: 0,
+    }
+    
+    ms.SetTarget(target)
     
     for i := 60 ; i > 0 ; i-- {
         fmt.Printf("\rsleeping %d seconds  ", i)

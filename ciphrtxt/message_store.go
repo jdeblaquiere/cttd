@@ -44,6 +44,11 @@ import (
     "time"
 )
 
+// 15 minutes clock skew - don't retry downloads of messages which fail
+// and expire within this time
+
+const allowableClockSkew = (60*15)
+
 const syncMaxGoroutines = 16
 
 // ShardSector defines a sector of coverage from the message space by representing
@@ -53,15 +58,17 @@ const syncMaxGoroutines = 16
 // 512 >> ring where ring is a value in (0 .. 9). Ring 0 would capture the
 // full 512 bins and ring 9 stores would only capture 1 bin. 
 
+const ShardSectorOuterRing = 9
+
 type ShardSector struct {
-    start   int
-    ring    uint
+    Start   int
+    Ring    uint
 }
 
 
 func (s *ShardSector) Contains(I string) (c bool, err error) {
-    ringsz := 512 >> s.ring
-    end := s.start + ringsz
+    ringsz := 512 >> s.Ring
+    end := s.Start + ringsz
     
     i64, err := strconv.ParseUint(I[:4], 16, 64)
     if err != nil {
@@ -69,11 +76,11 @@ func (s *ShardSector) Contains(I string) (c bool, err error) {
     }
     i := int(i64)
     if end > 0x400 {
-        if (i < s.start) && (i >= (end - 0x200)) {
+        if (i < s.Start) && (i >= (end - 0x200)) {
             return false, nil
         }
     } else {
-        if (i < s.start) || (i >= end) {
+        if (i < s.Start) || (i >= end) {
             return false, nil
         }
     }
@@ -86,11 +93,12 @@ type MessageStore struct {
     syncMutex sync.Mutex
     Count int
     sector ShardSector
+    target ShardSector
     lastRefresh uint32
     syncwg sync.WaitGroup
     iqueue chan []byte
     quitchan []chan int
-    lhc *LocalHeaderCache
+    LHC *LocalHeaderCache
 }
 
 func CheckOrCreateDirectory (filepath string) (err error) {
@@ -119,9 +127,9 @@ func OpenMessageStore(filepath string, lhc *LocalHeaderCache, startbin int) (ms 
     
     ms = new(MessageStore)
     ms.rootpath = filepath
-    ms.sector.start = startbin
-    ms.sector.ring = 9
-    ms.lhc = lhc
+    ms.sector.Start = startbin
+    ms.sector.Ring = ShardSectorOuterRing
+    ms.LHC = lhc
     
     ms.iqueue = make(chan []byte, (5*syncMaxGoroutines))
     ms.quitchan = make([]chan int, syncMaxGoroutines)
@@ -138,9 +146,9 @@ func OpenMessageStore(filepath string, lhc *LocalHeaderCache, startbin int) (ms 
                 select {
                 case I := <- Iqueue:
                     //mt.Printf("GR%d: seeking %s\n",gr,hex.EncodeToString(I))
-                    ordinal := rand.Perm(len(ms.lhc.Peers))
-                    for i := 0; i < len(ms.lhc.Peers); i++ {
-                        phc := ms.lhc.Peers[ordinal[i]].hc
+                    ordinal := rand.Perm(len(ms.LHC.Peers))
+                    for i := 0; i < len(ms.LHC.Peers); i++ {
+                        phc := ms.LHC.Peers[ordinal[i]].hc
                         h, _ := phc.FindByI(I)
                         if h == nil {
                             continue
@@ -167,9 +175,14 @@ func OpenMessageStore(filepath string, lhc *LocalHeaderCache, startbin int) (ms 
                         break
                     }
                     if failed {
-                        fmt.Printf("GR%d: pushing I (%s) back onto queue\n", gr, hex.EncodeToString(I))
-                        // push back on the queue
-                        Iqueue <- I
+                        h, err := ms.LHC.FindByI(I)
+                        if err == nil {
+                            if (h.expire + allowableClockSkew) > uint32(time.Now().Unix()) {
+                                fmt.Printf("GR%d: pushing I (%s) back onto queue\n", gr, hex.EncodeToString(I))
+                                // push back on the queue
+                                Iqueue <- I
+                            }
+                        }
                     }
                 case <- cquit:
                     fmt.Printf("GR %d done\n", gr)
@@ -313,6 +326,36 @@ func (ms *MessageStore) Remove(m *MessageFile) (err error) {
     return err
 }
 
+func (ms *MessageStore) FindSince (tstamp uint32) (msgs []MessageFile, err error) {
+    ms.Sync()
+
+    emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
+    tag1 := fmt.Sprintf("C%08X%s0", tstamp, emptyMessage)
+    tag2 := "C" + "FFFFFFFF" + emptyMessage + "0"
+    
+    bin1, err := hex.DecodeString(tag1)
+    if err != nil {
+        return nil, err
+    }
+    bin2, err := hex.DecodeString(tag2)
+    if err != nil {
+        return nil, err
+    }
+    
+    iter := ms.db.NewIterator(&util.Range{Start: bin1, Limit: bin2}, nil)
+    
+    msgs = make([]MessageFile, 0)
+    for iter.Next() {
+        m := new(MessageFile)
+        value := iter.Value()
+        if m.Deserialize(value) == nil {
+            return nil, errors.New("error parsing message")
+        }
+        msgs = append(msgs, *m)
+    }
+    return msgs, nil
+}
+
 func (ms *MessageStore) pruneExpired() (err error) {
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
     expiredBegin, err := hex.DecodeString("E" + "00000000" + emptyMessage + "0")
@@ -330,6 +373,7 @@ func (ms *MessageStore) pruneExpired() (err error) {
     m := new(MessageFile)
     
     delCount := int(0)
+    filesToRemove := make([]string, 0, ms.Count)
         
     for iter.Next() {
         if m.Deserialize(iter.Value()) == nil {
@@ -339,19 +383,33 @@ func (ms *MessageStore) pruneExpired() (err error) {
         if err != nil {
             return err
         }
+        batch.Delete(dbk.servertime)
         batch.Delete(dbk.expire)
         batch.Delete(dbk.I)
         delCount += 1
+        filesToRemove = append(filesToRemove, m.Filepath)
     }
     iter.Release()
     
     err = ms.db.Write(batch, nil)
-    if err == nil {
-        ms.Count -= delCount
-        fmt.Printf("MessageStore: dropping %d messages\n", delCount)
+    if err != nil {
+        return err
     }
     
-    return err
+    ms.Count -= delCount
+    fmt.Printf("MessageStore: dropped %d messages from db\n", delCount)
+    
+    delCount = 0
+    for _, f := range filesToRemove {
+        err = os.Remove(f)
+        if err == nil {
+            delCount += 1
+        }
+    }
+    
+    fmt.Printf("MessageStore: removed %d messages from filesystem\n", delCount)
+    
+    return nil
 }
 
 func (ms *MessageStore) FindByI (I []byte) (m *MessageFile, err error) {
@@ -369,10 +427,10 @@ func (ms *MessageStore) FindByI (I []byte) (m *MessageFile, err error) {
 }
 
 func (ms *MessageStore) syncSector(sector ShardSector) (err error) {
-    lhc := ms.lhc
+    lhc := ms.LHC
     lhc.Sync()
     
-    fmt.Printf("MessageStore.syncSector : refresh %04x-%d\n", sector.start, sector.ring)
+    fmt.Printf("MessageStore.syncSector : refresh %04x-%d\n", sector.Start, sector.Ring)
     
     segHeaders, err := lhc.findSector(sector)
     if err != nil {
@@ -400,10 +458,10 @@ func (ms *MessageStore) syncSector(sector ShardSector) (err error) {
 }
 
 func (ms *MessageStore) refreshSector(sector ShardSector, since uint32) (err error) {
-    lhc := ms.lhc
+    lhc := ms.LHC
     lhc.Sync()
     
-    fmt.Printf("MessageStore.refreshSector : refresh %04x-%d\n", sector.start, sector.ring)
+    fmt.Printf("MessageStore.refreshSector : refresh %04x-%d\n", sector.Start, sector.Ring)
     
     segHeaders, err := lhc.FindSince(since)
     if err != nil {
@@ -437,9 +495,13 @@ func (ms *MessageStore) refreshSector(sector ShardSector, since uint32) (err err
 }
 
 func (ms *MessageStore) populate(ring uint) (err error) {
-    newSync := ms.lhc.lastRefresh
-    lastSync := ms.lhc.lastRefresh
-    currentRing := ms.sector.ring
+    if ring > ShardSectorOuterRing {
+        ring = ShardSectorOuterRing
+    }
+
+    newSync := ms.LHC.lastRefresh
+    lastSync := ms.LHC.lastRefresh
+    currentRing := ms.sector.Ring
     target := ms.sector
     
     // validate that the current sector is covered
@@ -451,18 +513,18 @@ func (ms *MessageStore) populate(ring uint) (err error) {
     for r := currentRing; r > ring; r-- {
         extent := 512 >> r
         target = ShardSector{
-            start: ((ms.sector.start + extent) & 0x01ff) | 0x0200,
-            ring: r,
+            Start: ((ms.sector.Start + extent) & 0x01ff) | 0x0200,
+            Ring: r,
         }
     
         ms.syncSector(target)
         
         target = ShardSector{
-            start: ms.sector.start,
-            ring: r - 1,
+            Start: ms.sector.Start,
+            Ring: r - 1,
         }
         
-        newSync = ms.lhc.lastRefresh
+        newSync = ms.LHC.lastRefresh
         ms.refreshSector(target, lastSync)
         lastSync = newSync
     }
@@ -473,16 +535,24 @@ func (ms *MessageStore) populate(ring uint) (err error) {
     return nil
 }
 
+func (ms *MessageStore) SetTarget(target ShardSector) {
+    ms.target = target
+    ms.sector.Start = target.Start
+    ms.sector.Ring = ShardSectorOuterRing
+    
+    go ms.populate(target.Ring)
+}
+
 func (ms *MessageStore) Sync() (err error) {
-    lhc := ms.lhc
-    
+    lhc := ms.LHC
     lhc.Sync()
-    
     newSync := lhc.lastRefresh
     
     ms.refreshSector(ms.sector, ms.lastRefresh)
     
     ms.lastRefresh = newSync
+    
+    ms.pruneExpired()
     
     return nil
 }

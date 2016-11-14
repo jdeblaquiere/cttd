@@ -466,8 +466,8 @@ func TestLocalFindSector (t *testing.T) {
         }
         
         seg := ShardSector {
-            start: start,
-            ring: ring,
+            Start: start,
+            Ring: ring,
         }
         segHeaders, err := lhc.findSector(seg)
         if err != nil {

@@ -75,6 +75,10 @@ type HeaderListResponse struct {
     Headers []string `json:"header_list"`
 }
 
+type MessageListResponse struct {
+    Messages []string `json:"message_list"`
+}
+
 type HeaderCache struct {
     baseurl string
     db *leveldb.DB
