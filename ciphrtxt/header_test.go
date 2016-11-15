@@ -29,6 +29,7 @@ package ciphrtxt
 
 import (
     "testing"
+    "bytes"
     //"math/big"
     "math/rand"
     "net/http"
@@ -118,19 +119,27 @@ func TestDeserializeSerialize (t *testing.T) {
         //fmt.Println("    " + hex.EncodeToString(dbk.I))
         //fmt.Println()
         
-        t64, err := strconv.ParseUint(hex.EncodeToString(dbk.date)[1:9], 16, 32)
+        t64, err := strconv.ParseUint(hex.EncodeToString(dbk.date)[2:10], 16, 32)
         time := uint32(t64)
-        if (h.time != time) || (h.I != hex.EncodeToString(dbk.date)[9:75]) {
+        if (h.time != time) || (hex.EncodeToString(h.I) != hex.EncodeToString(dbk.date)[10:76]) {
+            fmt.Printf("date key mismatch\n")
             t.Fail()
         }
         
-        t64, err = strconv.ParseUint(hex.EncodeToString(dbk.expire)[1:9], 16, 32)
+        if (hex.EncodeToString(h.I) != hex.EncodeToString(dbk.servertime)[10:76]) {
+            fmt.Printf("servertime key mismatch\n")
+            t.Fail()
+        }
+        
+        t64, err = strconv.ParseUint(hex.EncodeToString(dbk.expire)[2:10], 16, 32)
         expire := uint32(t64)
-        if (h.expire != expire) || (h.I != hex.EncodeToString(dbk.expire)[9:75]) {
+        if (h.expire != expire) || (hex.EncodeToString(h.I) != hex.EncodeToString(dbk.expire)[10:76]) {
+            fmt.Printf("expire key mismatch\n")
             t.Fail()
         }
         
-        if h.I != hex.EncodeToString(dbk.I) {
+        if hex.EncodeToString(h.I) != hex.EncodeToString(dbk.I) {
+            fmt.Printf("I key mismatch\n")
             t.Fail()
         }
     }
@@ -352,12 +361,8 @@ func TestFindByI (t *testing.T) {
     for _, hdr := range s.HeaderList {
         h := new(RawMessageHeader)
         h.Deserialize(hdr)
-        Ibin, err := h.IKey()
-        if err != nil {
-            t.Fail()
-        }
         
-        msg, err := hc.FindByI(Ibin)
+        msg, err := hc.FindByI(h.IKey())
         if err != nil {
             if uint32(time.Now().Unix()) < h.expire {
                 fmt.Println("Error: could not find message:", h.I)
@@ -423,19 +428,15 @@ func TestLocalFindByI (t *testing.T) {
     for _, hdr := range s.HeaderList {
         h := new(RawMessageHeader)
         h.Deserialize(hdr)
-        Ibin, err := h.IKey()
-        if err != nil {
-            t.Fail()
-        }
         
-        msg, err := lhc.FindByI(Ibin)
+        msg, err := lhc.FindByI(h.IKey())
         if err != nil {
             if uint32(time.Now().Unix()) < h.expire {
-                fmt.Println("Error: could not find message:", h.I)
+                fmt.Println("Error: could not find message:", hex.EncodeToString(h.IKey()))
                 t.Fail()
             }
         } else if msg.Serialize() != h.Serialize() {
-            fmt.Println("Error: message mismatch:", h.I)
+            fmt.Println("Error: message mismatch:", hex.EncodeToString(h.IKey()))
             t.Fail()
         }
     }
@@ -477,7 +478,7 @@ func TestLocalFindSector (t *testing.T) {
         
         if (segHeaders != nil) {
             for _, s := range segHeaders {
-                i64, err := strconv.ParseUint(string(s.I[:4]), 16, 64)
+                i64, err := strconv.ParseUint(hex.EncodeToString(s.I)[:4], 16, 64)
                 if err != nil {
                     fmt.Println("whoops:", err)
                     t.Fail()
@@ -509,7 +510,7 @@ func TestLocalFindSector (t *testing.T) {
                 for _, h := range allHeaders {
                     var found bool = false
                 
-                    i64, err := strconv.ParseUint(string(h.I[:4]), 16, 64)
+                    i64, err := strconv.ParseUint(hex.EncodeToString(h.I)[:4], 16, 64)
                     if err != nil {
                         t.Fail()
                     }
@@ -531,7 +532,7 @@ func TestLocalFindSector (t *testing.T) {
                             continue
                         }
                         
-                        if s.I == h.I {
+                        if bytes.Equal(s.I, h.I) {
                             found = true
                             break
                         }

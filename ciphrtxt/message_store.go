@@ -31,6 +31,7 @@ import (
     //"net/http"
     //"io"
     "io/ioutil"
+    "encoding/binary"
     "encoding/hex"
     //"encoding/json"
     "fmt"
@@ -66,15 +67,11 @@ type ShardSector struct {
 }
 
 
-func (s *ShardSector) Contains(I string) (c bool, err error) {
+func (s *ShardSector) Contains(I []byte) (c bool, err error) {
     ringsz := 512 >> s.Ring
     end := s.Start + ringsz
     
-    i64, err := strconv.ParseUint(I[:4], 16, 64)
-    if err != nil {
-        return false, err
-    }
-    i := int(i64)
+    i := int(binary.BigEndian.Uint16(I[:2]))
     if end > 0x400 {
         if (i < s.Start) && (i >= (end - 0x200)) {
             return false, nil
@@ -225,7 +222,7 @@ func OpenMessageStore(filepath string, lhc *LocalHeaderCache, startbin int) (ms 
                     fmt.Printf("Failed to insert message %s\n", fpath)
                     continue
                 }
-                if ins {
+                if ins != 0 {
                     fmt.Printf("inserted %s into db\n", f.Name())
                 }
             }
@@ -258,11 +255,11 @@ func (ms *MessageStore) Close() {
 
 func (ms *MessageStore) recount() (err error) {
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
-    expiredBegin, err := hex.DecodeString("E" + "00000000" + emptyMessage + "0")
+    expiredBegin, err := hex.DecodeString("E0" + "00000000" + emptyMessage)
     if err != nil {
         return err
     }
-    expiredEnd, err := hex.DecodeString("E" + "FFFFFFFF" + emptyMessage + "0")
+    expiredEnd, err := hex.DecodeString("E0" + "FFFFFFFF" + emptyMessage)
     if err != nil {
         return err
     }
@@ -281,22 +278,26 @@ func (ms *MessageStore) recount() (err error) {
     return nil
 }
 
-func (ms *MessageStore) InsertFile(filepath string) (insert bool, err error) {
+func (ms *MessageStore) InsertFile(filepath string) (servertime uint32, err error) {
     m := Ingest(filepath)
     if m == nil {
-        return false, fmt.Errorf("Ingest failed for %s\n", filepath)
+        return 0, fmt.Errorf("Ingest failed for %s\n", filepath)
     }
     return ms.Insert(m)
 }
 
-func (ms *MessageStore) Insert(m *MessageFile) (insert bool, err error) {
+func (ms *MessageStore) Insert(m *MessageFile) (servertime uint32, err error) {
     dbk, err := m.RawMessageHeader.dbKeys(m.Servertime)
     if err != nil {
-        return false, err
+        return 0, err
     }
-    _, err = ms.db.Get(dbk.I, nil)
+    previous, err := ms.db.Get(dbk.I, nil)
     if err == nil {
-        return false, nil
+        p := new(MessageFile)
+        if p.Deserialize(previous) == nil {
+            return 0, errors.New("retreived invalid message from database")
+        }
+        return p.Servertime, nil
     }
     value := []byte(m.Serialize())
     batch := new(leveldb.Batch)
@@ -305,9 +306,10 @@ func (ms *MessageStore) Insert(m *MessageFile) (insert bool, err error) {
     batch.Put(dbk.I, value)
     err = ms.db.Write(batch, nil)
     if err != nil {
-        return false, err
+        return 0, err
     }
-    return true, nil
+    ms.Count += 1
+    return m.Servertime, nil
 }
 
 func (ms *MessageStore) Remove(m *MessageFile) (err error) {
@@ -323,6 +325,7 @@ func (ms *MessageStore) Remove(m *MessageFile) (err error) {
     if err == nil {
         return os.Remove(m.Filepath)
     }
+    ms.Count -= 1
     return err
 }
 
@@ -330,8 +333,8 @@ func (ms *MessageStore) FindSince (tstamp uint32) (msgs []MessageFile, err error
     ms.Sync()
 
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
-    tag1 := fmt.Sprintf("C%08X%s0", tstamp, emptyMessage)
-    tag2 := "C" + "FFFFFFFF" + emptyMessage + "0"
+    tag1 := fmt.Sprintf("C0%08X%s", tstamp, emptyMessage)
+    tag2 := "C0" + "FFFFFFFF" + emptyMessage
     
     bin1, err := hex.DecodeString(tag1)
     if err != nil {
@@ -353,17 +356,18 @@ func (ms *MessageStore) FindSince (tstamp uint32) (msgs []MessageFile, err error
         }
         msgs = append(msgs, *m)
     }
+    
     return msgs, nil
 }
 
 func (ms *MessageStore) pruneExpired() (err error) {
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
-    expiredBegin, err := hex.DecodeString("E" + "00000000" + emptyMessage + "0")
+    expiredBegin, err := hex.DecodeString("E0" + "00000000" + emptyMessage)
     if err != nil {
         return err
     }
     now := strconv.FormatUint(uint64(time.Now().Unix()),16)
-    expiredEnd, err := hex.DecodeString("E" + now + emptyMessage + "0")
+    expiredEnd, err := hex.DecodeString("E0" + now + emptyMessage)
     if err != nil {
         return err
     }
@@ -373,7 +377,7 @@ func (ms *MessageStore) pruneExpired() (err error) {
     m := new(MessageFile)
     
     delCount := int(0)
-    filesToRemove := make([]string, 0, ms.Count)
+    filesToRemove := make([]string, 0, 1024)
         
     for iter.Next() {
         if m.Deserialize(iter.Value()) == nil {
@@ -443,14 +447,10 @@ func (ms *MessageStore) syncSector(sector ShardSector) (err error) {
         if s.version == "0100" {
             continue
         }
-        I, err := hex.DecodeString(s.I)
+        _, err = ms.FindByI(s.I)
         if err != nil {
-            return err
-        }
-        _, err = ms.FindByI(I)
-        if err != nil {
-            //fmt.Printf("MessageStore.syncSector : queueing %s\n", s.I)
-            ms.iqueue <- I
+            //fmt.Printf("MessageStore.syncSector : queueing %s\n", hex.EncodeToString(s.I))
+            ms.iqueue <- s.I
         }
     }
     
@@ -479,14 +479,10 @@ func (ms *MessageStore) refreshSector(sector ShardSector, since uint32) (err err
             return err
         }
         if c {
-            I, err := hex.DecodeString(s.I)
+            _, err = ms.FindByI(s.I)
             if err != nil {
-                return err
-            }
-            _, err = ms.FindByI(I)
-            if err != nil {
-                //fmt.Printf("MessageStore.refreshSector : queueing %s\n", s.I)
-                ms.iqueue <- I
+                //fmt.Printf("MessageStore.refreshSector : queueing %s\n", hex.EncodeToString(s.I))
+                ms.iqueue <- s.I
             }
         }
     }

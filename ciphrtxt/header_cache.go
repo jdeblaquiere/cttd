@@ -79,14 +79,21 @@ type MessageListResponse struct {
     Messages []string `json:"message_list"`
 }
 
+type MessageUploadResponse struct {
+    Header string `json:"header"`
+    Servertime uint32 `json:"servertime"`
+}
+
 type HeaderCache struct {
     baseurl string
     db *leveldb.DB
     syncMutex sync.Mutex
     status StatusResponse
     serverTime uint32
-    lastRefresh uint32
+    lastRefreshServer uint32
+    lastRefreshLocal uint32
     Count int
+    NetworkErrors int
 }
 
 // NOTE : if dbpath is empty ("") header cache will be in-memory only
@@ -134,11 +141,11 @@ func OpenHeaderCache(host string, port uint16, dbpath string) (hc *HeaderCache, 
 
 func (hc *HeaderCache) recount() (err error) {
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
-    expiredBegin, err := hex.DecodeString("E" + "00000000" + emptyMessage + "0")
+    expiredBegin, err := hex.DecodeString("E0" + "00000000" + emptyMessage)
     if err != nil {
         return err
     }
-    expiredEnd, err := hex.DecodeString("E" + "FFFFFFFF" + emptyMessage + "0")
+    expiredEnd, err := hex.DecodeString("E0" + "FFFFFFFF" + emptyMessage)
     if err != nil {
         return err
     }
@@ -173,22 +180,22 @@ type dbkeys struct {
 
 func (h *RawMessageHeader) dbKeys(servertime uint32) (dbk *dbkeys, err error) {
     dbk = new(dbkeys)
-    dbk.date, err = hex.DecodeString(fmt.Sprintf("D%08X%s0", h.time, h.I))
+    dbk.date, err = hex.DecodeString(fmt.Sprintf("D0%08X", h.time))
     if err != nil {
         return nil, err
     }
-    dbk.servertime, err = hex.DecodeString(fmt.Sprintf("C%08X%s0", servertime, h.I))
+    dbk.date = append(dbk.date, h.I...)
+    dbk.servertime, err = hex.DecodeString(fmt.Sprintf("C0%08X", servertime))
     if err != nil {
         return nil, err
     }
-    dbk.expire, err = hex.DecodeString(fmt.Sprintf("E%08X%s0", h.expire, h.I))
+    dbk.servertime = append(dbk.servertime, h.I...)
+    dbk.expire, err = hex.DecodeString(fmt.Sprintf("E0%08X", h.expire))
     if err != nil {
         return nil, err
     }
-    dbk.I, err = hex.DecodeString(h.I)
-    if err != nil {
-        return nil, err
-    }
+    dbk.expire = append(dbk.expire, h.I...)
+    dbk.I = h.I
     return dbk, err
 }
 
@@ -208,6 +215,7 @@ func (hc *HeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
     servertime := uint32(time.Now().Unix())
     dbk, err := h.dbKeys(servertime)
     if err != nil {
+        fmt.Printf("HeaderCache.Insert: dbKeys returned error\n")
         return false, err
     }
     _, err = hc.db.Get(dbk.I, nil)
@@ -232,11 +240,7 @@ func (hc *HeaderCache) Insert(h *RawMessageHeader) (insert bool, err error) {
 }
 
 func (hc *HeaderCache) Remove(h *RawMessageHeader) (err error) {
-    I, err := hex.DecodeString(h.I)
-    if err != nil {
-        return err
-    }
-    value, err := hc.db.Get(I, nil)
+    value, err := hc.db.Get(h.I, nil)
     if err != nil {
         return err
     }
@@ -273,8 +277,8 @@ func (hc *HeaderCache) FindSince (tstamp uint32) (hdrs []RawMessageHeader, err e
     hc.Sync()
 
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
-    tag1 := fmt.Sprintf("C%08X%s0", tstamp, emptyMessage)
-    tag2 := "C" + "FFFFFFFF" + emptyMessage + "0"
+    tag1 := fmt.Sprintf("C0%08X%s", tstamp, emptyMessage)
+    tag2 := "C0" + "FFFFFFFF" + emptyMessage 
     
     bin1, err := hex.DecodeString(tag1)
     if err != nil {
@@ -303,8 +307,8 @@ func (hc *HeaderCache) FindExpiringAfter (tstamp uint32) (hdrs []RawMessageHeade
     hc.Sync()
 
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
-    tag1 := fmt.Sprintf("E%08X%s0", tstamp, emptyMessage)
-    tag2 := "E" + "FFFFFFFF" + emptyMessage + "0"
+    tag1 := fmt.Sprintf("E0%08X%s", tstamp, emptyMessage)
+    tag2 := "E0" + "FFFFFFFF" + emptyMessage
     
     bin1, err := hex.DecodeString(tag1)
     if err != nil {
@@ -338,14 +342,17 @@ func (hc *HeaderCache) getTime() (serverTime uint32, err error) {
     
     res, err := c.Get(hc.baseurl + apiTime)
     if err != nil {
+        hc.NetworkErrors += 1
         return 0, err
     }
     
     body, err := ioutil.ReadAll(res.Body)
     if err != nil {
+        hc.NetworkErrors += 1
         return 0, err
     }
     
+    hc.NetworkErrors = 0
     err = json.Unmarshal(body, &tr)
     if err != nil {
         return 0, err
@@ -362,14 +369,17 @@ func (hc *HeaderCache) getHeadersSince(since uint32) (mh []RawMessageHeader, err
     
     res, err := c.Get(hc.baseurl + apiHeadersSince + strconv.FormatInt(int64(since),10))
     if err != nil {
+        hc.NetworkErrors += 1
         return nil, err
     }
     
     body, err := ioutil.ReadAll(res.Body)
     if err != nil {
+        hc.NetworkErrors += 1
         return nil, err
     }
     
+    hc.NetworkErrors = 0
     s := new(HeaderListResponse)
     err = json.Unmarshal(body, &s)
     if err != nil {
@@ -389,12 +399,12 @@ func (hc *HeaderCache) getHeadersSince(since uint32) (mh []RawMessageHeader, err
 
 func (hc *HeaderCache) pruneExpired() (err error) {
     emptyMessage := "000000000000000000000000000000000000000000000000000000000000000000"
-    expiredBegin, err := hex.DecodeString("E" + "00000000" + emptyMessage + "0")
+    expiredBegin, err := hex.DecodeString("E0" + "00000000" + emptyMessage)
     if err != nil {
         return err
     }
     now := strconv.FormatUint(uint64(time.Now().Unix()),16)
-    expiredEnd, err := hex.DecodeString("E" + now + emptyMessage + "0")
+    expiredEnd, err := hex.DecodeString("E0" + now + emptyMessage)
     if err != nil {
         return err
     }
@@ -436,13 +446,21 @@ func (hc *HeaderCache) Sync() (err error) {
     // if "fresh enough" (refreshMinDelay) then simply return
     now := uint32(time.Now().Unix())
     
-    if (now - hc.lastRefresh) < refreshMinDelay {
+    if (hc.lastRefreshLocal + refreshMinDelay) > now {
         return nil
     }
     
     //should only have a single goroutine sync'ing at a time
     hc.syncMutex.Lock()
     defer hc.syncMutex.Unlock()
+    
+    now = uint32(time.Now().Unix())
+    
+    if (hc.lastRefreshLocal + refreshMinDelay) > now {
+        return nil
+    }
+    
+    fmt.Printf("MessageStore.Sync: %s sync @ now, last, next = %d, %d, %d\n", hc.baseurl, now, hc.lastRefreshLocal, (hc.lastRefreshLocal + refreshMinDelay))
     
     serverTime, err := hc.getTime()
     if err != nil {
@@ -454,7 +472,7 @@ func (hc *HeaderCache) Sync() (err error) {
         return err
     }
     
-    mhdrs, err := hc.getHeadersSince(hc.lastRefresh)
+    mhdrs, err := hc.getHeadersSince(hc.lastRefreshServer)
     if err != nil {
         return err
     }
@@ -471,7 +489,8 @@ func (hc *HeaderCache) Sync() (err error) {
         }
     }
 
-    hc.lastRefresh = serverTime
+    hc.lastRefreshServer = serverTime
+    hc.lastRefreshLocal = now
 
     fmt.Printf("insert %d message headers\n", insCount)
 
@@ -488,17 +507,21 @@ func (hc *HeaderCache) tryDownloadMessage(I []byte, recvpath string) (m *Message
     //fmt.Printf("try download %s\n", hc.baseurl + apiMessagesDownload + hex.EncodeToString(I))
     res, err := c.Get(hc.baseurl + apiMessagesDownload + hex.EncodeToString(I))
     if err != nil {
-        fmt.Printf("Connection error\n")
+        hc.NetworkErrors += 1
         return nil, err
     }
 
+    hc.NetworkErrors = 0
     f, err := os.Create(recvpath)
     if err != nil {
-        fmt.Printf("Cannot create recv file\n")
         return nil, err
     }
 
-    io.Copy(f, res.Body)
+    _, err = io.Copy(f, res.Body)
+    if err != nil {
+        return nil, err
+    }
+    
     f.Close()
 
     m = Ingest(recvpath)

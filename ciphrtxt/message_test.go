@@ -66,11 +66,7 @@ func TestMessageIngestMove (t *testing.T) {
     }
     
     for _, h := range mh {
-        I, err := h.IKey()
-        if err != nil {
-            fmt.Println("whoops:", err)
-            t.Fail()
-        }
+        I := h.IKey()
         res, err := http.Get("http://violet.ciphrtxt.com:7754/api/message/download/" + hex.EncodeToString(I))
         if err != nil {
             fmt.Println("whoops:", err)
@@ -91,12 +87,7 @@ func TestMessageIngestMove (t *testing.T) {
                 fmt.Println("whoops:", err)
                 t.Fail()
             } else {
-                I, err := m.IKey()
-                if err != nil {
-                fmt.Println("whoops:", err)
-                    t.Fail()
-                }
-                Ihex := hex.EncodeToString(I)
+                Ihex := hex.EncodeToString(m.IKey())
                 filemove := "./messages/store/" + Ihex[:4] + "/" + Ihex 
                 //fmt.Printf("moving to %s\n", filemove)
                 err = m.Move(filemove)

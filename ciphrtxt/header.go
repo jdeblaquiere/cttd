@@ -88,17 +88,33 @@ type RawMessageHeader struct {
     version string
     time    uint32
     expire  uint32
-    I       string
-    J       string
-    K       string
+    I       []byte
+    J       []byte
+    K       []byte
     blocklen    uint32
     reserved    uint64
-    r       string
-    s       string
+    r       []byte
+    s       []byte
     nonce   uint64
 }
 
+type MessageHeaderJSON struct {
+    Version string `json:"version"`
+    Time    uint32 `json:"time"`
+    Expire  uint32 `json:"expire"`
+    TimeStr    string `json:"time_str"`
+    ExpireStr  string `json:"expire_str"`
+    I       string `json:"I"`
+    J       string `json:"J"`
+    K       string `json:"K"`
+    Size    uint64 `json:"Size"`
+    R       string `json:"sig_r"`
+    S       string `json:"sig_s"`
+    Nonce   uint64 `json:"nonce"`
+}
+
 func (z *RawMessageHeader) deserializeV1(s string) *RawMessageHeader {
+    var err error
     var t64 uint64
     var d = strings.Split(s, ":")
     if len(d) != 8 || strings.Compare(d[0],"M0100") != 0 {
@@ -109,11 +125,16 @@ func (z *RawMessageHeader) deserializeV1(s string) *RawMessageHeader {
     z.time = uint32(t64)
     t64, _ = strconv.ParseUint(d[2], 16, 32)
     z.expire = uint32(t64)
-    z.I = d[3]
-    z.J = d[4]
-    z.K = d[5]
-    z.r = d[6]
-    z.s = d[7]
+    z.I, err = hex.DecodeString(d[3])
+    if err != nil { return nil }
+    z.J, err = hex.DecodeString(d[4])
+    if err != nil { return nil }
+    z.K, err = hex.DecodeString(d[5])
+    if err != nil { return nil }
+    z.r, err = hex.DecodeString(d[6])
+    if err != nil { return nil }
+    z.s, err = hex.DecodeString(d[7])
+    if err != nil { return nil }
     return z
 }
 
@@ -121,7 +142,7 @@ func (z *RawMessageHeader) deserializeV2(s string) *RawMessageHeader {
     var err error
     smh := make([]byte, 0)
     if len(s) < ShortMessageHeaderLengthB64V2 {
-        fmt.Println("message too short")
+        //fmt.Println("message too short")
         return nil
     }
     if len(s) >= MessageHeaderLengthB64V2 {
@@ -130,7 +151,7 @@ func (z *RawMessageHeader) deserializeV2(s string) *RawMessageHeader {
         smh, err = base64.StdEncoding.DecodeString(s[:ShortMessageHeaderLengthB64V2])
     }
     if err != nil {
-        fmt.Println("base64 conversion failed")
+        //fmt.Println("base64 conversion failed")
         return nil
     }
     return z.importBinaryHeaderV2(smh[:])
@@ -141,7 +162,7 @@ func (z *RawMessageHeader) importBinaryHeaderV2(smh []byte) *RawMessageHeader {
         return nil
     }
     if bytes.Compare(smh[:4],[]byte("M\x02\x00\x00")) != 0 {
-        fmt.Println("v0200 version string mismatch")
+        //fmt.Println("v0200 version string mismatch")
         return nil
     }
     z.version = "0200"
@@ -150,16 +171,21 @@ func (z *RawMessageHeader) importBinaryHeaderV2(smh []byte) *RawMessageHeader {
     //z.I = string(smh[12:45])
     //z.J = string(smh[45:78])
     //z.K = string(smh[78:111])
-    z.I = hex.EncodeToString(smh[12:45])
-    z.J = hex.EncodeToString(smh[45:78])
-    z.K = hex.EncodeToString(smh[78:111])
+    z.I = make([]byte,33)
+    copy(z.I, smh[12:45])
+    z.J = make([]byte,33)
+    copy(z.J, smh[45:78])
+    z.K = make([]byte,33)
+    copy(z.K, smh[78:111])
     z.blocklen = binary.BigEndian.Uint32(smh[111:115])
     z.reserved = binary.BigEndian.Uint64(smh[115:123])
     if len(smh) >= MessageHeaderLengthV2 {
         var ui8 uint8
         var ui32 uint32
-        z.r = string(smh[123:155])
-        z.s = string(smh[155:187])
+        z.r = make([]byte,32)
+        copy(z.r, smh[123:155])
+        z.s = make([]byte,32)
+        copy(z.s, smh[155:187])
         bufnonce := bytes.NewBuffer(smh[187:188])
         binary.Read(bufnonce, binary.BigEndian, &ui8)
         bufnonce = bytes.NewBuffer(smh[188:192])
@@ -180,13 +206,18 @@ func (z *RawMessageHeader) Deserialize(s string) *RawMessageHeader {
 
 func (z *RawMessageHeader) serializeV1() *SerializedMessageHeaderV1 {
     smh := new(SerializedMessageHeaderV1)
-    s := fmt.Sprintf("M%s:%08X:%08X:%s:%s:%s:%s:%s", z.version, z.time, z.expire, z.I, z.J, z.K, z.r, z.s)
-    //fmt.Println("serialized as : " + s)
-    if len(s) != MessageHeaderLengthV1 {
-        fmt.Printf("Message length invalid: %d chars\n", len(s))
+    I := hex.EncodeToString(z.I)
+    J := hex.EncodeToString(z.J)
+    K := hex.EncodeToString(z.K)
+    r := hex.EncodeToString(z.r)
+    s := hex.EncodeToString(z.s)
+    ss := fmt.Sprintf("M%s:%08X:%08X:%s:%s:%s:%s:%s", z.version, z.time, z.expire, I, J, K, r, s)
+    //fmt.Println("serialized as : " + ss)
+    if len(ss) != MessageHeaderLengthV1 {
+        //fmt.Printf("Message length invalid: %d chars\n", len(ss))
         return nil
     }
-    copy(smh[:], s)
+    copy(smh[:], ss)
     return smh
 }
 
@@ -195,28 +226,13 @@ func (z *RawMessageHeader) exportBinaryHeaderV2() *BinaryMessageHeaderV2 {
     buf.WriteString("M\x02\x00\x00")
     binary.Write(buf, binary.BigEndian, z.time)
     binary.Write(buf, binary.BigEndian, z.expire)
-    //buf.WriteString(z.I)
-    //buf.WriteString(z.J)
-    //buf.WriteString(z.K)
-    I, err := hex.DecodeString(z.I)
-    if err != nil {
-        return nil
-    }
-    J, err := hex.DecodeString(z.J)
-    if err != nil {
-        return nil
-    }
-    K, err := hex.DecodeString(z.K)
-    if err != nil {
-        return nil
-    }
-    buf.WriteString(string(I))
-    buf.WriteString(string(J))
-    buf.WriteString(string(K))
+    buf.Write(z.I)
+    buf.Write(z.J)
+    buf.Write(z.K)
     binary.Write(buf, binary.BigEndian, z.blocklen)
     binary.Write(buf, binary.BigEndian, z.reserved)
-    buf.WriteString(z.r)
-    buf.WriteString(z.s)
+    buf.Write(z.r)
+    buf.Write(z.s)
     binary.Write(buf, binary.BigEndian, uint8(z.nonce >> 32))
     binary.Write(buf, binary.BigEndian, uint32(z.nonce & 0xFFFFFFFF))
     //fmt.Println("serialized as : " + hex.EncodeToString(buf.Bytes()))
@@ -284,15 +300,31 @@ func (z *RawMessageHeader) ExpireTime() time.Time {
     return time.Unix(int64(z.expire), 0)
 }
 
-func (z *RawMessageHeader) IKey() (k []byte, err error) {
-    k, err = hex.DecodeString(z.I)
-    if err != nil {
-        return nil, err
-    }
-    return k, nil
+func (z *RawMessageHeader) IKey() (k []byte) {
+    return z.I
 }
 
 func (z *RawMessageHeader) Hash() []byte {
     hashval := sha256.Sum256([]byte(z.Serialize()))
     return hashval[:]
+}
+
+func (z *RawMessageHeader) JSON() *MessageHeaderJSON {
+    r := new(MessageHeaderJSON)
+    r.Version = z.version
+    r.Time = z.time
+    r.Expire = z.expire
+    r.TimeStr = time.Unix(int64(z.time),0).String()
+    r.ExpireStr = time.Unix(int64(z.expire),0).String()
+    r.I = hex.EncodeToString(z.I)
+    r.J = hex.EncodeToString(z.J)
+    r.K = hex.EncodeToString(z.K)
+    r.Size = uint64(z.blocklen + 1) * MessageHeaderLengthB64V2
+    r.R = hex.EncodeToString(z.r)
+    r.S = hex.EncodeToString(z.s)
+    r.Nonce = z.nonce
+    
+    fmt.Printf("exporting JSON for %s\n", r.I)
+    
+    return r
 }

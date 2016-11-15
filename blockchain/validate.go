@@ -493,12 +493,7 @@ func checkBlockHeaderNonces(header *wire.BlockHeader, timeSource MedianTimeSourc
     
     
     if headerA.ExpireTime().After(minExpireTime) {
-        ikey, err := headerA.IKey()
-        if err != nil {
-            str := fmt.Sprintf("Unable to parse message hex key : ", 
-                hex.EncodeToString(header.NonceHeaderA[:]))
-            return ruleError(ErrNonceValidation, str)
-        }
+        ikey := headerA.IKey()
         
         _, err = hc.FindByI(ikey)
         if err != nil {
@@ -509,12 +504,7 @@ func checkBlockHeaderNonces(header *wire.BlockHeader, timeSource MedianTimeSourc
     } 
     
     if headerB.ExpireTime().After(minExpireTime) {
-        ikey, err := headerB.IKey()
-        if err != nil {
-            str := fmt.Sprintf("Unable to parse message hex key : ", 
-                hex.EncodeToString(header.NonceHeaderA[:]))
-            return ruleError(ErrNonceValidation, str)
-        }
+        ikey := headerB.IKey()
         
         _, err = hc.FindByI(ikey)
         if err != nil {
