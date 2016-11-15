@@ -7,10 +7,10 @@ package blockchain_test
 import (
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // TestHaveBlock tests the HaveBlock API to ensure proper functionality.
@@ -23,7 +23,7 @@ func TestHaveBlock(t *testing.T) {
 		"blk_3A.dat.bz2",
 	}
 
-	var blocks []*btcutil.Block
+	var blocks []*cttutil.Block
 	for _, file := range testFiles {
 		blockTmp, err := loadBlocks(file)
 		if err != nil {
@@ -62,7 +62,7 @@ func TestHaveBlock(t *testing.T) {
 	}
 
 	// Insert an orphan block.
-	isOrphan, err := chain.ProcessBlock(btcutil.NewBlock(&Block100000),
+	isOrphan, err := chain.ProcessBlock(cttutil.NewBlock(&Block100000),
 		blockchain.BFNone)
 	if err != nil {
 		t.Errorf("Unable to process block: %v", err)

@@ -7,8 +7,8 @@ package blockchain
 import (
 	"math"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // nextPowerOfTwo returns the next highest power of two from a given number if
@@ -66,7 +66,7 @@ func HashMerkleBranches(left *chainhash.Hash, right *chainhash.Hash) *chainhash.
 // are calculated by concatenating the left node with itself before hashing.
 // Since this function uses nodes that are pointers to the hashes, empty nodes
 // will be nil.
-func BuildMerkleTreeStore(transactions []*btcutil.Tx) []*chainhash.Hash {
+func BuildMerkleTreeStore(transactions []*cttutil.Tx) []*chainhash.Hash {
 	// Calculate how many entries are required to hold the binary merkle
 	// tree as a linear array and create an array of that size.
 	nextPoT := nextPowerOfTwo(len(transactions))

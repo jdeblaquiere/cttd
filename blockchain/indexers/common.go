@@ -10,9 +10,9 @@ package indexers
 import (
 	"encoding/binary"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/database"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 var (
@@ -47,11 +47,11 @@ type Indexer interface {
 
 	// ConnectBlock is invoked when the index manager is notified that a new
 	// block has been connected to the main chain.
-	ConnectBlock(dbTx database.Tx, block *btcutil.Block, view *blockchain.UtxoViewpoint) error
+	ConnectBlock(dbTx database.Tx, block *cttutil.Block, view *blockchain.UtxoViewpoint) error
 
 	// DisconnectBlock is invoked when the index manager is notified that a
 	// block has been disconnected from the main chain.
-	DisconnectBlock(dbTx database.Tx, block *btcutil.Block, view *blockchain.UtxoViewpoint) error
+	DisconnectBlock(dbTx database.Tx, block *cttutil.Block, view *blockchain.UtxoViewpoint) error
 }
 
 // AssertError identifies an error that indicates an internal code consistency

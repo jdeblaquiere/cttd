@@ -27,18 +27,18 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/btcec"
-	"github.com/jadeblaquiere/ctcd/btcjson"
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/btcec"
+	"github.com/jadeblaquiere/cttd/btcjson"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ciphrtxt-go/ciphrtxt"
-	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcd/mempool"
-	"github.com/jadeblaquiere/ctcd/mining"
-	"github.com/jadeblaquiere/ctcd/txscript"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/database"
+	"github.com/jadeblaquiere/cttd/mempool"
+	"github.com/jadeblaquiere/cttd/mining"
+	"github.com/jadeblaquiere/cttd/txscript"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttutil"
 	"github.com/btcsuite/fastsha256"
 	"github.com/btcsuite/websocket"
 )
@@ -176,9 +176,9 @@ var rpcHandlersBeforeInit = map[string]commandHandler{
 	"verifymessage":         handleVerifyMessage,
 }
 
-// list of commands that we recognize, but for which btcd has no support because
+// list of commands that we recognize, but for which cttd has no support because
 // it lacks support for wallet functionality. For these commands the user
-// should ask a connected instance of btcwallet.
+// should ask a connected instance of cttwallet.
 var rpcAskWallet = map[string]struct{}{
 	"addmultisigaddress":     {},
 	"backupwallet":           {},
@@ -370,7 +370,7 @@ func handleUnimplemented(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 
 // handleAskWallet is the handler for commands that are recognized as valid, but
 // are unable to answer correctly since it involves wallet state.
-// These commands will be implemented in btcwallet.
+// These commands will be implemented in cttwallet.
 func handleAskWallet(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
 	return nil, ErrRPCNoWallet
 }
@@ -554,7 +554,7 @@ func handleCreateRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan 
 	// some validity checks.
 	for encodedAddr, amount := range c.Amounts {
 		// Ensure amount is in the valid range for monetary amounts.
-		if amount <= 0 || amount > btcutil.MaxSatoshi {
+		if amount <= 0 || amount > cttutil.MaxSatoshi {
 			return nil, &btcjson.RPCError{
 				Code:    btcjson.ErrRPCType,
 				Message: "Invalid amount",
@@ -562,7 +562,7 @@ func handleCreateRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan 
 		}
 
 		// Decode the provided address.
-		addr, err := btcutil.DecodeAddress(encodedAddr,
+		addr, err := cttutil.DecodeAddress(encodedAddr,
 			activeNetParams.Params)
 		if err != nil {
 			return nil, &btcjson.RPCError{
@@ -575,8 +575,8 @@ func handleCreateRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan 
 		// the network encoded with the address matches the network the
 		// server is currently on.
 		switch addr.(type) {
-		case *btcutil.AddressPubKeyHash:
-		case *btcutil.AddressScriptHash:
+		case *cttutil.AddressPubKeyHash:
+		case *cttutil.AddressScriptHash:
 		default:
 			return nil, &btcjson.RPCError{
 				Code:    btcjson.ErrRPCInvalidAddressOrKey,
@@ -599,7 +599,7 @@ func handleCreateRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan 
 		}
 
 		// Convert the amount to satoshi.
-		satoshi, err := btcutil.NewAmount(amount)
+		satoshi, err := cttutil.NewAmount(amount)
 		if err != nil {
 			context := "Failed to convert amount"
 			return nil, internalRPCError(err.Error(), context)
@@ -716,7 +716,7 @@ func createVoutList(mtx *wire.MsgTx, chainParams *chaincfg.Params, filterAddrMap
 
 		var vout btcjson.Vout
 		vout.N = uint32(i)
-		vout.Value = btcutil.Amount(v.Value).ToBTC()
+		vout.Value = cttutil.Amount(v.Value).ToBTC()
 		vout.ScriptPubKey.Addresses = encodedAddrs
 		vout.ScriptPubKey.Asm = disbuf
 		vout.ScriptPubKey.Hex = hex.EncodeToString(v.PkScript)
@@ -822,7 +822,7 @@ func handleDecodeScript(s *rpcServer, cmd interface{}, closeChan <-chan struct{}
 	}
 
 	// Convert the script itself to a pay-to-script-hash address.
-	p2sh, err := btcutil.NewAddressScriptHash(script, s.server.chainParams)
+	p2sh, err := cttutil.NewAddressScriptHash(script, s.server.chainParams)
 	if err != nil {
 		context := "Failed to convert script to pay-to-script-hash"
 		return nil, internalRPCError(err.Error(), context)
@@ -936,7 +936,7 @@ func handleGetAddedNodeInfo(s *rpcServer, cmd interface{}, closeChan <-chan stru
 		// Do a DNS lookup for the address.  If the lookup fails, just
 		// use the host.
 		var ipList []string
-		ips, err := btcdLookup(host)
+		ips, err := cttdLookup(host)
 		if err == nil {
 			ipList = make([]string, 0, len(ips))
 			for _, ip := range ips {
@@ -1034,7 +1034,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 	// The verbose flag is set, so generate the JSON object and return it.
 
 	// Deserialize the block.
-	blk, err := btcutil.NewBlockFromBytes(blkBytes)
+	blk, err := cttutil.NewBlockFromBytes(blkBytes)
 	if err != nil {
 		context := "Failed to deserialize block"
 		return nil, internalRPCError(err.Error(), context)
@@ -1377,7 +1377,7 @@ func (state *gbtWorkState) updateBlockTemplate(s *rpcServer, useCoinbaseValue bo
 		// Choose a payment address at random if the caller requests a
 		// full coinbase as opposed to only the pertinent details needed
 		// to create their own coinbase.
-		var payAddr btcutil.Address
+		var payAddr cttutil.Address
 		if !useCoinbaseValue {
 			payAddr = cfg.miningAddrs[rand.Intn(len(cfg.miningAddrs))]
 		}
@@ -1451,7 +1451,7 @@ func (state *gbtWorkState) updateBlockTemplate(s *rpcServer, useCoinbaseValue bo
 			template.ValidPayAddress = true
 
 			// Update the merkle root.
-			block := btcutil.NewBlock(template.Block)
+			block := cttutil.NewBlock(template.Block)
 			merkles := blockchain.BuildMerkleTreeStore(block.Transactions())
 			template.Block.Header.MerkleRoot = *merkles[len(merkles)-1]
 		}
@@ -1969,7 +1969,7 @@ func handleGetBlockTemplateProposal(s *rpcServer, request *btcjson.TemplateReque
 			Message: "Block decode failed: " + err.Error(),
 		}
 	}
-	block := btcutil.NewBlock(&msgBlock)
+	block := cttutil.NewBlock(&msgBlock)
 
 	// Ensure the block is building from the expected previous block.
 	expectedPrevHash, _ := s.server.blockManager.chainState.Best()
@@ -2563,7 +2563,7 @@ func handleGetTxOut(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 	txOutReply := &btcjson.GetTxOutResult{
 		BestBlock:     bestBlockHash,
 		Confirmations: int64(confirmations),
-		Value:         btcutil.Amount(value).ToBTC(),
+		Value:         cttutil.Amount(value).ToBTC(),
 		Version:       txVersion,
 		ScriptPubKey: btcjson.ScriptPubKeyResult{
 			Asm:       disbuf,
@@ -2795,7 +2795,7 @@ func handleGetWorkSubmission(s *rpcServer, hexData string) (interface{}, error) 
 
 	// Reconstruct the block using the submitted header stored block info.
 	msgBlock := blockInfo.msgBlock
-	block := btcutil.NewBlock(msgBlock)
+	block := cttutil.NewBlock(msgBlock)
 	msgBlock.Header.Timestamp = submittedHeader.Timestamp
 	msgBlock.Header.NonceHeaderA = submittedHeader.NonceHeaderA
 	msgBlock.Header.NonceHeaderB = submittedHeader.NonceHeaderB
@@ -2958,7 +2958,7 @@ func handlePing(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (inter
 type retrievedTx struct {
 	txBytes []byte
 	blkHash *chainhash.Hash // Only set when transaction is in a block.
-	tx      *btcutil.Tx
+	tx      *cttutil.Tx
 }
 
 // fetchInputTxos fetches the outpoints from all transactions referenced by the
@@ -3136,7 +3136,7 @@ func createVinListPrevOut(s *rpcServer, mtx *wire.MsgTx, chainParams *chaincfg.P
 			vinListEntry := &vinList[len(vinList)-1]
 			vinListEntry.PrevOut = &btcjson.PrevOut{
 				Addresses: encodedAddrs,
-				Value:     btcutil.Amount(originTxOut.Value).ToBTC(),
+				Value:     cttutil.Amount(originTxOut.Value).ToBTC(),
 			}
 		}
 	}
@@ -3147,7 +3147,7 @@ func createVinListPrevOut(s *rpcServer, mtx *wire.MsgTx, chainParams *chaincfg.P
 // fetchMempoolTxnsForAddress queries the address index for all unconfirmed
 // transactions that involve the provided address.  The results will be limited
 // by the number to skip and the number requested.
-func fetchMempoolTxnsForAddress(s *rpcServer, addr btcutil.Address, numToSkip, numRequested uint32) ([]*btcutil.Tx, uint32) {
+func fetchMempoolTxnsForAddress(s *rpcServer, addr cttutil.Address, numToSkip, numRequested uint32) ([]*cttutil.Tx, uint32) {
 	// There are no entries to return when there are less available than the
 	// number being skipped.
 	mpTxns := s.server.addrIndex.UnconfirmedTxnsForAddress(addr)
@@ -3196,7 +3196,7 @@ func handleSearchRawTransactions(s *rpcServer, cmd interface{}, closeChan <-chan
 	}
 
 	// Attempt to decode the supplied address.
-	addr, err := btcutil.DecodeAddress(c.Address, s.server.chainParams)
+	addr, err := cttutil.DecodeAddress(c.Address, s.server.chainParams)
 	if err != nil {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCInvalidAddressOrKey,
@@ -3463,7 +3463,7 @@ func handleSendRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan st
 		}
 	}
 
-	tx := btcutil.NewTx(msgtx)
+	tx := cttutil.NewTx(msgtx)
 	acceptedTxs, err := s.server.txMemPool.ProcessTransaction(tx, false, false)
 	if err != nil {
 		// When the error is a rule error, it means the transaction was
@@ -3537,7 +3537,7 @@ func handleStop(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (inter
 	case s.requestProcessShutdown <- struct{}{}:
 	default:
 	}
-	return "btcd stopping.", nil
+	return "cttd stopping.", nil
 }
 
 // handleSubmitBlock implements the submitblock command.
@@ -3554,7 +3554,7 @@ func handleSubmitBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{})
 		return nil, rpcDecodeHexError(hexStr)
 	}
 
-	block, err := btcutil.NewBlockFromBytes(serializedBlock)
+	block, err := cttutil.NewBlockFromBytes(serializedBlock)
 	if err != nil {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCDeserialization,
@@ -3576,7 +3576,7 @@ func handleValidateAddress(s *rpcServer, cmd interface{}, closeChan <-chan struc
 	c := cmd.(*btcjson.ValidateAddressCmd)
 
 	result := btcjson.ValidateAddressChainResult{}
-	addr, err := btcutil.DecodeAddress(c.Address, activeNetParams.Params)
+	addr, err := cttutil.DecodeAddress(c.Address, activeNetParams.Params)
 	if err != nil {
 		// Return the default value (false) for IsValid.
 		return result, nil
@@ -3644,7 +3644,7 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	c := cmd.(*btcjson.VerifyMessageCmd)
 
 	// Decode the provided address.
-	addr, err := btcutil.DecodeAddress(c.Address, activeNetParams.Params)
+	addr, err := cttutil.DecodeAddress(c.Address, activeNetParams.Params)
 	if err != nil {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCInvalidAddressOrKey,
@@ -3653,7 +3653,7 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	}
 
 	// Only P2PKH addresses are valid for signing.
-	if _, ok := addr.(*btcutil.AddressPubKeyHash); !ok {
+	if _, ok := addr.(*cttutil.AddressPubKeyHash); !ok {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCType,
 			Message: "Address is not a pay-to-pubkey-hash address",
@@ -3691,7 +3691,7 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 	} else {
 		serializedPK = btcPK.SerializeUncompressed()
 	}
-	address, err := btcutil.NewAddressPubKey(serializedPK,
+	address, err := cttutil.NewAddressPubKey(serializedPK,
 		activeNetParams.Params)
 	if err != nil {
 		// Again mirror Bitcoin Core behavior, which treats error in public key
@@ -4091,7 +4091,7 @@ func (s *rpcServer) jsonRPCRead(w http.ResponseWriter, r *http.Request, isAdmin 
 
 // jsonAuthFail sends a message back to the client if the http auth is rejected.
 func jsonAuthFail(w http.ResponseWriter) {
-	w.Header().Add("WWW-Authenticate", `Basic realm="btcd RPC"`)
+	w.Header().Add("WWW-Authenticate", `Basic realm="cttd RPC"`)
 	http.Error(w, "401 Unauthorized.", http.StatusUnauthorized)
 }
 
@@ -4172,9 +4172,9 @@ func (s *rpcServer) Start() {
 func genCertPair(certFile, keyFile string) error {
 	rpcsLog.Infof("Generating TLS certificates...")
 
-	org := "btcd autogenerated cert"
+	org := "cttd autogenerated cert"
 	validUntil := time.Now().Add(10 * 365 * 24 * time.Hour)
-	cert, key, err := btcutil.NewTLSCertPair(org, validUntil, nil)
+	cert, key, err := cttutil.NewTLSCertPair(org, validUntil, nil)
 	if err != nil {
 		return err
 	}

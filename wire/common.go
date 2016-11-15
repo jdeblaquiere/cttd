@@ -13,7 +13,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
 )
 
 const (

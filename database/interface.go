@@ -8,8 +8,8 @@
 package database
 
 import (
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // Cursor represents a cursor over key/value pairs and nested buckets of a
@@ -227,7 +227,7 @@ type Tx interface {
 	//   - ErrTxClosed if the transaction has already been closed
 	//
 	// Other errors are possible depending on the implementation.
-	StoreBlock(block *btcutil.Block) error
+	StoreBlock(block *cttutil.Block) error
 
 	// HasBlock returns whether or not a block with the given hash exists
 	// in the database.

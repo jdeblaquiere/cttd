@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // TestCheckConnectBlock tests the CheckConnectBlock function to ensure it
@@ -30,7 +30,7 @@ func TestCheckConnectBlock(t *testing.T) {
 
 	// The genesis block should fail to connect since it's already inserted.
 	genesisBlock := chaincfg.MainNetParams.GenesisBlock
-	err = chain.CheckConnectBlock(btcutil.NewBlock(genesisBlock))
+	err = chain.CheckConnectBlock(cttutil.NewBlock(genesisBlock))
 	if err == nil {
 		t.Errorf("CheckConnectBlock: Did not received expected error")
 	}
@@ -40,7 +40,7 @@ func TestCheckConnectBlock(t *testing.T) {
 // as expected.
 func TestCheckBlockSanity(t *testing.T) {
 	powLimit := chaincfg.MainNetParams.PowLimit
-	block := btcutil.NewBlock(&Block100000)
+	block := cttutil.NewBlock(&Block100000)
 	timeSource := blockchain.NewMedianTime()
 	err := blockchain.CheckBlockSanity(block, powLimit, timeSource)
 	if err != nil {
@@ -102,7 +102,7 @@ func TestCheckSerializedHeight(t *testing.T) {
 	for i, test := range tests {
 		msgTx := coinbaseTx.Copy()
 		msgTx.TxIn[0].SignatureScript = test.sigScript
-		tx := btcutil.NewTx(msgTx)
+		tx := cttutil.NewTx(msgTx)
 
 		err := blockchain.TstCheckSerializedHeight(tx, test.wantHeight)
 		if reflect.TypeOf(err) != reflect.TypeOf(test.err) {

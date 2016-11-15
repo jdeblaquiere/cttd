@@ -1,11 +1,11 @@
 mempool
 =======
 
-[![Build Status](http://img.shields.io/travis/btcsuite/btcd.svg)]
-(https://travis-ci.org/btcsuite/btcd) [![ISC License]
+[![Build Status](http://img.shields.io/travis/btcsuite/cttd.svg)]
+(https://travis-ci.org/btcsuite/cttd) [![ISC License]
 (http://img.shields.io/badge/license-ISC-blue.svg)](http://copyfree.org)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)]
-(http://godoc.org/github.com/jadeblaquiere/ctcd/mempool)
+(http://godoc.org/github.com/jadeblaquiere/cttd/mempool)
 
 ## Overview
 
@@ -14,7 +14,7 @@ This package is currently a work in progress.
 ## Installation and Updating
 
 ```bash
-$ go get -u github.com/jadeblaquiere/ctcd/mempool
+$ go get -u github.com/jadeblaquiere/cttd/mempool
 ```
 
 ## License

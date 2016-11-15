@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/btcec"
+	"github.com/jadeblaquiere/cttd/btcec"
 )
 
 func TestGenerateSharedSecret(t *testing.T) {

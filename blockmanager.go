@@ -13,13 +13,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcd/mempool"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/database"
+	"github.com/jadeblaquiere/cttd/mempool"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 const (
@@ -59,7 +59,7 @@ type newPeerMsg struct {
 // blockMsg packages a bitcoin block message and the peer it came from together
 // so the block handler has access to that information.
 type blockMsg struct {
-	block *btcutil.Block
+	block *cttutil.Block
 	peer  *serverPeer
 }
 
@@ -85,7 +85,7 @@ type donePeerMsg struct {
 // txMsg packages a bitcoin tx message and the peer it came from together
 // so the block handler has access to that information.
 type txMsg struct {
-	tx   *btcutil.Tx
+	tx   *cttutil.Tx
 	peer *serverPeer
 }
 
@@ -108,7 +108,7 @@ type processBlockResponse struct {
 // extra handling whereas this message essentially is just a concurrent safe
 // way to call ProcessBlock on the internal block chain instance.
 type processBlockMsg struct {
-	block *btcutil.Block
+	block *cttutil.Block
 	flags blockchain.BehaviorFlags
 	reply chan processBlockResponse
 }
@@ -1186,7 +1186,7 @@ func (b *blockManager) handleNotifyMsg(notification *blockchain.Notification) {
 			return
 		}
 
-		block, ok := notification.Data.(*btcutil.Block)
+		block, ok := notification.Data.(*cttutil.Block)
 		if !ok {
 			bmgrLog.Warnf("Chain accepted notification is not a block.")
 			break
@@ -1198,7 +1198,7 @@ func (b *blockManager) handleNotifyMsg(notification *blockchain.Notification) {
 
 	// A block has been connected to the main block chain.
 	case blockchain.NTBlockConnected:
-		block, ok := notification.Data.(*btcutil.Block)
+		block, ok := notification.Data.(*cttutil.Block)
 		if !ok {
 			bmgrLog.Warnf("Chain connected notification is not a block.")
 			break
@@ -1234,7 +1234,7 @@ func (b *blockManager) handleNotifyMsg(notification *blockchain.Notification) {
 
 	// A block has been disconnected from the main block chain.
 	case blockchain.NTBlockDisconnected:
-		block, ok := notification.Data.(*btcutil.Block)
+		block, ok := notification.Data.(*cttutil.Block)
 		if !ok {
 			bmgrLog.Warnf("Chain disconnected notification is not a block.")
 			break
@@ -1271,7 +1271,7 @@ func (b *blockManager) NewPeer(sp *serverPeer) {
 
 // QueueTx adds the passed transaction message and peer to the block handling
 // queue.
-func (b *blockManager) QueueTx(tx *btcutil.Tx, sp *serverPeer) {
+func (b *blockManager) QueueTx(tx *cttutil.Tx, sp *serverPeer) {
 	// Don't accept more transactions if we're shutting down.
 	if atomic.LoadInt32(&b.shutdown) != 0 {
 		sp.txProcessed <- struct{}{}
@@ -1282,7 +1282,7 @@ func (b *blockManager) QueueTx(tx *btcutil.Tx, sp *serverPeer) {
 }
 
 // QueueBlock adds the passed block message and peer to the block handling queue.
-func (b *blockManager) QueueBlock(block *btcutil.Block, sp *serverPeer) {
+func (b *blockManager) QueueBlock(block *cttutil.Block, sp *serverPeer) {
 	// Don't accept more blocks if we're shutting down.
 	if atomic.LoadInt32(&b.shutdown) != 0 {
 		sp.blockProcessed <- struct{}{}
@@ -1362,7 +1362,7 @@ func (b *blockManager) SyncPeer() *serverPeer {
 // ProcessBlock makes use of ProcessBlock on an internal instance of a block
 // chain.  It is funneled through the block manager since btcchain is not safe
 // for concurrent access.
-func (b *blockManager) ProcessBlock(block *btcutil.Block, flags blockchain.BehaviorFlags) (bool, error) {
+func (b *blockManager) ProcessBlock(block *cttutil.Block, flags blockchain.BehaviorFlags) (bool, error) {
 	reply := make(chan processBlockResponse, 1)
 	b.msgChan <- processBlockMsg{block: block, flags: flags, reply: reply}
 	response := <-reply
@@ -1446,7 +1446,7 @@ func removeRegressionDB(dbPath string) error {
 	// Remove the old regression test database if it already exists.
 	fi, err := os.Stat(dbPath)
 	if err == nil {
-		btcdLog.Infof("Removing regression test database from '%s'", dbPath)
+		cttdLog.Infof("Removing regression test database from '%s'", dbPath)
 		if fi.IsDir() {
 			err := os.RemoveAll(dbPath)
 			if err != nil {
@@ -1498,7 +1498,7 @@ func warnMultipeDBs() {
 	// Warn if there are extra databases.
 	if len(duplicateDbPaths) > 0 {
 		selectedDbPath := blockDbPath(cfg.DbType)
-		btcdLog.Warnf("WARNING: There are multiple block chain databases "+
+		cttdLog.Warnf("WARNING: There are multiple block chain databases "+
 			"using different database types.\nYou probably don't "+
 			"want to waste disk space by having more than one.\n"+
 			"Your current database is located at [%v].\nThe "+
@@ -1517,7 +1517,7 @@ func loadBlockDB() (database.DB, error) {
 	// handle it uniquely.  We also don't want to worry about the multiple
 	// database type warnings when running with the memory database.
 	if cfg.DbType == "memdb" {
-		btcdLog.Infof("Creating block database in memory.")
+		cttdLog.Infof("Creating block database in memory.")
 		db, err := database.Create(cfg.DbType)
 		if err != nil {
 			return nil, err
@@ -1534,7 +1534,7 @@ func loadBlockDB() (database.DB, error) {
 	// each run, so remove it now if it already exists.
 	removeRegressionDB(dbPath)
 
-	btcdLog.Infof("Loading block database from '%s'", dbPath)
+	cttdLog.Infof("Loading block database from '%s'", dbPath)
 	db, err := database.Open(cfg.DbType, dbPath, activeNetParams.Net)
 	if err != nil {
 		// Return the error if it's not because the database doesn't
@@ -1556,6 +1556,6 @@ func loadBlockDB() (database.DB, error) {
 		}
 	}
 
-	btcdLog.Info("Block database loaded")
+	cttdLog.Info("Block database loaded")
 	return db, nil
 }

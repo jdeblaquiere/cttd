@@ -39,7 +39,7 @@ imports:
   version: 6cf5744a041a0022271cefed95ba843f6d87fd51
   subpackages:
   - spew
-- name: github.com/jadeblaquiere/ctcrpcclient
+- name: github.com/jadeblaquiere/cttrpcclient
   version: 5cfeeeb4b54ddcc3d2a7900f569ed748ccbab132
 - name: github.com/syndtr/goleveldb
   version: 6b4daa5362b502898ddf367c5c11deb9e7a5c727

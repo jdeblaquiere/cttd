@@ -5,8 +5,8 @@
 package blockchain
 
 import (
-	"github.com/jadeblaquiere/ctcd/btcec"
-	"github.com/jadeblaquiere/ctcd/txscript"
+	"github.com/jadeblaquiere/cttd/btcec"
+	"github.com/jadeblaquiere/cttd/txscript"
 )
 
 // -----------------------------------------------------------------------------

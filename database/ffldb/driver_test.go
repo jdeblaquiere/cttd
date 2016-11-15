@@ -12,10 +12,10 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcd/database/ffldb"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/database"
+	"github.com/jadeblaquiere/cttd/database/ffldb"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // dbType is the database type name for this driver.
@@ -171,7 +171,7 @@ func TestPersistence(t *testing.T) {
 		"b1key2": "foo2",
 		"b1key3": "foo3",
 	}
-	genesisBlock := btcutil.NewBlock(chaincfg.MainNetParams.GenesisBlock)
+	genesisBlock := cttutil.NewBlock(chaincfg.MainNetParams.GenesisBlock)
 	genesisHash := chaincfg.MainNetParams.GenesisHash
 	err = db.Update(func(tx database.Tx) error {
 		metadataBucket := tx.Metadata()

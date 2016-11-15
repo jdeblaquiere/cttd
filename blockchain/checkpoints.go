@@ -7,11 +7,11 @@ package blockchain
 import (
 	"fmt"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcd/txscript"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/database"
+	"github.com/jadeblaquiere/cttd/txscript"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // CheckpointConfirmations is the number of blocks before the end of the current
@@ -111,7 +111,7 @@ func (b *BlockChain) verifyCheckpoint(height int32, hash *chainhash.Hash) bool {
 // really only happen for blocks before the first checkpoint).
 //
 // This function MUST be called with the chain lock held (for reads).
-func (b *BlockChain) findPreviousCheckpoint() (*btcutil.Block, error) {
+func (b *BlockChain) findPreviousCheckpoint() (*cttutil.Block, error) {
 	if b.noCheckpoints || len(b.chainParams.Checkpoints) == 0 {
 		return nil, nil
 	}
@@ -229,7 +229,7 @@ func (b *BlockChain) findPreviousCheckpoint() (*btcutil.Block, error) {
 
 // isNonstandardTransaction determines whether a transaction contains any
 // scripts which are not one of the standard types.
-func isNonstandardTransaction(tx *btcutil.Tx) bool {
+func isNonstandardTransaction(tx *cttutil.Tx) bool {
 	// Check all of the output public key scripts for non-standard scripts.
 	for _, txOut := range tx.MsgTx().TxOut {
 		scriptClass := txscript.GetScriptClass(txOut.PkScript)
@@ -257,7 +257,7 @@ func isNonstandardTransaction(tx *btcutil.Tx) bool {
 // decision and then manually added to the list of checkpoints for a network.
 //
 // This function is safe for concurrent access.
-func (b *BlockChain) IsCheckpointCandidate(block *btcutil.Block) (bool, error) {
+func (b *BlockChain) IsCheckpointCandidate(block *cttutil.Block) (bool, error) {
 	b.chainLock.RLock()
 	defer b.chainLock.RUnlock()
 

@@ -7,9 +7,9 @@ package blockchain
 import (
 	"fmt"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/database"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // BehaviorFlags is a bitmask defining tweaks to the normal behavior when
@@ -125,7 +125,7 @@ func (b *BlockChain) processOrphans(hash *chainhash.Hash, flags BehaviorFlags) e
 // when the error is nil.
 //
 // This function is safe for concurrent access.
-func (b *BlockChain) ProcessBlock(block *btcutil.Block, flags BehaviorFlags) (bool, error) {
+func (b *BlockChain) ProcessBlock(block *cttutil.Block, flags BehaviorFlags) (bool, error) {
 	b.chainLock.Lock()
 	defer b.chainLock.Unlock()
 

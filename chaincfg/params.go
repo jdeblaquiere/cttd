@@ -9,8 +9,8 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/wire"
 )
 
 // These variables are the chain proof-of-work limit parameters for each default

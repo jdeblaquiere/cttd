@@ -1,11 +1,11 @@
 blockchain
 ==========
 
-[![Build Status](http://img.shields.io/travis/btcsuite/btcd.svg)]
-(https://travis-ci.org/btcsuite/btcd) [![ISC License]
+[![Build Status](http://img.shields.io/travis/btcsuite/cttd.svg)]
+(https://travis-ci.org/btcsuite/cttd) [![ISC License]
 (http://img.shields.io/badge/license-ISC-blue.svg)](http://copyfree.org)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)]
-(http://godoc.org/github.com/jadeblaquiere/btcd/blockchain)
+(http://godoc.org/github.com/jadeblaquiere/cttd/blockchain)
 
 Package blockchain implements bitcoin block handling and chain selection rules.
 The test coverage is currently only around 60%, but will be increasing over
@@ -23,7 +23,7 @@ block chain.
 ## Installation and Updating
 
 ```bash
-$ go get -u github.com/jadeblaquiere/btcd/blockchain
+$ go get -u github.com/jadeblaquiere/cttd/blockchain
 ```
 
 ## Bitcoin Chain Processing Overview
@@ -64,20 +64,20 @@ is by no means exhaustive:
 ## Examples
 
 * [ProcessBlock Example]
-  (http://godoc.org/github.com/jadeblaquiere/btcd/blockchain#example-BlockChain-ProcessBlock)  
+  (http://godoc.org/github.com/jadeblaquiere/cttd/blockchain#example-BlockChain-ProcessBlock)  
   Demonstrates how to create a new chain instance and use ProcessBlock to
   attempt to attempt add a block to the chain.  This example intentionally
   attempts to insert a duplicate genesis block to illustrate how an invalid
   block is handled.
 
 * [CompactToBig Example]
-  (http://godoc.org/github.com/jadeblaquiere/btcd/blockchain#example-CompactToBig)  
+  (http://godoc.org/github.com/jadeblaquiere/cttd/blockchain#example-CompactToBig)  
   Demonstrates how to convert the compact "bits" in a block header which
   represent the target difficulty to a big integer and display it using the
   typical hex notation.
 
 * [BigToCompact Example]
-  (http://godoc.org/github.com/jadeblaquiere/btcd/blockchain#example-BigToCompact)  
+  (http://godoc.org/github.com/jadeblaquiere/cttd/blockchain#example-BigToCompact)  
   Demonstrates how to convert how to convert a target difficulty into the
   compact "bits" in a block header which represent that target difficulty.
 

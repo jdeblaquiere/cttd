@@ -17,9 +17,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/database"
+	"github.com/jadeblaquiere/cttd/wire"
 )
 
 const (

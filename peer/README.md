@@ -1,11 +1,11 @@
 peer
 ====
 
-[![Build Status](http://img.shields.io/travis/btcsuite/btcd.svg)]
-(https://travis-ci.org/btcsuite/btcd) [![ISC License]
+[![Build Status](http://img.shields.io/travis/btcsuite/cttd.svg)]
+(https://travis-ci.org/btcsuite/cttd) [![ISC License]
 (http://img.shields.io/badge/license-ISC-blue.svg)](http://copyfree.org)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)]
-(http://godoc.org/github.com/jadeblaquiere/btcd/peer)
+(http://godoc.org/github.com/jadeblaquiere/cttd/peer)
 
 Package peer provides a common base for creating and managing bitcoin network
 peers.
@@ -60,13 +60,13 @@ A quick overview of the major features peer provides are as follows:
 ## Installation and Updating
 
 ```bash
-$ go get -u github.com/jadeblaquiere/btcd/peer
+$ go get -u github.com/jadeblaquiere/cttd/peer
 ```
 
 ## Examples
 
 * [New Outbound Peer Example]
-  (https://godoc.org/github.com/jadeblaquiere/btcd/peer#example-package--NewOutboundPeer)  
+  (https://godoc.org/github.com/jadeblaquiere/cttd/peer#example-package--NewOutboundPeer)  
   Demonstrates the basic process for initializing and creating an outbound peer.
   Peers negotiate by exchanging version and verack messages.  For demonstration,
   a simple handler for the version message is attached to the peer.

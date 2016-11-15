@@ -1,4 +1,4 @@
-package: github.com/jadeblaquiere/ctcd
+package: github.com/jadeblaquiere/cttd
 import:
 - package: github.com/btcsuite/btclog
 - package: github.com/btcsuite/fastsha256
@@ -28,7 +28,7 @@ import:
 - package: github.com/davecgh/go-spew
   subpackages:
   - spew
-- package: github.com/jadeblaquiere/ctcrpcclient
+- package: github.com/jadeblaquiere/cttrpcclient
 - package: github.com/syndtr/goleveldb
   subpackages:
   - leveldb

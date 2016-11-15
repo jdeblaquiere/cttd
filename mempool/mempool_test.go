@@ -10,13 +10,13 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/btcec"
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/txscript"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/btcec"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/txscript"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // fakeChain is used by the pool harness to provide generated test utxos and
@@ -34,7 +34,7 @@ type fakeChain struct {
 // returned view can be examined for duplicate unspent transaction outputs.
 //
 // This function is safe for concurrent access however the returned view is NOT.
-func (s *fakeChain) FetchUtxoView(tx *btcutil.Tx) (*blockchain.UtxoViewpoint, error) {
+func (s *fakeChain) FetchUtxoView(tx *cttutil.Tx) (*blockchain.UtxoViewpoint, error) {
 	s.RLock()
 	defer s.RUnlock()
 
@@ -76,16 +76,16 @@ func (s *fakeChain) SetHeight(height int32) {
 // amount associated with it.
 type spendableOutput struct {
 	outPoint wire.OutPoint
-	amount   btcutil.Amount
+	amount   cttutil.Amount
 }
 
 // txOutToSpendableOut returns a spendable output given a transaction and index
 // of the output to use.  This is useful as a convenience when creating test
 // transactions.
-func txOutToSpendableOut(tx *btcutil.Tx, outputNum uint32) spendableOutput {
+func txOutToSpendableOut(tx *cttutil.Tx, outputNum uint32) spendableOutput {
 	return spendableOutput{
 		outPoint: wire.OutPoint{Hash: *tx.Hash(), Index: outputNum},
-		amount:   btcutil.Amount(tx.MsgTx().TxOut[outputNum].Value),
+		amount:   cttutil.Amount(tx.MsgTx().TxOut[outputNum].Value),
 	}
 }
 
@@ -99,7 +99,7 @@ type poolHarness struct {
 	// payAddr is the p2sh address for the signing key and is used for the
 	// payment address throughout the tests.
 	signKey     *btcec.PrivateKey
-	payAddr     btcutil.Address
+	payAddr     cttutil.Address
 	payScript   []byte
 	chainParams *chaincfg.Params
 
@@ -112,7 +112,7 @@ type poolHarness struct {
 // address associated with the harness.  It automatically uses a standard
 // signature script that starts with the block height that is required by
 // version 2 blocks.
-func (p *poolHarness) CreateCoinbaseTx(blockHeight int32, numOutputs uint32) (*btcutil.Tx, error) {
+func (p *poolHarness) CreateCoinbaseTx(blockHeight int32, numOutputs uint32) (*cttutil.Tx, error) {
 	// Create standard coinbase script.
 	extraNonce := int64(0)
 	coinbaseScript, err := txscript.NewScriptBuilder().
@@ -146,17 +146,17 @@ func (p *poolHarness) CreateCoinbaseTx(blockHeight int32, numOutputs uint32) (*b
 		})
 	}
 
-	return btcutil.NewTx(tx), nil
+	return cttutil.NewTx(tx), nil
 }
 
 // CreateSignedTx creates a new signed transaction that consumes the provided
 // inputs and generates the provided number of outputs by evenly splitting the
 // total input amount.  All outputs will be to the payment script associated
 // with the harness and all inputs are assumed to do the same.
-func (p *poolHarness) CreateSignedTx(inputs []spendableOutput, numOutputs uint32) (*btcutil.Tx, error) {
+func (p *poolHarness) CreateSignedTx(inputs []spendableOutput, numOutputs uint32) (*cttutil.Tx, error) {
 	// Calculate the total input amount and split it amongst the requested
 	// number of outputs.
-	var totalInput btcutil.Amount
+	var totalInput cttutil.Amount
 	for _, input := range inputs {
 		totalInput += input.amount
 	}
@@ -194,15 +194,15 @@ func (p *poolHarness) CreateSignedTx(inputs []spendableOutput, numOutputs uint32
 		tx.TxIn[i].SignatureScript = sigScript
 	}
 
-	return btcutil.NewTx(tx), nil
+	return cttutil.NewTx(tx), nil
 }
 
 // CreateTxChain creates a chain of zero-fee transactions (each subsequent
 // transaction spends the entire amount from the previous one) with the first
 // one spending the provided outpoint.  Each transaction spends the entire
 // amount of the previous one and as such does not include any fees.
-func (p *poolHarness) CreateTxChain(firstOutput spendableOutput, numTxns uint32) ([]*btcutil.Tx, error) {
-	txChain := make([]*btcutil.Tx, 0, numTxns)
+func (p *poolHarness) CreateTxChain(firstOutput spendableOutput, numTxns uint32) ([]*cttutil.Tx, error) {
+	txChain := make([]*cttutil.Tx, 0, numTxns)
 	prevOutPoint := firstOutput.outPoint
 	spendableAmount := firstOutput.amount
 	for i := uint32(0); i < numTxns; i++ {
@@ -228,7 +228,7 @@ func (p *poolHarness) CreateTxChain(firstOutput spendableOutput, numTxns uint32)
 		}
 		tx.TxIn[0].SignatureScript = sigScript
 
-		txChain = append(txChain, btcutil.NewTx(tx))
+		txChain = append(txChain, cttutil.NewTx(tx))
 
 		// Next transaction uses outputs from this one.
 		prevOutPoint = wire.OutPoint{Hash: tx.TxHash(), Index: 0}
@@ -254,7 +254,7 @@ func newPoolHarness(chainParams *chaincfg.Params) (*poolHarness, []spendableOutp
 	// Generate associated pay-to-script-hash address and resulting payment
 	// script.
 	pubKeyBytes := signPub.SerializeCompressed()
-	payPubKeyAddr, err := btcutil.NewAddressPubKey(pubKeyBytes, chainParams)
+	payPubKeyAddr, err := cttutil.NewAddressPubKey(pubKeyBytes, chainParams)
 	if err != nil {
 		return nil, nil, err
 	}

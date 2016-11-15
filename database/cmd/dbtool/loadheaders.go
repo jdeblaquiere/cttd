@@ -7,8 +7,8 @@ package main
 import (
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/database"
 )
 
 // headersCmd defines the configuration options for the loadheaders command.

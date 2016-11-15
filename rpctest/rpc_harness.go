@@ -15,11 +15,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcrpcclient"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttrpcclient"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 var (
@@ -54,10 +54,10 @@ var (
 // Harness to exercise functionality.
 type HarnessTestCase func(r *Harness, t *testing.T)
 
-// Harness fully encapsulates an active btcd process to provide a unified
-// platform for creating rpc driven integration tests involving btcd. The
-// active btcd node will typically be run in simnet mode in order to allow for
-// easy generation of test blockchains.  The active btcd process is fully
+// Harness fully encapsulates an active cttd process to provide a unified
+// platform for creating rpc driven integration tests involving cttd. The
+// active cttd node will typically be run in simnet mode in order to allow for
+// easy generation of test blockchains.  The active cttd process is fully
 // managed by Harness, which handles the necessary initialization, and teardown
 // of the process along with any temporary directories created as a result.
 // Multiple Harness instances may be run concurrently, in order to allow for
@@ -183,7 +183,7 @@ func New(activeNet *chaincfg.Params, handlers *ctcrpcclient.NotificationHandlers
 // NOTE: This method and TearDown should always be called from the same
 // goroutine as they are not concurrent safe.
 func (h *Harness) SetUp(createTestChain bool, numMatureOutputs uint32) error {
-	// Start the btcd node itself. This spawns a new process which will be
+	// Start the cttd node itself. This spawns a new process which will be
 	// managed
 	if err := h.node.start(); err != nil {
 		return err
@@ -194,7 +194,7 @@ func (h *Harness) SetUp(createTestChain bool, numMatureOutputs uint32) error {
 
 	h.wallet.Start()
 
-	// Ensure the btcd properly dispatches our registered call-back for
+	// Ensure the cttd properly dispatches our registered call-back for
 	// each new block. Otherwise, the memWallet won't function properly.
 	if err := h.Node.NotifyBlocks(); err != nil {
 		return err
@@ -255,7 +255,7 @@ func (h *Harness) TearDown() error {
 	return nil
 }
 
-// connectRPCClient attempts to establish an RPC connection to the created btcd
+// connectRPCClient attempts to establish an RPC connection to the created cttd
 // process belonging to this Harness instance. If the initial connection
 // attempt fails, this function will retry h.maxConnRetries times, backing off
 // the time between subsequent attempts. If after h.maxConnRetries attempts,
@@ -287,7 +287,7 @@ func (h *Harness) connectRPCClient() error {
 // wallet.
 //
 // This function is safe for concurrent access.
-func (h *Harness) NewAddress() (btcutil.Address, error) {
+func (h *Harness) NewAddress() (cttutil.Address, error) {
 	return h.wallet.NewAddress()
 }
 
@@ -295,7 +295,7 @@ func (h *Harness) NewAddress() (btcutil.Address, error) {
 // wallet.
 //
 // This function is safe for concurrent access.
-func (h *Harness) ConfirmedBalance() btcutil.Amount {
+func (h *Harness) ConfirmedBalance() cttutil.Amount {
 	return h.wallet.ConfirmedBalance()
 }
 
@@ -305,7 +305,7 @@ func (h *Harness) ConfirmedBalance() btcutil.Amount {
 //
 // This function is safe for concurrent access.
 func (h *Harness) SendOutputs(targetOutputs []*wire.TxOut,
-	feeRate btcutil.Amount) (*chainhash.Hash, error) {
+	feeRate cttutil.Amount) (*chainhash.Hash, error) {
 
 	return h.wallet.SendOutputs(targetOutputs, feeRate)
 }
@@ -321,7 +321,7 @@ func (h *Harness) SendOutputs(targetOutputs []*wire.TxOut,
 //
 // This function is safe for concurrent access.
 func (h *Harness) CreateTransaction(targetOutputs []*wire.TxOut,
-	feeRate btcutil.Amount) (*wire.MsgTx, error) {
+	feeRate cttutil.Amount) (*wire.MsgTx, error) {
 
 	return h.wallet.CreateTransaction(targetOutputs, feeRate)
 }
@@ -351,8 +351,8 @@ func (h *Harness) RPCConfig() ctcrpcclient.ConnConfig {
 // blockTime parameter if one doesn't wish to set a custom time.
 //
 // This function is safe for concurrent access.
-func (h *Harness) GenerateAndSubmitBlock(txns []*btcutil.Tx, blockVersion int32,
-	blockTime time.Time) (*btcutil.Block, error) {
+func (h *Harness) GenerateAndSubmitBlock(txns []*cttutil.Tx, blockVersion int32,
+	blockTime time.Time) (*cttutil.Block, error) {
 
 	h.Lock()
 	defer h.Unlock()

@@ -4,7 +4,7 @@
 
 package blockchain
 
-import "github.com/jadeblaquiere/ctcutil"
+import "github.com/jadeblaquiere/cttutil"
 
 // maybeAcceptBlock potentially accepts a block into the memory block chain.
 // It performs several validation checks which depend on its position within
@@ -19,7 +19,7 @@ import "github.com/jadeblaquiere/ctcutil"
 // their documentation for how the flags modify their behavior.
 //
 // This function MUST be called with the chain state lock held (for writes).
-func (b *BlockChain) maybeAcceptBlock(block *btcutil.Block, flags BehaviorFlags) error {
+func (b *BlockChain) maybeAcceptBlock(block *cttutil.Block, flags BehaviorFlags) error {
 	dryRun := flags&BFDryRun == BFDryRun
 
 	// Get a block node for the block previous to this one.  Will be nil

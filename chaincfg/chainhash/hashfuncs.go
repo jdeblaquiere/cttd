@@ -8,7 +8,7 @@ package chainhash
 //import "fmt"
 //import "encoding/hex"
 import "github.com/btcsuite/fastsha256"
-import "github.com/jadeblaquiere/ctcd/btcec"
+import "github.com/jadeblaquiere/cttd/btcec"
 
 // HashB calculates hash(b) and returns the resulting bytes.
 func HashB(b []byte) []byte {

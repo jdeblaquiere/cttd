@@ -9,9 +9,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/peer"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/peer"
+	"github.com/jadeblaquiere/cttd/wire"
 )
 
 // mockRemotePeer creates a basic inbound peer listening on the simnet port for

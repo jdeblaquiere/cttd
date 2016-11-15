@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/addrmgr"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/cttd/addrmgr"
+	"github.com/jadeblaquiere/cttd/wire"
 )
 
 // TestIPTypes ensures the various functions which determine the type of an IP

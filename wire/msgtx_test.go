@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
 	"github.com/davecgh/go-spew/spew"
 )
 

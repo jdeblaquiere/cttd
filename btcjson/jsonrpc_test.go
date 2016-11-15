@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/btcjson"
+	"github.com/jadeblaquiere/cttd/btcjson"
 )
 
 // TestIsValidIDType ensures the IsValidIDType function behaves as expected.

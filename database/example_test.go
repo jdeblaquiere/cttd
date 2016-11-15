@@ -10,11 +10,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/database"
-	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/database"
+	_ "github.com/jadeblaquiere/cttd/database/ffldb"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // This example demonstrates creating a new database.
@@ -22,8 +22,8 @@ func ExampleCreate() {
 	// This example assumes the ffldb driver is imported.
 	//
 	// import (
-	// 	"github.com/jadeblaquiere/ctcd/database"
-	// 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
+	// 	"github.com/jadeblaquiere/cttd/database"
+	// 	_ "github.com/jadeblaquiere/cttd/database/ffldb"
 	// )
 
 	// Create a database and schedule it to be closed and removed on exit.
@@ -48,8 +48,8 @@ func Example_basicUsage() {
 	// This example assumes the ffldb driver is imported.
 	//
 	// import (
-	// 	"github.com/jadeblaquiere/ctcd/database"
-	// 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
+	// 	"github.com/jadeblaquiere/cttd/database"
+	// 	_ "github.com/jadeblaquiere/cttd/database/ffldb"
 	// )
 
 	// Create a database and schedule it to be closed and removed on exit.
@@ -114,8 +114,8 @@ func Example_blockStorageAndRetrieval() {
 	// This example assumes the ffldb driver is imported.
 	//
 	// import (
-	// 	"github.com/jadeblaquiere/ctcd/database"
-	// 	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
+	// 	"github.com/jadeblaquiere/cttd/database"
+	// 	_ "github.com/jadeblaquiere/cttd/database/ffldb"
 	// )
 
 	// Create a database and schedule it to be closed and removed on exit.
@@ -136,7 +136,7 @@ func Example_blockStorageAndRetrieval() {
 	// and example.
 	err = db.Update(func(tx database.Tx) error {
 		genesisBlock := chaincfg.MainNetParams.GenesisBlock
-		return tx.StoreBlock(btcutil.NewBlock(genesisBlock))
+		return tx.StoreBlock(cttutil.NewBlock(genesisBlock))
 	})
 	if err != nil {
 		fmt.Println(err)

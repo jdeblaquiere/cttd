@@ -7,14 +7,14 @@ package blockchain_test
 import (
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // BenchmarkIsCoinBase performs a simple benchmark against the IsCoinBase
 // function.
 func BenchmarkIsCoinBase(b *testing.B) {
-	tx, _ := btcutil.NewBlock(&Block100000).Tx(1)
+	tx, _ := cttutil.NewBlock(&Block100000).Tx(1)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		blockchain.IsCoinBase(tx)

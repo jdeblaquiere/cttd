@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"hash"
 
-	"github.com/jadeblaquiere/ctcd/btcec"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/cttd/btcec"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/wire"
 	"github.com/btcsuite/fastsha256"
 	"github.com/btcsuite/golangcrypto/ripemd160"
 )

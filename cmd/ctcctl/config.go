@@ -13,8 +13,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jadeblaquiere/ctcd/btcjson"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/btcjson"
+	"github.com/jadeblaquiere/cttutil"
 	flags "github.com/btcsuite/go-flags"
 )
 
@@ -26,13 +26,13 @@ const (
 )
 
 var (
-	btcdHomeDir           = btcutil.AppDataDir("ctcd", false)
-	btcctlHomeDir         = btcutil.AppDataDir("ctcctl", false)
-	btcwalletHomeDir      = btcutil.AppDataDir("ctcwallet", false)
+	cttdHomeDir           = cttutil.AppDataDir("cttd", false)
+	btcctlHomeDir         = cttutil.AppDataDir("cttctl", false)
+	cttwalletHomeDir      = cttutil.AppDataDir("cttwallet", false)
 	defaultConfigFile     = filepath.Join(btcctlHomeDir, "ctcctl.conf")
 	defaultRPCServer      = "localhost"
-	defaultRPCCertFile    = filepath.Join(btcdHomeDir, "rpc.cert")
-	defaultWalletCertFile = filepath.Join(btcwalletHomeDir, "rpc.cert")
+	defaultRPCCertFile    = filepath.Join(cttdHomeDir, "rpc.cert")
+	defaultWalletCertFile = filepath.Join(cttwalletHomeDir, "rpc.cert")
 )
 
 // listCommands categorizes and lists all of the usable commands along with
@@ -169,7 +169,7 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Create the home directory if it doesn't already exist.
-	err := os.MkdirAll(btcdHomeDir, 0700)
+	err := os.MkdirAll(cttdHomeDir, 0700)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(-1)
@@ -268,20 +268,20 @@ func loadConfig() (*config, []string, error) {
 }
 
 // createDefaultConfig creates a basic config file at the given destination path.
-// For this it tries to read the btcd config file at its default path, and extract
+// For this it tries to read the cttd config file at its default path, and extract
 // the RPC user and password from it.
 func createDefaultConfigFile(destinationPath string) error {
 	// Create the destination directory if it does not exists
 	os.MkdirAll(filepath.Dir(destinationPath), 0700)
 
-	// Read btcd.conf from its default path
-	btcdConfigPath := filepath.Join(btcdHomeDir, "ctcd.conf")
-	btcdConfigFile, err := os.Open(btcdConfigPath)
+	// Read cttd.conf from its default path
+	cttdConfigPath := filepath.Join(cttdHomeDir, "cttd.conf")
+	cttdConfigFile, err := os.Open(cttdConfigPath)
 	if err != nil {
 		return err
 	}
-	defer btcdConfigFile.Close()
-	content, err := ioutil.ReadAll(btcdConfigFile)
+	defer cttdConfigFile.Close()
+	content, err := ioutil.ReadAll(cttdConfigFile)
 	if err != nil {
 		return err
 	}

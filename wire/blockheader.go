@@ -9,7 +9,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
     "github.com/jadeblaquiere/ciphrtxt-go/ciphrtxt"
 )
 

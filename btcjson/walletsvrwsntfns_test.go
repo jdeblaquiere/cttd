@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/btcjson"
+	"github.com/jadeblaquiere/cttd/btcjson"
 )
 
 // TestWalletSvrWsNtfns tests all of the chain server websocket-specific
@@ -44,15 +44,15 @@ func TestWalletSvrWsNtfns(t *testing.T) {
 			},
 		},
 		{
-			name: "btcdconnected",
+			name: "cttdconnected",
 			newNtfn: func() (interface{}, error) {
-				return btcjson.NewCmd("btcdconnected", true)
+				return btcjson.NewCmd("cttdconnected", true)
 			},
 			staticNtfn: func() interface{} {
-				return btcjson.NewBtcdConnectedNtfn(true)
+				return btcjson.NewCttdConnectedNtfn(true)
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"btcdconnected","params":[true],"id":null}`,
-			unmarshalled: &btcjson.BtcdConnectedNtfn{
+			marshalled: `{"jsonrpc":"1.0","method":"cttdconnected","params":[true],"id":null}`,
+			unmarshalled: &btcjson.CttdConnectedNtfn{
 				Connected: true,
 			},
 		},

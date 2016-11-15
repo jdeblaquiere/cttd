@@ -20,21 +20,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/database"
-	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
-	"github.com/jadeblaquiere/ctcd/mempool"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/database"
+	_ "github.com/jadeblaquiere/cttd/database/ffldb"
+	"github.com/jadeblaquiere/cttd/mempool"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttutil"
 	flags "github.com/btcsuite/go-flags"
 	"github.com/btcsuite/go-socks/socks"
 )
 
 const (
-	defaultConfigFilename        = "ctcd.conf"
+	defaultConfigFilename        = "cttd.conf"
 	defaultDataDirname           = "data"
 	defaultLogLevel              = "info"
 	defaultLogDirname            = "logs"
-	defaultLogFilename           = "ctcd.log"
+	defaultLogFilename           = "cttd.log"
 	defaultMaxPeers              = 125
 	defaultBanDuration           = time.Hour * 24
 	defaultBanThreshold          = 100
@@ -56,13 +56,13 @@ const (
 )
 
 var (
-	btcdHomeDir        = btcutil.AppDataDir("ctcd", false)
-	defaultConfigFile  = filepath.Join(btcdHomeDir, defaultConfigFilename)
-	defaultDataDir     = filepath.Join(btcdHomeDir, defaultDataDirname)
+	cttdHomeDir        = cttutil.AppDataDir("cttd", false)
+	defaultConfigFile  = filepath.Join(cttdHomeDir, defaultConfigFilename)
+	defaultDataDir     = filepath.Join(cttdHomeDir, defaultDataDirname)
 	knownDbTypes       = database.SupportedDrivers()
-	defaultRPCKeyFile  = filepath.Join(btcdHomeDir, "rpc.key")
-	defaultRPCCertFile = filepath.Join(btcdHomeDir, "rpc.cert")
-	defaultLogDir      = filepath.Join(btcdHomeDir, defaultLogDirname)
+	defaultRPCKeyFile  = filepath.Join(cttdHomeDir, "rpc.key")
+	defaultRPCCertFile = filepath.Join(cttdHomeDir, "rpc.cert")
+	defaultLogDir      = filepath.Join(cttdHomeDir, defaultLogDirname)
 )
 
 // runServiceCommand is only set to a real function on Windows.  It is used
@@ -78,7 +78,7 @@ func minUint32(a, b uint32) uint32 {
 	return b
 }
 
-// config defines the configuration options for btcd.
+// config defines the configuration options for cttd.
 //
 // See loadConfig for details on the configuration load process.
 type config struct {
@@ -147,11 +147,11 @@ type config struct {
 	lookup             func(string) ([]net.IP, error)
 	oniondial          func(string, string) (net.Conn, error)
 	dial               func(string, string) (net.Conn, error)
-	miningAddrs        []btcutil.Address
-	minRelayTxFee      btcutil.Amount
+	miningAddrs        []cttutil.Address
+	minRelayTxFee      cttutil.Amount
 }
 
-// serviceOptions defines the configuration options for btcd as a service on
+// serviceOptions defines the configuration options for cttd as a service on
 // Windows.
 type serviceOptions struct {
 	ServiceCommand string `short:"s" long:"service" description:"Service command {install, remove, start, stop}"`
@@ -162,7 +162,7 @@ type serviceOptions struct {
 func cleanAndExpandPath(path string) string {
 	// Expand initial ~ to OS specific home directory.
 	if strings.HasPrefix(path, "~") {
-		homeDir := filepath.Dir(btcdHomeDir)
+		homeDir := filepath.Dir(cttdHomeDir)
 		path = strings.Replace(path, "~", homeDir, 1)
 	}
 
@@ -328,7 +328,7 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 // 	3) Load configuration file overwriting defaults with any specified options
 // 	4) Parse CLI options and overwrite/add any specified options
 //
-// The above results in btcd functioning properly without any config settings
+// The above results in cttd functioning properly without any config settings
 // while still allowing the user to override settings with config files and
 // command line options.  Command line options always take precedence.
 func loadConfig() (*config, []string, error) {
@@ -405,7 +405,7 @@ func loadConfig() (*config, []string, error) {
 		if _, err := os.Stat(preCfg.ConfigFile); os.IsNotExist(err) {
 			err := createDefaultConfigFile(preCfg.ConfigFile)
 			if err != nil {
-				btcdLog.Warnf("Error creating a default config file: %v", err)
+				cttdLog.Warnf("Error creating a default config file: %v", err)
 			}
 		}
 
@@ -438,7 +438,7 @@ func loadConfig() (*config, []string, error) {
 
 	// Create the home directory if it doesn't already exist.
 	funcName := "loadConfig"
-	err = os.MkdirAll(btcdHomeDir, 0700)
+	err = os.MkdirAll(cttdHomeDir, 0700)
 	if err != nil {
 		// Show a nicer error message if it's because a symlink is
 		// linked to a directory that does not exist (probably because
@@ -628,7 +628,7 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Validate the the minrelaytxfee.
-	cfg.minRelayTxFee, err = btcutil.NewAmount(cfg.MinRelayTxFee)
+	cfg.minRelayTxFee, err = cttutil.NewAmount(cfg.MinRelayTxFee)
 	if err != nil {
 		str := "%s: invalid minrelaytxfee: %v"
 		err := fmt.Errorf(str, funcName, err)
@@ -697,10 +697,10 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Check getwork keys are valid and saved parsed versions.
-	cfg.miningAddrs = make([]btcutil.Address, 0, len(cfg.GetWorkKeys)+
+	cfg.miningAddrs = make([]cttutil.Address, 0, len(cfg.GetWorkKeys)+
 		len(cfg.MiningAddrs))
 	for _, strAddr := range cfg.GetWorkKeys {
-		addr, err := btcutil.DecodeAddress(strAddr,
+		addr, err := cttutil.DecodeAddress(strAddr,
 			activeNetParams.Params)
 		if err != nil {
 			str := "%s: getworkkey '%s' failed to decode: %v"
@@ -721,7 +721,7 @@ func loadConfig() (*config, []string, error) {
 
 	// Check mining addresses are valid and saved parsed versions.
 	for _, strAddr := range cfg.MiningAddrs {
-		addr, err := btcutil.DecodeAddress(strAddr, activeNetParams.Params)
+		addr, err := cttutil.DecodeAddress(strAddr, activeNetParams.Params)
 		if err != nil {
 			str := "%s: mining address '%s' failed to decode: %v"
 			err := fmt.Errorf(str, funcName, strAddr, err)
@@ -827,7 +827,7 @@ func loadConfig() (*config, []string, error) {
 
 		if cfg.TorIsolation &&
 			(cfg.ProxyUser != "" || cfg.ProxyPass != "") {
-			btcdLog.Warn("Tor isolation set -- overriding " +
+			cttdLog.Warn("Tor isolation set -- overriding " +
 				"specified proxy user credentials")
 		}
 
@@ -865,7 +865,7 @@ func loadConfig() (*config, []string, error) {
 
 		if cfg.TorIsolation &&
 			(cfg.OnionProxyUser != "" || cfg.OnionProxyPass != "") {
-			btcdLog.Warn("Tor isolation set -- overriding " +
+			cttdLog.Warn("Tor isolation set -- overriding " +
 				"specified onionproxy user credentials ")
 		}
 
@@ -901,13 +901,13 @@ func loadConfig() (*config, []string, error) {
 	// done.  This prevents the warning on help messages and invalid
 	// options.  Note this should go directly before the return.
 	if configFileError != nil {
-		btcdLog.Warnf("%v", configFileError)
+		cttdLog.Warnf("%v", configFileError)
 	}
 
 	return &cfg, remainingArgs, nil
 }
 
-// createDefaultConfig copies the file sample-btcd.conf to the given destination path,
+// createDefaultConfig copies the file sample-cttd.conf to the given destination path,
 // and populates it with some randomly generated RPC username and password.
 func createDefaultConfigFile(destinationPath string) error {
 	// Create the destination directory if it does not exists
@@ -915,7 +915,7 @@ func createDefaultConfigFile(destinationPath string) error {
 
 	// We get the sample config file path, which is in the same directory as this file.
 	_, path, _, _ := runtime.Caller(0)
-	sampleConfigPath := filepath.Join(filepath.Dir(path), "sample-btcd.conf")
+	sampleConfigPath := filepath.Join(filepath.Dir(path), "sample-cttd.conf")
 
 	// We generate a random user and password
 	randomBytes := make([]byte, 20)
@@ -967,26 +967,26 @@ func createDefaultConfigFile(destinationPath string) error {
 	return nil
 }
 
-// btcdDial connects to the address on the named network using the appropriate
+// cttdDial connects to the address on the named network using the appropriate
 // dial function depending on the address and configuration options.  For
 // example, .onion addresses will be dialed using the onion specific proxy if
 // one was specified, but will otherwise use the normal dial function (which
 // could itself use a proxy or not).
-func btcdDial(network, address string) (net.Conn, error) {
+func cttdDial(network, address string) (net.Conn, error) {
 	if strings.Contains(address, ".onion:") {
 		return cfg.oniondial(network, address)
 	}
 	return cfg.dial(network, address)
 }
 
-// btcdLookup returns the correct DNS lookup function to use depending on the
+// cttdLookup returns the correct DNS lookup function to use depending on the
 // passed host and configuration options.  For example, .onion addresses will be
 // resolved using the onion specific proxy if one was specified, but will
 // otherwise treat the normal proxy as tor unless --noonion was specified in
 // which case the lookup will fail.  Meanwhile, normal IP addresses will be
 // resolved using tor if a proxy was specified unless --noonion was also
 // specified in which case the normal system DNS resolver will be used.
-func btcdLookup(host string) ([]net.IP, error) {
+func cttdLookup(host string) ([]net.IP, error) {
 	if strings.HasSuffix(host, ".onion") {
 		return cfg.onionlookup(host)
 	}

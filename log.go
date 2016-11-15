@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jadeblaquiere/ctcd/addrmgr"
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
-	"github.com/jadeblaquiere/ctcd/database"
-	"github.com/jadeblaquiere/ctcd/mempool"
-	"github.com/jadeblaquiere/ctcd/peer"
-	"github.com/jadeblaquiere/ctcd/txscript"
+	"github.com/jadeblaquiere/cttd/addrmgr"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/blockchain/indexers"
+	"github.com/jadeblaquiere/cttd/database"
+	"github.com/jadeblaquiere/cttd/mempool"
+	"github.com/jadeblaquiere/cttd/peer"
+	"github.com/jadeblaquiere/cttd/txscript"
 	"github.com/btcsuite/btclog"
 	"github.com/btcsuite/seelog"
 )
@@ -35,7 +35,7 @@ var (
 	amgrLog    = btclog.Disabled
 	bcdbLog    = btclog.Disabled
 	bmgrLog    = btclog.Disabled
-	btcdLog    = btclog.Disabled
+	cttdLog    = btclog.Disabled
 	chanLog    = btclog.Disabled
 	discLog    = btclog.Disabled
 	indxLog    = btclog.Disabled
@@ -53,7 +53,7 @@ var subsystemLoggers = map[string]btclog.Logger{
 	"AMGR": amgrLog,
 	"BCDB": bcdbLog,
 	"BMGR": bmgrLog,
-	"CTCD": btcdLog,
+	"CTTD": cttdLog,
 	"CHAN": chanLog,
 	"DISC": discLog,
 	"INDX": indxLog,
@@ -104,8 +104,8 @@ func useLogger(subsystemID string, logger btclog.Logger) {
 	case "BMGR":
 		bmgrLog = logger
 
-	case "CTCD":
-		btcdLog = logger
+	case "CTTD":
+		cttdLog = logger
 
 	case "CHAN":
 		chanLog = logger

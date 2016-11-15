@@ -1,11 +1,11 @@
 txscript
 ========
 
-[![Build Status](https://travis-ci.org/btcsuite/btcd.png?branch=master)]
-(https://travis-ci.org/btcsuite/btcd) [![ISC License]
+[![Build Status](https://travis-ci.org/btcsuite/cttd.png?branch=master)]
+(https://travis-ci.org/btcsuite/cttd) [![ISC License]
 (http://img.shields.io/badge/license-ISC-blue.svg)](http://copyfree.org)
-[![GoDoc](https://godoc.org/github.com/jadeblaquiere/btcd/txscript?status.png)]
-(http://godoc.org/github.com/jadeblaquiere/btcd/txscript)
+[![GoDoc](https://godoc.org/github.com/jadeblaquiere/cttd/txscript?status.png)]
+(http://godoc.org/github.com/jadeblaquiere/cttd/txscript)
 
 Package txscript implements the bitcoin transaction script language.  There is
 a comprehensive test suite.
@@ -23,23 +23,23 @@ can be found at https://en.bitcoin.it/wiki/Script
 ## Installation and Updating
 
 ```bash
-$ go get -u github.com/jadeblaquiere/btcd/txscript
+$ go get -u github.com/jadeblaquiere/cttd/txscript
 ```
 
 ## Examples
 
 * [Standard Pay-to-pubkey-hash Script]
-  (http://godoc.org/github.com/jadeblaquiere/btcd/txscript#example-PayToAddrScript)  
+  (http://godoc.org/github.com/jadeblaquiere/cttd/txscript#example-PayToAddrScript)  
   Demonstrates creating a script which pays to a bitcoin address.  It also
   prints the created script hex and uses the DisasmString function to display
   the disassembled script.
 
 * [Extracting Details from Standard Scripts]
-  (http://godoc.org/github.com/jadeblaquiere/btcd/txscript#example-ExtractPkScriptAddrs)  
+  (http://godoc.org/github.com/jadeblaquiere/cttd/txscript#example-ExtractPkScriptAddrs)  
   Demonstrates extracting information from a standard public key script.
 
 * [Manually Signing a Transaction Output]
-  (http://godoc.org/github.com/jadeblaquiere/btcd/txscript#example-SignTxOutput)  
+  (http://godoc.org/github.com/jadeblaquiere/cttd/txscript#example-SignTxOutput)  
   Demonstrates manually creating and signing a redeem transaction.
 
 ## GPG Verification Key

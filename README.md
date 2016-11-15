@@ -1,6 +1,6 @@
-# ctcd
+# cttd
 
-ctcd is the ciphrtxt token coin node implementation. It is derived from btcd (see btcd information below). In addition to having unique network identifiers ctcd changes the POW algorithm and extends the bitcoin protocol by creating two additional script opcodes to support the ciphrtxt network. The extension script opcodes are:
+cttd is the ciphrtxt token coin node implementation. It is derived from cttd (see cttd information below). In addition to having unique network identifiers cttd changes the POW algorithm and extends the bitcoin protocol by creating two additional script opcodes to support the ciphrtxt network. The extension script opcodes are:
 
 1. OP_REGISTERACCESSKEY (OP_NOP5) - used to register a 101-byte access key which includes the information below. In order for the NAK to be considered valid by the msgstore service it must return a fee to the miner (coinbase transaction)
  * (04 bytes) unsigned integer unix time for expiration of key
@@ -9,20 +9,20 @@ ctcd is the ciphrtxt token coin node implementation. It is derived from btcd (se
 
 2. OP_POSTDIRECTORY (OP_NOP7) - used to post a directory object (documentation pending)
 
-btcd
+cttd
 ====
 
-[![Build Status](https://travis-ci.org/btcsuite/btcd.png?branch=master)]
-(https://travis-ci.org/btcsuite/btcd)
+[![Build Status](https://travis-ci.org/btcsuite/cttd.png?branch=master)]
+(https://travis-ci.org/btcsuite/cttd)
 
-btcd is an alternative full node bitcoin implementation written in Go (golang).
+cttd is an alternative full node bitcoin implementation written in Go (golang).
 
 This project is currently under active development and is in a Beta state.  It
 is extremely stable and has been in production use since October 2013.
 
 It properly downloads, validates, and serves the block chain using the exact
 rules (including bugs) for block acceptance as Bitcoin Core.  We have taken
-great care to avoid btcd causing a fork to the block chain.  It passes all of
+great care to avoid cttd causing a fork to the block chain.  It passes all of
 the 'official' block acceptance tests
 (https://github.com/TheBlueMatt/test-scripts) as well as all of the JSON test
 data in the Bitcoin Core code.
@@ -33,12 +33,12 @@ transactions admitted to the pool follow the rules required by the block chain
 and also includes the same checks which filter transactions based on
 miner requirements ("standard" transactions) as Bitcoin Core.
 
-One key difference between btcd and Bitcoin Core is that btcd does *NOT* include
+One key difference between cttd and Bitcoin Core is that cttd does *NOT* include
 wallet functionality and this was a very intentional design decision.  See the
-blog entry [here](https://blog.conformal.com/btcd-not-your-moms-bitcoin-daemon)
+blog entry [here](https://blog.conformal.com/cttd-not-your-moms-bitcoin-daemon)
 for more details.  This means you can't actually make or receive payments
-directly with btcd.  That functionality is provided by the
-[btcwallet](https://github.com/btcsuite/btcwallet) and
+directly with cttd.  That functionality is provided by the
+[cttwallet](https://github.com/btcsuite/cttwallet) and
 [Paymetheus](https://github.com/btcsuite/Paymetheus) (Windows-only) projects
 which are both under active development.
 
@@ -65,17 +65,17 @@ recommended that `GOPATH` is set to a directory in your home directory such as
 `~/goprojects` to avoid write permission issues.  It is also recommended to add
 `$GOPATH/bin` to your `PATH` at this point.
 
-- Run the following commands to obtain btcd, all dependencies, and install it:
+- Run the following commands to obtain cttd, all dependencies, and install it:
 
 ```bash
 $ go get -u github.com/Masterminds/glide
-$ git clone https://github.com/jadeblaquiere/ctcd $GOPATH/src/github.com/jadeblaquiere/ctcd
-$ cd $GOPATH/src/github.com/jadeblaquiere/ctcd
+$ git clone https://github.com/jadeblaquiere/cttd $GOPATH/src/github.com/jadeblaquiere/cttd
+$ cd $GOPATH/src/github.com/jadeblaquiere/cttd
 $ glide install
 $ go install . ./cmd/...
 ```
 
-- btcd (and utilities) will now be installed in ```$GOPATH/bin```.  If you did
+- cttd (and utilities) will now be installed in ```$GOPATH/bin```.  If you did
   not already add the bin directory to your system path during Go installation,
   we recommend you do so now.
 
@@ -87,51 +87,51 @@ Install a newer MSI
 
 #### Linux/BSD/MacOSX/POSIX - Build from Source
 
-- Run the following commands to update btcd, all dependencies, and install it:
+- Run the following commands to update cttd, all dependencies, and install it:
 
 ```bash
-$ cd $GOPATH/src/github.com/jadeblaquiere/ctcd
+$ cd $GOPATH/src/github.com/jadeblaquiere/cttd
 $ git pull && glide install
 $ go install . ./cmd/...
 ```
 
 ## Getting Started
 
-ctcd has several configuration options avilable to tweak how it runs, but all
+cttd has several configuration options avilable to tweak how it runs, but all
 of the basic operations described in the intro section work with zero
 configuration.
 
 #### Windows (Installed from MSI)
 
-Launch ctcd from your Start menu.
+Launch cttd from your Start menu.
 
 #### Linux/BSD/POSIX/Source
 
 ```bash
-$ ./ctcd
+$ ./cttd
 ````
 
 ## IRC
 
 - irc.freenode.net
-- channel #btcd
-- [webchat](https://webchat.freenode.net/?channels=btcd)
+- channel #cttd
+- [webchat](https://webchat.freenode.net/?channels=cttd)
 
 ## Mailing lists
 
-- btcd: discussion of btcd and its packages.
-- btcd-commits: readonly mail-out of source code changes.
+- cttd: discussion of cttd and its packages.
+- cttd-commits: readonly mail-out of source code changes.
 
 To subscribe to a given list, send email to list+subscribe@opensource.conformal.com
 
 ## Issue Tracker
 
-The [integrated github issue tracker](https://github.com/jadeblaquiere/btcd/issues)
+The [integrated github issue tracker](https://github.com/jadeblaquiere/cttd/issues)
 is used for this project.
 
 ## Documentation
 
-The documentation is a work-in-progress.  It is located in the [docs](https://github.com/jadeblaquiere/btcd/tree/master/docs) folder.
+The documentation is a work-in-progress.  It is located in the [docs](https://github.com/jadeblaquiere/cttd/tree/master/docs) folder.
 
 ## GPG Verification Key
 
@@ -155,4 +155,4 @@ verify the signature perform the following:
 
 ## License
 
-btcd is licensed under the [copyfree](http://copyfree.org) ISC License.
+cttd is licensed under the [copyfree](http://copyfree.org) ISC License.

@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/cttd/database"
 )
 
 // TestSetLogWriter ensures the

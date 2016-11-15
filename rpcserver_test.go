@@ -11,8 +11,8 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/rpctest"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/rpctest"
 )
 
 func testGetBestBlock(r *rpctest.Harness, t *testing.T) {
@@ -105,8 +105,8 @@ func TestMain(m *testing.M) {
 	// In order to properly test scenarios on as if we were on mainnet,
 	// ensure that non-standard transactions aren't accepted into the
 	// mempool or relayed.
-	btcdCfg := []string{"--rejectnonstd"}
-	primaryHarness, err = rpctest.New(&chaincfg.SimNetParams, nil, btcdCfg)
+	cttdCfg := []string{"--rejectnonstd"}
+	primaryHarness, err = rpctest.New(&chaincfg.SimNetParams, nil, cttdCfg)
 	if err != nil {
 		fmt.Println("unable to create primary harness: ", err)
 		os.Exit(1)
@@ -138,7 +138,7 @@ func TestRpcServer(t *testing.T) {
 	defer func() {
 		// If one of the integration tests caused a panic within the main
 		// goroutine, then tear down all the harnesses in order to avoid
-		// any leaked btcd processes.
+		// any leaked cttd processes.
 		if r := recover(); r != nil {
 			fmt.Println("recovering from test panic: ", r)
 			if err := rpctest.TearDownAll(); err != nil {

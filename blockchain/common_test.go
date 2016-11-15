@@ -13,12 +13,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/database"
-	_ "github.com/jadeblaquiere/ctcd/database/ffldb"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/database"
+	_ "github.com/jadeblaquiere/cttd/database/ffldb"
+	"github.com/jadeblaquiere/cttd/wire"
 )
 
 const (

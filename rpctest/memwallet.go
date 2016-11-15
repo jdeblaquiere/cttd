@@ -11,15 +11,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/btcec"
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/txscript"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcrpcclient"
-	"github.com/jadeblaquiere/ctcutil"
-	"github.com/jadeblaquiere/ctcutil/hdkeychain"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/btcec"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/txscript"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttrpcclient"
+	"github.com/jadeblaquiere/cttutil"
+	"github.com/jadeblaquiere/cttutil/hdkeychain"
 )
 
 var (
@@ -39,7 +39,7 @@ var (
 // maturity period of direct coinbase outputs.
 type utxo struct {
 	pkScript       []byte
-	value          btcutil.Amount
+	value          cttutil.Amount
 	keyIndex       uint32
 	maturityHeight int32
 	isLocked       bool
@@ -72,7 +72,7 @@ type undoEntry struct {
 // hierarchy which promotes reproducibility between harness test runs.
 type memWallet struct {
 	coinbaseKey  *btcec.PrivateKey
-	coinbaseAddr btcutil.Address
+	coinbaseAddr cttutil.Address
 
 	// hdRoot is the root master private key for the wallet.
 	hdRoot *hdkeychain.ExtendedKey
@@ -86,7 +86,7 @@ type memWallet struct {
 
 	// addrs tracks all addresses belonging to the wallet. The addresses
 	// are indexed by their keypath from the hdRoot.
-	addrs map[uint32]btcutil.Address
+	addrs map[uint32]cttutil.Address
 
 	// utxos is the set of utxos spendable by the wallet.
 	utxos map[wire.OutPoint]*utxo
@@ -140,7 +140,7 @@ func newMemWallet(net *chaincfg.Params, harnessID uint32) (*memWallet, error) {
 
 	// Track the coinbase generation address to ensure we properly track
 	// newly generated bitcoin we can spend.
-	addrs := make(map[uint32]btcutil.Address)
+	addrs := make(map[uint32]cttutil.Address)
 	addrs[0] = coinbaseAddr
 
 	return &memWallet{
@@ -170,7 +170,7 @@ func (m *memWallet) SyncedHeight() int32 {
 	return m.currentHeight
 }
 
-// SetRPCClient saves the passed rpc connection to btcd as the wallet's
+// SetRPCClient saves the passed rpc connection to cttd as the wallet's
 // personal rpc connection.
 func (m *memWallet) SetRPCClient(rpcClient *ctcrpcclient.Client) {
 	m.rpc = rpcClient
@@ -266,7 +266,7 @@ func (m *memWallet) evalOutputs(outputs []*wire.TxOut, txHash *chainhash.Hash,
 
 			op := wire.OutPoint{Hash: *txHash, Index: uint32(i)}
 			m.utxos[op] = &utxo{
-				value:          btcutil.Amount(output.Value),
+				value:          cttutil.Amount(output.Value),
 				keyIndex:       keyIndex,
 				maturityHeight: maturityHeight,
 				pkScript:       pkScript,
@@ -312,7 +312,7 @@ func (m *memWallet) UnwindBlock(hash *chainhash.Hash, height int32, t time.Time)
 }
 
 // newAddress returns a new address from the wallet's hd key chain.
-func (m *memWallet) newAddress() (btcutil.Address, error) {
+func (m *memWallet) newAddress() (cttutil.Address, error) {
 	index := m.hdIndex
 
 	childKey, err := m.hdRoot.Child(index)
@@ -339,7 +339,7 @@ func (m *memWallet) newAddress() (btcutil.Address, error) {
 // NewAddress returns a fresh address spendable by the wallet.
 //
 // This function is safe for concurrent access.
-func (m *memWallet) NewAddress() (btcutil.Address, error) {
+func (m *memWallet) NewAddress() (cttutil.Address, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -352,7 +352,7 @@ func (m *memWallet) NewAddress() (btcutil.Address, error) {
 // satoshis-per-byte.
 //
 // NOTE: The memWallet's mutex must be held when this function is called.
-func (m *memWallet) fundTx(tx *wire.MsgTx, amt btcutil.Amount, feeRate btcutil.Amount) error {
+func (m *memWallet) fundTx(tx *wire.MsgTx, amt cttutil.Amount, feeRate cttutil.Amount) error {
 	const (
 		// spendSize is the largest number of bytes of a sigScript
 		// which spends a p2pkh output: OP_DATA_73 <sig> OP_DATA_33 <pubkey>
@@ -360,7 +360,7 @@ func (m *memWallet) fundTx(tx *wire.MsgTx, amt btcutil.Amount, feeRate btcutil.A
 	)
 
 	var (
-		amtSelected btcutil.Amount
+		amtSelected cttutil.Amount
 		txSize      int
 	)
 
@@ -383,7 +383,7 @@ func (m *memWallet) fundTx(tx *wire.MsgTx, amt btcutil.Amount, feeRate btcutil.A
 		// observing the specified fee rate. If we don't have enough
 		// coins from he current amount selected to pay the fee, then
 		// continue to grab more coins.
-		reqFee := btcutil.Amount(txSize * int(feeRate))
+		reqFee := cttutil.Amount(txSize * int(feeRate))
 		if amtSelected-reqFee < amt {
 			continue
 		}
@@ -419,7 +419,7 @@ func (m *memWallet) fundTx(tx *wire.MsgTx, amt btcutil.Amount, feeRate btcutil.A
 // while observing the passed fee rate. The passed fee rate should be expressed
 // in satoshis-per-byte.
 func (m *memWallet) SendOutputs(outputs []*wire.TxOut,
-	feeRate btcutil.Amount) (*chainhash.Hash, error) {
+	feeRate cttutil.Amount) (*chainhash.Hash, error) {
 
 	tx, err := m.CreateTransaction(outputs, feeRate)
 	if err != nil {
@@ -434,7 +434,7 @@ func (m *memWallet) SendOutputs(outputs []*wire.TxOut,
 // expressed in satoshis-per-byte.
 //
 // This function is safe for concurrent access.
-func (m *memWallet) CreateTransaction(outputs []*wire.TxOut, feeRate btcutil.Amount) (*wire.MsgTx, error) {
+func (m *memWallet) CreateTransaction(outputs []*wire.TxOut, feeRate cttutil.Amount) (*wire.MsgTx, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -442,14 +442,14 @@ func (m *memWallet) CreateTransaction(outputs []*wire.TxOut, feeRate btcutil.Amo
 
 	// Tally up the total amount to be sent in order to perform coin
 	// selection shortly below.
-	var outputAmt btcutil.Amount
+	var outputAmt cttutil.Amount
 	for _, output := range outputs {
-		outputAmt += btcutil.Amount(output.Value)
+		outputAmt += cttutil.Amount(output.Value)
 		tx.AddTxOut(output)
 	}
 
 	// Attempt to fund the transaction with spendable utxos.
-	if err := m.fundTx(tx, outputAmt, btcutil.Amount(feeRate)); err != nil {
+	if err := m.fundTx(tx, outputAmt, cttutil.Amount(feeRate)); err != nil {
 		return nil, err
 	}
 
@@ -514,11 +514,11 @@ func (m *memWallet) UnlockOutputs(inputs []*wire.TxIn) {
 // ConfirmedBalance returns the confirmed balance of the wallet.
 //
 // This function is safe for concurrent access.
-func (m *memWallet) ConfirmedBalance() btcutil.Amount {
+func (m *memWallet) ConfirmedBalance() cttutil.Amount {
 	m.RLock()
 	defer m.RUnlock()
 
-	var balance btcutil.Amount
+	var balance cttutil.Amount
 	for _, utxo := range m.utxos {
 		// Prevent any immature or locked outputs from contributing to
 		// the wallet's total confirmed balance.
@@ -533,9 +533,9 @@ func (m *memWallet) ConfirmedBalance() btcutil.Amount {
 }
 
 // keyToAddr maps the passed private to corresponding p2pkh address.
-func keyToAddr(key *btcec.PrivateKey, net *chaincfg.Params) (btcutil.Address, error) {
+func keyToAddr(key *btcec.PrivateKey, net *chaincfg.Params) (cttutil.Address, error) {
 	serializedKey := key.PubKey().SerializeCompressed()
-	pubKeyAddr, err := btcutil.NewAddressPubKey(serializedKey, net)
+	pubKeyAddr, err := cttutil.NewAddressPubKey(serializedKey, net)
 	if err != nil {
 		return nil, err
 	}

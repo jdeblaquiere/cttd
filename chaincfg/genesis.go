@@ -7,9 +7,9 @@ package chaincfg
 import (
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
 	"github.com/jadeblaquiere/ciphrtxt-go/ciphrtxt"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/cttd/wire"
 )
 
 // ctindigoGenesisCoinbaseTx is the coinbase transaction for the genesis blocks

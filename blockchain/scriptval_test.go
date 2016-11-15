@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/txscript"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/txscript"
 )
 
 // TestCheckBlockScripts ensures that validating the all of the scripts in a

@@ -11,12 +11,12 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/blockchain"
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/txscript"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/blockchain"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/txscript"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // solveBlock attempts to find a nonce which makes the passed block header hash
@@ -88,7 +88,7 @@ func standardCoinbaseScript(nextBlockHeight int32, extraNonce uint64) ([]byte, e
 // createCoinbaseTx returns a coinbase transaction paying an appropriate
 // subsidy based on the passed block height to the provided address.
 func createCoinbaseTx(coinbaseScript []byte, nextBlockHeight int32,
-	addr btcutil.Address, net *chaincfg.Params) (*btcutil.Tx, error) {
+	addr cttutil.Address, net *chaincfg.Params) (*cttutil.Tx, error) {
 
 	// Create the script to pay to the provided payment address.
 	pkScript, err := txscript.PayToAddrScript(addr)
@@ -109,13 +109,13 @@ func createCoinbaseTx(coinbaseScript []byte, nextBlockHeight int32,
 		Value:    blockchain.CalcBlockSubsidy(nextBlockHeight, net),
 		PkScript: pkScript,
 	})
-	return btcutil.NewTx(tx), nil
+	return cttutil.NewTx(tx), nil
 }
 
 // createBlock creates a new block building from the previous block.
-func createBlock(prevBlock *btcutil.Block, inclusionTxs []*btcutil.Tx,
+func createBlock(prevBlock *cttutil.Block, inclusionTxs []*cttutil.Tx,
 	blockVersion int32, blockTime time.Time,
-	miningAddr btcutil.Address, net *chaincfg.Params) (*btcutil.Block, error) {
+	miningAddr cttutil.Address, net *chaincfg.Params) (*cttutil.Block, error) {
 
 	prevHash := prevBlock.Hash()
 	blockHeight := prevBlock.Height() + 1
@@ -143,7 +143,7 @@ func createBlock(prevBlock *btcutil.Block, inclusionTxs []*btcutil.Tx,
 	}
 
 	// Create a new block ready to be solved.
-	blockTxns := []*btcutil.Tx{coinbaseTx}
+	blockTxns := []*cttutil.Tx{coinbaseTx}
 	if inclusionTxs != nil {
 		blockTxns = append(blockTxns, inclusionTxs...)
 	}
@@ -167,7 +167,7 @@ func createBlock(prevBlock *btcutil.Block, inclusionTxs []*btcutil.Tx,
 		return nil, errors.New("Unable to solve block")
 	}
 
-	utilBlock := btcutil.NewBlock(&block)
+	utilBlock := cttutil.NewBlock(&block)
 	utilBlock.SetHeight(blockHeight)
 	return utilBlock, nil
 }

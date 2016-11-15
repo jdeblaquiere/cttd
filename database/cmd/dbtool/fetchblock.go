@@ -9,8 +9,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/database"
 )
 
 // fetchBlockCmd defines the configuration options for the fetchblock command.

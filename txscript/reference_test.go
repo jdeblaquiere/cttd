@@ -15,10 +15,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	. "github.com/jadeblaquiere/ctcd/txscript"
-	"github.com/jadeblaquiere/ctcd/wire"
-	"github.com/jadeblaquiere/ctcutil"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	. "github.com/jadeblaquiere/cttd/txscript"
+	"github.com/jadeblaquiere/cttd/wire"
+	"github.com/jadeblaquiere/cttutil"
 )
 
 // testName returns a descriptive test name for the given reference test data.
@@ -370,7 +370,7 @@ testloop:
 			continue
 		}
 
-		tx, err := btcutil.NewTxFromBytes(serializedTx)
+		tx, err := cttutil.NewTxFromBytes(serializedTx)
 		if err != nil {
 			t.Errorf("bad test (arg 2 not msgtx %v) %d: %v", err,
 				i, test)
@@ -512,7 +512,7 @@ testloop:
 			continue
 		}
 
-		tx, err := btcutil.NewTxFromBytes(serializedTx)
+		tx, err := cttutil.NewTxFromBytes(serializedTx)
 		if err != nil {
 			t.Errorf("bad test (arg 2 not msgtx %v) %d: %v", err,
 				i, test)

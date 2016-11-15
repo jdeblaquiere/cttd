@@ -15,7 +15,7 @@ var (
 
 func TestCreateDefaultConfigFile(t *testing.T) {
 	// Setup a temporary directory
-	tmpDir, err := ioutil.TempDir("", "btcd")
+	tmpDir, err := ioutil.TempDir("", "cttd")
 	if err != nil {
 		t.Fatalf("Failed creating a temporary directory: %v", err)
 	}

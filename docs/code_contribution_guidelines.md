@@ -31,7 +31,7 @@ represent real money and introducing bugs and security vulnerabilities can have
 far more dire consequences than in typical projects where having a small bug is
 minimal by comparison.  In the world of cryptocurrencies, even the smallest bug
 in the wrong area can cost people a significant amount of money.  For this
-reason, the btcd suite has a formalized and rigorous development process which
+reason, the cttd suite has a formalized and rigorous development process which
 is outlined on this page.
 
 We highly encourage code contributions, however it is imperative that you adhere
@@ -65,7 +65,7 @@ security and performance implications.
 <a name="ReqReading" />
 ### 3. Required Reading
 
-- [Effective Go](http://golang.org/doc/effective_go.html) - The entire btcd
+- [Effective Go](http://golang.org/doc/effective_go.html) - The entire cttd
   suite follows the guidelines in this document.  For your code to be accepted,
   it must follow the guidelines therein.
 - [Original Satoshi Whitepaper](http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&ved=0CCkQFjAA&url=http%3A%2F%2Fbitcoin.org%2Fbitcoin.pdf&ei=os3VUuH8G4SlsASV74GoAg&usg=AFQjCNEipPLigou_1MfB7DQjXCNdlylrBg&sig2=FaHDuT5z36GMWDEnybDJLg&bvm=bv.59378465,d.b2I) - This is the white paper that started it all.  Having a solid
@@ -103,7 +103,7 @@ This approach has several benefits:
 <a name="Testing" />
 ### 4.2 Testing
 
-One of the major design goals of all core btcd packages is to aim for complete
+One of the major design goals of all core cttd packages is to aim for complete
 test coverage.  This is financial software so bugs and regressions can cost
 people real money.  For this reason every effort must be taken to ensure the
 code is as accurate and bug-free as possible.  Thorough testing is a good way to
@@ -245,7 +245,7 @@ a good thing.
 ### 5. Code Approval Process
 
 This section describes the code approval process that is used for code
-contributions.  This is how to get your changes into btcd.
+contributions.  This is how to get your changes into cttd.
 
 <a name="CodeReview" />
 ### 5.1 Code Review
@@ -303,7 +303,7 @@ keep a clean commit history over a tangled weave of merge commits.  However,
 regardless of the specific merge method used, the code will be integrated with
 the master branch and the pull request will be closed.
 
-Rejoice as you will now be listed as a [contributor](https://github.com/jadeblaquiere/btcd/graphs/contributors)!
+Rejoice as you will now be listed as a [contributor](https://github.com/jadeblaquiere/cttd/graphs/contributors)!
 
 <a name="Standards" />
 ### 6. Contribution Standards
@@ -330,5 +330,5 @@ Rejoice as you will now be listed as a [contributor](https://github.com/jadeblaq
 ### 6.2. Licensing of Contributions
 ****
 All contributions must be licensed with the
-[ISC license](https://github.com/jadeblaquiere/btcd/blob/master/LICENSE).  This is
-the same license as all of the code in the btcd suite.
+[ISC license](https://github.com/jadeblaquiere/cttd/blob/master/LICENSE).  This is
+the same license as all of the code in the cttd suite.

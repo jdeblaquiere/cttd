@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcrpcclient"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttrpcclient"
 )
 
 // JoinType is an enum representing a particular type of "node join". A node

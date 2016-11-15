@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg"
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/peer"
-	"github.com/jadeblaquiere/ctcd/wire"
+	"github.com/jadeblaquiere/cttd/chaincfg"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/peer"
+	"github.com/jadeblaquiere/cttd/wire"
 	"github.com/btcsuite/go-socks/socks"
 )
 

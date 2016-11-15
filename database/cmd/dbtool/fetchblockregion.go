@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/database"
+	"github.com/jadeblaquiere/cttd/chaincfg/chainhash"
+	"github.com/jadeblaquiere/cttd/database"
 )
 
 // blockRegionCmd defines the configuration options for the fetchblockregion

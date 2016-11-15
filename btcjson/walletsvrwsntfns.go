@@ -12,9 +12,9 @@ const (
 	// notifications.
 	AccountBalanceNtfnMethod = "accountbalance"
 
-	// BtcdConnectedNtfnMethod is the method used for notifications when
+	// CttdConnectedNtfnMethod is the method used for notifications when
 	// a wallet server is connected to a chain server.
-	BtcdConnectedNtfnMethod = "btcdconnected"
+	CttdConnectedNtfnMethod = "cttdconnected"
 
 	// WalletLockStateNtfnMethod is the method used to notify the lock state
 	// of a wallet has changed.
@@ -42,15 +42,15 @@ func NewAccountBalanceNtfn(account string, balance float64, confirmed bool) *Acc
 	}
 }
 
-// BtcdConnectedNtfn defines the btcdconnected JSON-RPC notification.
-type BtcdConnectedNtfn struct {
+// CttdConnectedNtfn defines the cttdconnected JSON-RPC notification.
+type CttdConnectedNtfn struct {
 	Connected bool
 }
 
-// NewBtcdConnectedNtfn returns a new instance which can be used to issue a
-// btcdconnected JSON-RPC notification.
-func NewBtcdConnectedNtfn(connected bool) *BtcdConnectedNtfn {
-	return &BtcdConnectedNtfn{
+// NewCttdConnectedNtfn returns a new instance which can be used to issue a
+// cttdconnected JSON-RPC notification.
+func NewCttdConnectedNtfn(connected bool) *CttdConnectedNtfn {
+	return &CttdConnectedNtfn{
 		Connected: connected,
 	}
 }
@@ -89,7 +89,7 @@ func init() {
 	flags := UFWalletOnly | UFWebsocketOnly | UFNotification
 
 	MustRegisterCmd(AccountBalanceNtfnMethod, (*AccountBalanceNtfn)(nil), flags)
-	MustRegisterCmd(BtcdConnectedNtfnMethod, (*BtcdConnectedNtfn)(nil), flags)
+	MustRegisterCmd(CttdConnectedNtfnMethod, (*CttdConnectedNtfn)(nil), flags)
 	MustRegisterCmd(WalletLockStateNtfnMethod, (*WalletLockStateNtfn)(nil), flags)
 	MustRegisterCmd(NewTxNtfnMethod, (*NewTxNtfn)(nil), flags)
 }
