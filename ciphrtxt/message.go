@@ -47,6 +47,8 @@ type MessageFile struct {
     Filepath    string
 }
 
+type MessageFileSlice []MessageFile
+
 func Ingest(filepath string) *MessageFile {
     f, err := os.Open(filepath)
     if err != nil {
@@ -134,3 +136,36 @@ func (z *MessageFile) Deserialize(bmh []byte) *MessageFile {
     z.Filepath = string(fpath)
     return z
 }
+
+// Len, Less, Swap used for sorting slices of RMH
+
+func (z MessageFileSlice) Len() int {
+    return len(z)
+}
+
+func (z MessageFileSlice) Less(i, j int) bool {
+    if z[i].RawMessageHeader.time < z[j].RawMessageHeader.time {
+        return true
+    }
+    if z[i].RawMessageHeader.time > z[j].RawMessageHeader.time {
+        return false
+    }
+    for x := 0 ; x < 33 ; x++ {
+        if z[i].RawMessageHeader.I[x] < z[j].RawMessageHeader.I[x] {
+            return true
+        }
+        if z[i].RawMessageHeader.I[x] > z[j].RawMessageHeader.I[x] {
+            return false
+        }
+    }
+    return false
+}
+
+func (z MessageFileSlice) Swap(i, j int) {
+    t1 := z[i].Serialize()
+    t2 := z[j].Serialize()
+    z[j].Deserialize(t1)
+    z[i].Deserialize(t2)
+}
+
+

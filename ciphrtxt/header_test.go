@@ -38,6 +38,7 @@ import (
     "encoding/hex"
     "encoding/json"
     "fmt"
+    "sort"
     "strconv"
     "sync"
     "time"
@@ -324,6 +325,60 @@ func TestHashvals (t *testing.T) {
     }
     
     for _, h := range mh {
+        hx := hex.EncodeToString(h.Hash())
+        if hx[:4] != "0000" {
+            fmt.Println("Found Message Hash: " + hx)
+            t.Fail()
+        }
+    }
+}
+
+func TestSortRawMessageHeader (t *testing.T) {
+    hc, err := OpenHeaderCache("violet.ciphrtxt.com", 7754, "testdb/violet.ciphrtxt.com")
+    if err != nil {
+        t.Fail()
+    }
+    defer hc.Close()
+
+    // validate based on messages from the last hour
+    now := time.Now().Unix()
+    mh, err := hc.getHeadersSince(uint32(now-3600))
+    if err != nil {
+        fmt.Println("error getHeaderSince - test failed")
+        t.Fail()
+    }
+    
+    mhs := RawMessageHeaderSlice(mh)
+    fmt.Printf("Sorting %d elements\n", mhs.Len())
+    
+    for _, h := range mhs {
+        fmt.Printf("t %d : I %s\n", h.time, hex.EncodeToString(h.I))
+        hx := hex.EncodeToString(h.Hash())
+        if hx[:4] != "0000" {
+            fmt.Println("Found Message Hash: " + hx)
+            t.Fail()
+        }
+    }
+    
+    fmt.Println()
+    
+    sort.Sort(mhs)
+    
+    for _, h := range mhs {
+        fmt.Printf("t %d : I %s\n", h.time, hex.EncodeToString(h.I))
+        hx := hex.EncodeToString(h.Hash())
+        if hx[:4] != "0000" {
+            fmt.Println("Found Message Hash: " + hx)
+            t.Fail()
+        }
+    }
+    
+    fmt.Println()
+    
+    sort.Sort(sort.Reverse(RawMessageHeaderSlice(mh)))
+    
+    for _, h := range mhs {
+        fmt.Printf("t %d : I %s\n", h.time, hex.EncodeToString(h.I))
         hx := hex.EncodeToString(h.Hash())
         if hx[:4] != "0000" {
             fmt.Println("Found Message Hash: " + hx)

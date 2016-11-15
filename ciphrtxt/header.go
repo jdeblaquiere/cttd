@@ -98,6 +98,8 @@ type RawMessageHeader struct {
     nonce   uint64
 }
 
+type RawMessageHeaderSlice []RawMessageHeader
+
 type MessageHeaderJSON struct {
     Version string `json:"version"`
     Time    uint32 `json:"time"`
@@ -309,13 +311,44 @@ func (z *RawMessageHeader) Hash() []byte {
     return hashval[:]
 }
 
+// Len, Less, Swap used for sorting slices of RMH
+
+func (z RawMessageHeaderSlice) Len() int {
+    return len(z)
+}
+
+func (z RawMessageHeaderSlice) Less(i, j int) bool {
+    if z[i].time < z[j].time {
+        return true
+    }
+    if z[i].time > z[j].time {
+        return false
+    }
+    for x := 0 ; x < 33 ; x++ {
+        if z[i].I[x] < z[j].I[x] {
+            return true
+        }
+        if z[i].I[x] > z[j].I[x] {
+            return false
+        }
+    }
+    return false
+}
+
+func (z RawMessageHeaderSlice) Swap(i, j int) {
+    t1 := z[i].Serialize()
+    t2 := z[j].Serialize()
+    z[j].Deserialize(t1)
+    z[i].Deserialize(t2)
+}
+
 func (z *RawMessageHeader) JSON() *MessageHeaderJSON {
     r := new(MessageHeaderJSON)
     r.Version = z.version
     r.Time = z.time
     r.Expire = z.expire
-    r.TimeStr = time.Unix(int64(z.time),0).String()
-    r.ExpireStr = time.Unix(int64(z.expire),0).String()
+    r.TimeStr = time.Unix(int64(z.time),0).UTC().String()
+    r.ExpireStr = time.Unix(int64(z.expire),0).UTC().String()
     r.I = hex.EncodeToString(z.I)
     r.J = hex.EncodeToString(z.J)
     r.K = hex.EncodeToString(z.K)
@@ -323,8 +356,6 @@ func (z *RawMessageHeader) JSON() *MessageHeaderJSON {
     r.R = hex.EncodeToString(z.r)
     r.S = hex.EncodeToString(z.s)
     r.Nonce = z.nonce
-    
-    fmt.Printf("exporting JSON for %s\n", r.I)
     
     return r
 }

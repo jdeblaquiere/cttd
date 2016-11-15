@@ -37,6 +37,7 @@ import (
     "io"
     "math/big"
     "os"
+    "sort"
     "strconv"
     "time"
     
@@ -127,6 +128,7 @@ func main() {
 func index(ctx *iris.Context){
     now := uint32(time.Now().Unix())
     lastHr, err := ms.FindSince(now - 3600)
+    sort.Sort(sort.Reverse(ciphrtxt.MessageFileSlice(lastHr)))
     if err != nil {
         ctx.EmitError(iris.StatusInternalServerError)
         return
