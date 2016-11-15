@@ -15,7 +15,7 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/blockchain"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/ciphrtxt"
+	"github.com/jadeblaquiere/ciphrtxt-go/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/mining"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"

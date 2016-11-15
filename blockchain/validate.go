@@ -14,7 +14,7 @@ import (
 
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/ciphrtxt"
+	"github.com/jadeblaquiere/ciphrtxt-go/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/txscript"
 	"github.com/jadeblaquiere/ctcd/wire"
 	"github.com/jadeblaquiere/ctcutil"
@@ -495,7 +495,7 @@ func checkBlockHeaderNonces(header *wire.BlockHeader, timeSource MedianTimeSourc
     if headerA.ExpireTime().After(minExpireTime) {
         ikey := headerA.IKey()
         
-        _, err = hc.FindByI(ikey)
+        _, err := hc.FindByI(ikey)
         if err != nil {
             str := fmt.Sprintf("Message not found in HeaderCache : ", 
                 hex.EncodeToString(header.NonceHeaderA[:]))
@@ -506,7 +506,7 @@ func checkBlockHeaderNonces(header *wire.BlockHeader, timeSource MedianTimeSourc
     if headerB.ExpireTime().After(minExpireTime) {
         ikey := headerB.IKey()
         
-        _, err = hc.FindByI(ikey)
+        _, err := hc.FindByI(ikey)
         if err != nil {
             str := fmt.Sprintf("Message not found in HeaderCache : ", 
                 hex.EncodeToString(header.NonceHeaderA[:]))

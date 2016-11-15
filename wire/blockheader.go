@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-    "github.com/jadeblaquiere/ctcd/ciphrtxt"
+    "github.com/jadeblaquiere/ciphrtxt-go/ciphrtxt"
 )
 
 // BlockVersion is the current latest supported block version.

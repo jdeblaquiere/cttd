@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/ciphrtxt"
+	"github.com/jadeblaquiere/ciphrtxt-go/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/wire"
 )
 

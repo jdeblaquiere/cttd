@@ -26,7 +26,7 @@ import (
 	"github.com/jadeblaquiere/ctcd/blockchain/indexers"
 	"github.com/jadeblaquiere/ctcd/chaincfg"
 	"github.com/jadeblaquiere/ctcd/chaincfg/chainhash"
-	"github.com/jadeblaquiere/ctcd/ciphrtxt"
+	"github.com/jadeblaquiere/ciphrtxt-go/ciphrtxt"
 	"github.com/jadeblaquiere/ctcd/database"
 	"github.com/jadeblaquiere/ctcd/mempool"
 	"github.com/jadeblaquiere/ctcd/mining"
