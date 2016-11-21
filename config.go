@@ -143,6 +143,7 @@ type config struct {
 	RejectNonStd       bool          `long:"rejectnonstd" description:"Reject non-standard transactions regardless of the default settings for the active network."`
 	HeaderCacheHost    string        `long:"headercachehost" description:"Host for connection to header cache"`
 	HeaderCachePort    int           `long:"headercacheport" description:"Port for connection to header cache"`
+	HeaderCacheRetries int          `long:"headercacheretries" description:"Number of retries connecting to Header Cache (before exit, default is 10). There is a 30 second pause between attempts."`
 	onionlookup        func(string) ([]net.IP, error)
 	lookup             func(string) ([]net.IP, error)
 	oniondial          func(string, string) (net.Conn, error)

@@ -2477,12 +2477,26 @@ func newServer(listenAddrs []string, db database.DB, chainParams *chaincfg.Param
             }
             dbdir := filepath.Join(defaultDataDir,"hdb",host)
 
-            hcache, err = ciphrtxt.OpenHeaderCache(host, uint16(port), dbdir)
-            if err != nil {
-                srvrLog.Warnf("Can't connect to HeaderCache or db: %v", err)
+            retries := 10
+            if cfg.HeaderCacheRetries != 0 {
+                retries = cfg.HeaderCacheRetries
             }
             
-            srvrLog.Infof("Opened MSGSTORE at: %s:%d", host, port)
+            hcache, err = ciphrtxt.OpenHeaderCache(host, uint16(port), dbdir)
+            if err != nil {
+                srvrLog.Warnf("Can't connect to HeaderCache or db: %v, retry in 30 sec", err)
+                for i := 0; i < retries; i++ {
+                    time.Sleep(time.Second * 30)
+                    hcache, err = ciphrtxt.OpenHeaderCache(host, uint16(port), dbdir)
+                    if err == nil {
+                        break
+                    }
+                    srvrLog.Warnf("Can't connect to HeaderCache or db: %v, %d retries remaining", err, (retries - (i+1)))
+                }
+            }
+            if err == nil {
+                srvrLog.Infof("Opened MSGSTORE at: %s:%d", host, port)
+            }
         }
     }
 
